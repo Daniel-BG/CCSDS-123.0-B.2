@@ -30,9 +30,8 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use work.math_functions.all;
-use work.data_structures.all;
-use work.constants.all;
+use work.ccsds_math_functions.all;
+use work.ccsds_data_structures.all;
 
 
 use ieee.numeric_std.all;
@@ -43,35 +42,34 @@ use ieee.numeric_std.all;
 --also maxZ - 1 and maxT - 1 can be precalculated
 entity coord_gen_diagonal is
 	generic (
-		MAX_COORD_Z: integer := CONST_MAX_Z;
-		MAX_COORD_T: integer := CONST_MAX_T
+		MAX_COORD_Z_WIDTH: integer := 9;
+		MAX_COORD_T_WIDTH: integer := 18
 	);
 	port (
 		--control signals 
-		clk, rst, start : in std_logic;
+		clk, rst: in std_logic;
 		finished: out std_logic;
 		--control inputs
-		max_z: in unsigned(BITS(MAX_COORD_Z) - 1 downto 0);
-		max_t: in unsigned(BITS(MAX_COORD_T) - 1 downto 0);
+		cfg_max_z: in std_logic_vector(MAX_COORD_Z_WIDTH - 1 downto 0);
+		cfg_max_t: in std_logic_vector(MAX_COORD_T_WIDTH - 1 downto 0);
 		--output bus
 		axis_out_valid: out std_logic;
 		axis_out_ready: in std_logic;
 		axis_out_last: out std_logic;
-		axis_out_data_z: out unsigned(BITS(MAX_COORD_Z) - 1 downto 0);
-		axis_out_data_t: out unsigned(BITS(MAX_COORD_T) - 1 downto 0)
+		axis_out_data_z: out std_logic_vector(MAX_COORD_Z_WIDTH - 1 downto 0);
+		axis_out_data_t: out std_logic_vector(MAX_COORD_T_WIDTH - 1 downto 0);
+		axis_out_data_tz: out std_logic_vector(MAX_COORD_Z_WIDTH - 1 downto 0)
 	);
 end coord_gen_diagonal;
 
 architecture Behavioral of coord_gen_diagonal is
 
-	type state_t is (ST_IDLE, ST_WORKING, ST_FINISHED);
+	type state_t is (ST_WORKING, ST_FINISHED);
 	signal state_curr, state_next: state_t;
-	
-	signal saved_max_z, next_saved_max_z: unsigned(BITS(MAX_COORD_Z) - 1 downto 0);
-	signal saved_max_t, next_saved_max_t: unsigned(BITS(MAX_COORD_T) - 1 downto 0);
-	
-	signal z_curr, z_next: unsigned(BITS(MAX_COORD_Z) - 1 downto 0);
-	signal t_curr, t_next: unsigned(BITS(MAX_COORD_T) - 1 downto 0);
+		
+	signal z_curr, z_next: unsigned(MAX_COORD_Z_WIDTH - 1 downto 0);
+	signal tz_curr, tz_next: unsigned(MAX_COORD_Z_WIDTH - 1 downto 0);
+	signal t_curr, t_next: unsigned(MAX_COORD_T_WIDTH - 1 downto 0);
 	 
 
 begin
@@ -79,74 +77,86 @@ begin
 	seq: process(clk, rst, state_next) 
 	begin
 		if rst = '1' then
-			state_curr <= ST_IDLE;
-			saved_max_z <= (others => '0');
-			saved_max_t <= (others => '0');
+			state_curr <= ST_WORKING;
 			z_curr <= (others => '0');
 			t_curr <= (others => '0');
+			tz_curr<= (others => '0');
 		elsif rising_edge(clk) then
 			state_curr <= state_next;
-			saved_max_z <= next_saved_max_z;
-			saved_max_t <= next_saved_max_t;
 			z_curr <= z_next;
 			t_curr <= t_next;
+			tz_curr<= tz_next;
 		end if;
 	end process;
 	
 	
-	comb: process(state_curr, saved_max_z, saved_max_t, z_curr, t_curr, max_z, max_t, axis_out_ready, start)
+	comb: process(state_curr, z_curr, t_curr, tz_curr, cfg_max_z, cfg_max_t, axis_out_ready)
 	
-		variable z: unsigned(BITS(MAX_COORD_Z) - 1 downto 0);
-		variable t: unsigned(BITS(MAX_COORD_T) - 1 downto 0);
+		variable z, tz: unsigned(MAX_COORD_Z_WIDTH - 1 downto 0);
+		variable t: unsigned(MAX_COORD_T_WIDTH - 1 downto 0);
 		
 		variable last: boolean;
 	
 	begin
 		--default values for registers
 		state_next <= state_curr;
-		next_saved_max_z <= saved_max_z;
-		next_saved_max_t <= saved_max_t;
 		z_next <= z_curr;
 		t_next <= t_curr;
+		tz_next <= tz_curr;
 		--default values for AXIS bus and other outputs
 		axis_out_valid <= '0';
 		axis_out_last <= '0';
-		axis_out_data_z <= z_curr;
-		axis_out_data_t <= t_curr;
+		axis_out_data_z <= std_logic_vector(z_curr);
+		axis_out_data_t <= std_logic_vector(t_curr);
+		axis_out_data_tz <= std_logic_vector(tz_curr);
 		finished <= '0';
 		--starting variable values
 		z := (others => '0');
 		t := (others => '0');
+		tz:= (others => '0');
 		last := false;
 
-		if state_curr = ST_IDLE then
-			if (start = '1') then
-				state_next <= ST_WORKING;
-				next_saved_max_z <= max_z;
-				next_saved_max_t <= max_t;
-			end if;
-		elsif state_curr = ST_WORKING then
+		if state_curr = ST_WORKING then
 			z := z_curr;
 			t := t_curr;
+			tz:= tz_curr;
 			if (z = 0) then
-				if (t < saved_max_z - 1) then  --first diagonals
-					z := resize(t + 1, BITS(MAX_COORD_Z));
+				if (t < unsigned(cfg_max_z)) then  --first diagonals
+					z := resize(t + 1, MAX_COORD_Z_WIDTH);
 					t := (others => '0');
+					tz:= (others => '0');
 				else
-					z := saved_max_z - 1;
-					t := t - saved_max_z + 2;
+					z := unsigned(cfg_max_z);
+					t := t - unsigned(cfg_max_z) + 1;
+					if tz = unsigned(cfg_max_z) then
+						tz := (tz'range => '0') + 1;
+					elsif tz = unsigned(cfg_max_z) - 1 then
+						tz := (others => '0');
+					else
+						tz := tz + 2;
+					end if;
 				end if;
-			elsif (t = saved_max_t - 1) then
-				if (z = saved_max_z - 1) then -- last sample
+			elsif (t = unsigned(cfg_max_t)) then
+				if (z = unsigned(cfg_max_z)) then -- last sample
 					last := true;
 					axis_out_last <= '1';
 				else --last diagonals
-					t := t + z - saved_max_z + 2;
-					z := saved_max_z - 1;
+					t := t + z - unsigned(cfg_max_z) + 1;
+					if (tz + z + 1 < unsigned(cfg_max_z)) then
+						tz := tz + z + 2;
+					else 
+						tz := tz + z + 1 - unsigned(cfg_max_z);	
+					end if;
+					z := unsigned(cfg_max_z);
 				end if;
 			else
 				z := z - 1;
 				t := t + 1;
+				if tz = unsigned(cfg_max_z) then
+					tz := (others => '0');
+				else
+					tz := tz + 1;
+				end if;
 			end if;
 			
 			--update coords only on AXIS transaction
@@ -154,6 +164,7 @@ begin
 			if axis_out_ready = '1' then
 				z_next <= z;
 				t_next <= t;
+				tz_next <= tz;
 				
 				if (last) then
 					state_next <= ST_FINISHED;

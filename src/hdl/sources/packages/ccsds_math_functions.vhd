@@ -18,13 +18,13 @@
 -- 
 ----------------------------------------------------------------------------------
 
-package math_functions is
+package ccsds_math_functions is
 	--headers
 	function BITS(invalue: integer) return integer;
 
-end package math_functions;
+end package ccsds_math_functions;
 
-package body math_functions is
+package body ccsds_math_functions is
 	--actual function bodies
 	function BITS(invalue: integer) return integer is
 		variable i: integer := 1;
@@ -38,4 +38,4 @@ package body math_functions is
 		return -1;
 	end function;
 
-end math_functions;
+end ccsds_math_functions;
