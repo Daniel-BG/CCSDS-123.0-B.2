@@ -25,6 +25,7 @@ use work.ccsds_math_functions.all;
 
 package ccsds_constants is
 	--IMAGE CONSTANTS
+	type local_sum_t is (WIDE_NEIGHBOR_ORIENTED, WIDE_COLUMN_ORIENTED);
 
 	--FIXED CONSTANTS
 	constant CONST_MAX_X: integer := 512;
@@ -43,6 +44,24 @@ package ccsds_constants is
 	constant CONST_MAX_D: integer := 16;
 	constant CONST_OUT_BYTES: integer := 4;
 	
+	
+	function LSUM_WIDTH(data_width: integer) return integer;
+	function LDIF_WIDTH(data_width: integer) return integer;
+
+end ccsds_constants;
+
+package body ccsds_constants is
+	--actual function bodies
+	
+	function LSUM_WIDTH(data_width: integer) return integer is
+	begin
+		return data_width + 2;
+	end function;
+	
+	function LDIF_WIDTH(data_width: integer) return integer is
+	begin
+		return data_width + 3;
+	end function;
 
 end ccsds_constants;
 
