@@ -22,31 +22,27 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+use work.ccsds_constants.all;
 
 entity coord_gen_vertical_reloc is
-	generic (
-		MAX_COORD_T_WIDTH: integer := 9;
-		MAX_COORD_Z_WIDTH: integer := 9;
-		DATA_WIDTH: integer := 16
-	);
 	port (
 		--control signals 
 		clk, rst: in std_logic;
 		finished: out std_logic;
 		--control inputs
-		cfg_max_z: in std_logic_vector(MAX_COORD_Z_WIDTH - 1 downto 0);
-		cfg_max_t: in std_logic_vector(MAX_COORD_T_WIDTH - 1 downto 0);
+		cfg_max_z: in std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
+		cfg_max_t: in std_logic_vector(CONST_MAX_T_BITS - 1 downto 0);
 		--input bus
-		axis_in_data: in std_logic_vector(DATA_WIDTH - 1 downto 0);
+		axis_in_data: in std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		axis_in_ready: out std_logic;
 		axis_in_valid: in std_logic;
 		--output bus
 		axis_out_valid: out std_logic;
 		axis_out_ready: in std_logic;
 		axis_out_last: out std_logic;
-		axis_out_data: out std_logic_vector(DATA_WIDTH - 1 downto 0);
-		axis_out_data_z: out std_logic_vector(MAX_COORD_Z_WIDTH - 1 downto 0);
-		axis_out_data_tz: out std_logic_vector(MAX_COORD_Z_WIDTH - 1 downto 0)
+		axis_out_data: out std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+		axis_out_data_z: out std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
+		axis_out_data_tz: out std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0)
 	);
 end coord_gen_vertical_reloc;
 
@@ -54,9 +50,9 @@ architecture Behavioral of coord_gen_vertical_reloc is
 	type state_t is (ST_WORKING, ST_FINISHED);
 	signal state_curr, state_next : state_t;
 	
-	signal z_curr, z_next: unsigned(MAX_COORD_Z_WIDTH - 1 downto 0);
-	signal t_curr, t_next: unsigned(MAX_COORD_T_WIDTH - 1 downto 0);
-	signal tz_curr, tz_next: unsigned(MAX_COORD_Z_WIDTH - 1 downto 0);
+	signal z_curr, z_next: unsigned(CONST_MAX_Z_BITS - 1 downto 0);
+	signal t_curr, t_next: unsigned(CONST_MAX_T_BITS - 1 downto 0);
+	signal tz_curr, tz_next: unsigned(CONST_MAX_Z_BITS - 1 downto 0);
 	
 	
 begin

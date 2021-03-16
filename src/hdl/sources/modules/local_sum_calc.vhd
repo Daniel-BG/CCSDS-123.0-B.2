@@ -27,7 +27,8 @@ use work.ccsds_constants.all;
 
 entity local_sum_calc is
 	generic (
-		DATA_WIDTH: integer := 16
+		DATA_WIDTH: integer := 16;
+		LSUM_WIDTH: integer := 16 + 2
 	);
 	port (
 		clk, rst			: in std_logic;
@@ -41,7 +42,7 @@ entity local_sum_calc is
 		axis_in_coord_d 	: in coordinate_bounds_t;
 		axis_in_coord_ready : out std_logic;
 		axis_in_coord_valid : in std_logic;
-		axis_out_d 			: out std_logic_vector(LSUM_WIDTH(DATA_WIDTH)-1 downto 0);
+		axis_out_d 			: out std_logic_vector(LSUM_WIDTH-1 downto 0);
 		axis_out_ready 		: in std_logic;
 		axis_out_valid 		: out std_logic
 	);
@@ -99,25 +100,25 @@ begin
 		if cfg_sum_type = WIDE_NEIGHBOR_ORIENTED then
 			if saved_coord.first_y = '0' and saved_coord.first_x = '0' and saved_coord.last_x = '0' then
 				axis_out_d <= std_logic_vector(
-						resize(unsigned(axis_in_w),LSUM_WIDTH(DATA_WIDTH))  +
-						resize(unsigned(axis_in_n),LSUM_WIDTH(DATA_WIDTH)) + 
-						resize(unsigned(axis_in_ne),LSUM_WIDTH(DATA_WIDTH)) + 
-						resize(unsigned(axis_in_nw),LSUM_WIDTH(DATA_WIDTH))
+						resize(unsigned(axis_in_w),LSUM_WIDTH)  +
+						resize(unsigned(axis_in_n),LSUM_WIDTH) + 
+						resize(unsigned(axis_in_ne),LSUM_WIDTH) + 
+						resize(unsigned(axis_in_nw),LSUM_WIDTH)
 					);
 			elsif saved_coord.first_y = '1' and saved_coord.first_x = '0' then
 				axis_out_d <= std_logic_vector(
-						resize(unsigned(axis_in_w & "00"), LSUM_WIDTH(DATA_WIDTH))
+						resize(unsigned(axis_in_w & "00"), LSUM_WIDTH)
 					);
 			elsif saved_coord.first_y = '0' and saved_coord.first_x = '1' then
 				axis_out_d <= std_logic_vector(
-					resize(unsigned(axis_in_n & "0"),LSUM_WIDTH(DATA_WIDTH)) + 
-					resize(unsigned(axis_in_ne & "0"),LSUM_WIDTH(DATA_WIDTH))
+					resize(unsigned(axis_in_n & "0"),LSUM_WIDTH) + 
+					resize(unsigned(axis_in_ne & "0"),LSUM_WIDTH)
 				);
 			elsif saved_coord.first_y = '0' and saved_coord.last_x = '1' then
 				axis_out_d <= std_logic_vector(
-						resize(unsigned(axis_in_w),LSUM_WIDTH(DATA_WIDTH))  +
-						resize(unsigned(axis_in_n & "0"),LSUM_WIDTH(DATA_WIDTH)) + 
-						resize(unsigned(axis_in_nw),LSUM_WIDTH(DATA_WIDTH))
+						resize(unsigned(axis_in_w),LSUM_WIDTH)  +
+						resize(unsigned(axis_in_n & "0"),LSUM_WIDTH) + 
+						resize(unsigned(axis_in_nw),LSUM_WIDTH)
 					);
 			else --t = 0
 				axis_out_d <= (others => '0');
@@ -125,11 +126,11 @@ begin
 		elsif cfg_sum_type = WIDE_COLUMN_ORIENTED then
 			if saved_coord.first_y = '0' then
 				axis_out_d <= std_logic_vector(
-					resize(unsigned(axis_in_n & "00"), LSUM_WIDTH(DATA_WIDTH))
+					resize(unsigned(axis_in_n & "00"), DATA_WIDTH)
 				);
 			elsif saved_coord.first_y = '1' and saved_coord.first_x = '0' then
 				axis_out_d <= std_logic_vector(
-					resize(unsigned(axis_in_w & "00"), LSUM_WIDTH(DATA_WIDTH))
+					resize(unsigned(axis_in_w & "00"), DATA_WIDTH)
 				);
 			else --t = 0
 				axis_out_d <= (others => '0');

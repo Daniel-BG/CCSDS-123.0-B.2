@@ -25,32 +25,20 @@ use work.ccsds_constants.all;
 use work.ccsds_data_structures.all;
 use work.am_data_types.all;
 
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
 entity input_rearrange is
-	generic (
-		MAX_X_WIDTH: integer := 10;
-		MAX_Y_WIDTH: integer := 8;
-		MAX_Z_WIDTH: integer := 9;
-		MAX_T_WIDTH: integer := 18;
-		DATA_WIDTH: integer := CONST_MAX_D
-	);
 	port ( 
 		clk, rst 				: in std_logic;
 		finished 				: out std_logic;
-		cfg_max_x				: in std_logic_vector(MAX_X_WIDTH - 1 downto 0);
-		cfg_max_y				: in std_logic_vector(MAX_Y_WIDTH - 1 downto 0);
-		cfg_max_z 				: in std_logic_vector(MAX_Z_WIDTH - 1 downto 0);	
-		cfg_max_t				: in std_logic_vector(MAX_T_WIDTH - 1 downto 0);
-		cfg_min_preload_value 	: in std_logic_vector(MAX_Z_WIDTH*2 - 1 downto 0);
-		cfg_max_preload_value 	: in std_logic_vector(MAX_Z_WIDTH*2 - 1 downto 0);
-		axis_input_d			: in std_logic_vector(DATA_WIDTH - 1 downto 0);
+		cfg_max_x				: in std_logic_vector(CONST_MAX_X_BITS - 1 downto 0);
+		cfg_max_y				: in std_logic_vector(CONST_MAX_Y_BITS - 1 downto 0);
+		cfg_max_z 				: in std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);	
+		cfg_max_t				: in std_logic_vector(CONST_MAX_T_BITS - 1 downto 0);
+		cfg_min_preload_value 	: in std_logic_vector(CONST_MAX_Z_BITS*2 - 1 downto 0);
+		cfg_max_preload_value 	: in std_logic_vector(CONST_MAX_Z_BITS*2 - 1 downto 0);
+		axis_input_d			: in std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		axis_input_ready		: out std_logic;
 		axis_input_valid		: in std_logic;
-		axis_output_d			: out std_logic_vector(DATA_WIDTH - 1 downto 0); --make sure we got enough space
+		axis_output_d			: out std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0); --make sure we got enough space
 		axis_output_flags 		: out coordinate_bounds_array_t; --stdlv
 		axis_output_last		: out std_logic;
 		axis_output_valid		: out std_logic;
@@ -69,18 +57,18 @@ architecture Behavioral of input_rearrange is
 	signal axis_rel_coord_gen_valid		: std_logic;
 	signal axis_rel_coord_gen_ready		: std_logic;
 	signal axis_rel_coord_gen_last		: std_logic;
-	signal axis_rel_coord_gen_data 		: std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal axis_rel_coord_gen_data_z	: std_logic_vector(MAX_Z_WIDTH - 1 downto 0);
-	signal axis_rel_coord_gen_data_tz	: std_logic_vector(MAX_Z_WIDTH - 1 downto 0);
+	signal axis_rel_coord_gen_data 		: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+	signal axis_rel_coord_gen_data_z	: std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
+	signal axis_rel_coord_gen_data_tz	: std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
 	
 	--diagonal coordinate generator for the input relocator
 	signal input_coord_gen_diag_finished: std_logic;
 	signal axis_diag_coord_gen_valid 	: std_logic;
 	signal axis_diag_coord_gen_ready 	: std_logic;
 	signal axis_diag_coord_gen_last 	: std_logic;
-	signal axis_diag_coord_gen_data_z	: std_logic_vector(MAX_Z_WIDTH - 1 downto 0);
-	signal axis_diag_coord_gen_data_t 	: std_logic_vector(MAX_T_WIDTH - 1 downto 0);
-	signal axis_diag_coord_gen_data_tz 	: std_logic_vector(MAX_Z_WIDTH - 1 downto 0);
+	signal axis_diag_coord_gen_data_z	: std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
+	signal axis_diag_coord_gen_data_t 	: std_logic_vector(CONST_MAX_T_BITS - 1 downto 0);
+	signal axis_diag_coord_gen_data_tz 	: std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
 	
 	--diagonal coordinate generator for the flag generator (easier to have two
 	--diagonal generators instead of a splitter. Similar resources but no sync required
@@ -88,23 +76,23 @@ architecture Behavioral of input_rearrange is
 	signal axis_flag_coord_gen_valid 	: std_logic;
 	signal axis_flag_coord_gen_ready 	: std_logic;
 	signal axis_flag_coord_gen_last 	: std_logic;
-	signal axis_flag_coord_gen_data_z	: std_logic_vector(MAX_Z_WIDTH - 1 downto 0);
-	signal axis_flag_coord_gen_data_t 	: std_logic_vector(MAX_T_WIDTH - 1 downto 0);
-	signal axis_flag_coord_gen_data_tz 	: std_logic_vector(MAX_Z_WIDTH - 1 downto 0);
+	signal axis_flag_coord_gen_data_z	: std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
+	signal axis_flag_coord_gen_data_t 	: std_logic_vector(CONST_MAX_T_BITS - 1 downto 0);
+	signal axis_flag_coord_gen_data_tz 	: std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
 	
 	--output from relocator
 	signal sample_relocator_finished: std_logic;
-	signal axis_reloc_d		: std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal axis_reloc_d		: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal axis_reloc_ready	: std_logic;
 	signal axis_reloc_valid	: std_logic;
 	signal axis_reloc_last	: std_logic;
 	
 	--signals coming from the divisor before the flagging
-	signal axis_flag_coord_y: std_logic_vector(MAX_Y_WIDTH - 1 downto 0);
-	signal axis_flag_coord_y_pre: std_logic_vector(MAX_T_WIDTH - 1 downto 0);
-	signal axis_flag_coord_x: std_logic_vector(MAX_X_WIDTH - 1 downto 0);
+	signal axis_flag_coord_y: std_logic_vector(CONST_MAX_Y_BITS - 1 downto 0);
+	signal axis_flag_coord_y_pre: std_logic_vector(CONST_MAX_T_BITS - 1 downto 0);
+	signal axis_flag_coord_x: std_logic_vector(CONST_MAX_X_BITS - 1 downto 0);
 	signal axis_flag_coord_ready, axis_flag_coord_valid, axis_flag_coord_last: std_logic;
-	signal axis_flag_coord_z: std_logic_vector(MAX_Z_WIDTH - 1 downto 0);
+	signal axis_flag_coord_z: std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
 	
 	--signals from the flag generation module
 	signal axis_flag_ready, axis_flag_valid, axis_flag_last: std_logic;
@@ -139,11 +127,6 @@ begin
 	
 	
 	input_vertical_reloc_coord_gen: entity work.coord_gen_vertical_reloc	
-		generic map (
-			MAX_COORD_T_WIDTH => MAX_T_WIDTH,
-			MAX_COORD_Z_WIDTH => MAX_Z_WIDTH,
-			DATA_WIDTH => DATA_WIDTH
-		)
 		port map (
 			--control signals 
 			clk => clk, rst => rst,
@@ -166,10 +149,6 @@ begin
 	
 	
 	input_coord_gen_diagonal: entity work.coord_gen_diagonal
-		generic map (
-			MAX_COORD_Z_WIDTH => MAX_Z_WIDTH,
-			MAX_COORD_T_WIDTH => MAX_T_WIDTH
-		)
 		port map (
 			clk => clk, rst => rst,
 			finished => input_coord_gen_diag_finished,
@@ -188,8 +167,8 @@ begin
 	
 	relocator: entity work.sample_relocator 
 		generic map (
-			MAX_SIDE_LOG => MAX_Z_WIDTH,
-			DATA_WIDTH   => DATA_WIDTH
+			MAX_SIDE_LOG => CONST_MAX_Z_BITS,
+			DATA_WIDTH   => CONST_MAX_DATA_WIDTH
 		)
 		port map (
 			--control signals 
@@ -220,10 +199,6 @@ begin
 		
 		
 	flag_coord_gen_diagonal: entity work.coord_gen_diagonal
-		generic map (
-			MAX_COORD_Z_WIDTH => MAX_Z_WIDTH,
-			MAX_COORD_T_WIDTH => MAX_T_WIDTH
-		)
 		port map (
 			clk => clk, rst => rst, 
 			finished => flag_coord_gen_diag_finished,
@@ -241,10 +216,10 @@ begin
 		
 	xy_coord_gen: entity work.axis_segmented_unsigned_divider
 		generic map (
-			DIVIDEND_WIDTH => MAX_T_WIDTH,
-			DIVISOR_WIDTH => MAX_X_WIDTH,
+			DIVIDEND_WIDTH => CONST_MAX_T_BITS,
+			DIVISOR_WIDTH => CONST_MAX_X_BITS,
 			LAST_POLICY => PASS_ZERO,
-			USER_WIDTH => MAX_Z_WIDTH,
+			USER_WIDTH => CONST_MAX_Z_BITS,
 			USER_POLICY => PASS_ZERO
 		)
 		port map ( 
@@ -269,11 +244,6 @@ begin
 		
 		
 	flagger: entity work.flag_gen 
-		generic map (
-			MAX_X_WIDTH => MAX_X_WIDTH,
-			MAX_Y_WIDTH => MAX_Y_WIDTH,
-			MAX_Z_WIDTH => MAX_Z_WIDTH
-		)
 		port map (
 			cfg_max_x			=> cfg_max_x,
 			cfg_max_y			=> cfg_max_y,
@@ -292,7 +262,7 @@ begin
 		
 	output_sync: entity work.axis_synchronizer_2	
 		generic map (
-			DATA_WIDTH_0 => DATA_WIDTH,
+			DATA_WIDTH_0 => CONST_MAX_DATA_WIDTH,
 			DATA_WIDTH_1 => coordinate_bounds_array_t'length,
 			LATCH => true,
 			LAST_POLICY => PASS_ZERO

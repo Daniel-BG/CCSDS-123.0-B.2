@@ -21,6 +21,7 @@
 package ccsds_math_functions is
 	--headers
 	function BITS(invalue: integer) return integer;
+	function MAX(a, b: integer) return integer;
 
 end package ccsds_math_functions;
 
@@ -36,6 +37,16 @@ package body ccsds_math_functions is
 			i := i + 1;
 		end loop;
 		return -1;
+	end function;
+	
+		
+	function MAX(a, b: integer) return integer is
+	begin
+		if a > b then
+			return a;
+		else
+			return b;
+		end if;
 	end function;
 
 end ccsds_math_functions;

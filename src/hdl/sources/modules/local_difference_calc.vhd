@@ -27,22 +27,24 @@ use work.ccsds_constants.all;
 
 entity local_difference_calc is
 	generic (
-		DATA_WIDTH: integer := 16
+		DATA_WIDTH: integer := 16;
+		LSUM_WIDTH: integer := 16 + 2;
+		LDIF_WIDTH: integer := 16 + 3
 	);
 	port (
 		clk, rst			: in std_logic;
 		axis_in_w 			: in std_logic_vector(DATA_WIDTH - 1 downto 0);
 		axis_in_nw 			: in std_logic_vector(DATA_WIDTH - 1 downto 0);
 		axis_in_n 			: in std_logic_vector(DATA_WIDTH - 1 downto 0);
-		axis_in_ls 			: in std_logic_vector(LSUM_WIDTH(DATA_WIDTH) - 1 downto 0);
+		axis_in_ls 			: in std_logic_vector(LSUM_WIDTH - 1 downto 0);
 		axis_in_ready 		: out std_logic;
 		axis_in_valid 		: in std_logic;
 		axis_in_coord_d 	: in coordinate_bounds_t;
 		axis_in_coord_ready : out std_logic;
 		axis_in_coord_valid : in std_logic;
-		axis_out_nd 		: out std_logic_vector(LDIF_WIDTH(DATA_WIDTH)-1 downto 0);
-		axis_out_nwd 		: out std_logic_vector(LDIF_WIDTH(DATA_WIDTH)-1 downto 0);
-		axis_out_wd 		: out std_logic_vector(LDIF_WIDTH(DATA_WIDTH)-1 downto 0);
+		axis_out_nd 		: out std_logic_vector(LDIF_WIDTH-1 downto 0);
+		axis_out_nwd 		: out std_logic_vector(LDIF_WIDTH-1 downto 0);
+		axis_out_wd 		: out std_logic_vector(LDIF_WIDTH-1 downto 0);
 		axis_out_ready 		: in std_logic;
 		axis_out_valid 		: out std_logic
 	);
@@ -99,29 +101,29 @@ begin
 		--calculate output
 		if saved_coord.first_x = '0' and saved_coord.first_y = '0' then
 			axis_out_nd <= std_logic_vector(
-					resize(unsigned(axis_in_n & "00"),LDIF_WIDTH(DATA_WIDTH))  -
-					resize(unsigned(axis_in_ls),LDIF_WIDTH(DATA_WIDTH))
+					resize(unsigned(axis_in_n & "00"),LDIF_WIDTH)  -
+					resize(unsigned(axis_in_ls),LDIF_WIDTH)
 				);
 			axis_out_wd <= std_logic_vector(
-					resize(unsigned(axis_in_w & "00"),LDIF_WIDTH(DATA_WIDTH))  -
-					resize(unsigned(axis_in_ls),LDIF_WIDTH(DATA_WIDTH))
+					resize(unsigned(axis_in_w & "00"),LDIF_WIDTH)  -
+					resize(unsigned(axis_in_ls),LDIF_WIDTH)
 				);
 			axis_out_nwd <= std_logic_vector(
-					resize(unsigned(axis_in_nw & "00"),LDIF_WIDTH(DATA_WIDTH))  -
-					resize(unsigned(axis_in_ls),LDIF_WIDTH(DATA_WIDTH))
+					resize(unsigned(axis_in_nw & "00"),LDIF_WIDTH)  -
+					resize(unsigned(axis_in_ls),LDIF_WIDTH)
 				);
 		elsif saved_coord.first_x = '1' and saved_coord.first_y = '0' then
 			axis_out_nd <= std_logic_vector(
-					resize(unsigned(axis_in_n & "00"),LDIF_WIDTH(DATA_WIDTH))  -
-					resize(unsigned(axis_in_ls),LDIF_WIDTH(DATA_WIDTH))
+					resize(unsigned(axis_in_n & "00"),LDIF_WIDTH)  -
+					resize(unsigned(axis_in_ls),LDIF_WIDTH)
 				);
 			axis_out_wd <= std_logic_vector(
-					resize(unsigned(axis_in_n & "00"),LDIF_WIDTH(DATA_WIDTH))  -
-					resize(unsigned(axis_in_ls),LDIF_WIDTH(DATA_WIDTH))
+					resize(unsigned(axis_in_n & "00"),LDIF_WIDTH)  -
+					resize(unsigned(axis_in_ls),LDIF_WIDTH)
 				);
 			axis_out_nwd <= std_logic_vector(
-					resize(unsigned(axis_in_n & "00"),LDIF_WIDTH(DATA_WIDTH))  -
-					resize(unsigned(axis_in_ls),LDIF_WIDTH(DATA_WIDTH))
+					resize(unsigned(axis_in_n & "00"),LDIF_WIDTH)  -
+					resize(unsigned(axis_in_ls),LDIF_WIDTH)
 				);
 		else
 			axis_out_nd 	<= (others => '0');

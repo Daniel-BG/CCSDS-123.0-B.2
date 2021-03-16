@@ -23,20 +23,16 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.ccsds_data_structures.all;
+use work.ccsds_constants.all;
 
 entity flag_gen is
-	generic (
-		MAX_X_WIDTH: integer := 10;
-		MAX_Y_WIDTH: integer := 10;
-		MAX_Z_WIDTH: integer := 10
-	);
 	port (
-		cfg_max_x				: in std_logic_vector(MAX_X_WIDTH - 1 downto 0);
-		cfg_max_y				: in std_logic_vector(MAX_Y_WIDTH - 1 downto 0);
-		cfg_max_z				: in std_logic_vector(MAX_Z_WIDTH - 1 downto 0);
-		axis_input_x			: in std_logic_vector(MAX_X_WIDTH - 1 downto 0);
-		axis_input_y			: in std_logic_vector(MAX_Y_WIDTH - 1 downto 0);
-		axis_input_z			: in std_logic_vector(MAX_Z_WIDTH - 1 downto 0);
+		cfg_max_x				: in std_logic_vector(CONST_MAX_X_BITS - 1 downto 0);
+		cfg_max_y				: in std_logic_vector(CONST_MAX_Y_BITS - 1 downto 0);
+		cfg_max_z				: in std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
+		axis_input_x			: in std_logic_vector(CONST_MAX_X_BITS - 1 downto 0);
+		axis_input_y			: in std_logic_vector(CONST_MAX_Y_BITS - 1 downto 0);
+		axis_input_z			: in std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
 		axis_input_ready		: out std_logic;
 		axis_input_valid		: in std_logic;
 		axis_input_last 		: in std_logic;
