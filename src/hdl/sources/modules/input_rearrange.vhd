@@ -39,7 +39,7 @@ entity input_rearrange is
 		axis_input_ready		: out std_logic;
 		axis_input_valid		: in std_logic;
 		axis_output_d			: out std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0); --make sure we got enough space
-		axis_output_flags 		: out coordinate_bounds_array_t; --stdlv
+		axis_output_coord 		: out coordinate_bounds_array_t; --stdlv
 		axis_output_last		: out std_logic;
 		axis_output_valid		: out std_logic;
 		axis_output_ready		: in std_logic
@@ -282,7 +282,7 @@ begin
 			output_valid  => axis_output_valid,
 			output_ready  => axis_output_ready,
 			output_data_0 => axis_output_d,
-			output_data_1 => axis_output_flags,
+			output_data_1 => axis_output_coord,
 			output_last	  => axis_output_last
 		);
 		

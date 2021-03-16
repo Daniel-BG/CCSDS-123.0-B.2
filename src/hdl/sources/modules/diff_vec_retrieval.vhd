@@ -22,20 +22,18 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.ccsds_data_structures.all;
+use work.ccsds_constants.all;
 
 entity diff_vec_retrieval is
-	generic (
-		DATA_WIDTH: integer := 16
-	);
 	port ( 
 		clk, rst: in std_logic;
 		axis_in_coord_d: in coordinate_bounds_array_t;
 		axis_in_coord_valid: in std_logic;
 		axis_in_coord_ready: out std_logic;
-		axis_in_data_d: in std_logic_vector(DATA_WIDTH - 1 downto 0);
+		axis_in_data_d: in std_logic_vector(CONST_DIFFVEC_BITS - 1 downto 0);
 		axis_in_data_valid: in std_logic;
 		axis_in_data_ready: out std_logic;
-		axis_out_data_d: out std_logic_vector(DATA_WIDTH - 1 downto 0);
+		axis_out_data_d: out std_logic_vector(CONST_DIFFVEC_BITS - 1 downto 0);
 		axis_out_data_valid: out std_logic;
 		axis_out_data_ready: in std_logic
 	);
@@ -50,7 +48,7 @@ begin
 
 	queue_retrieval: entity work.axis_conditioned_retrieval
 		generic map ( 
-			DATA_WIDTH => DATA_WIDTH 
+			DATA_WIDTH => CONST_DIFFVEC_BITS 
 		)
 		port map (
 			clk => clk, rst => rst,
