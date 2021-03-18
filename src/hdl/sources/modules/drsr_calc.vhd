@@ -23,11 +23,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.ccsds_constants.all;
 use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+use work.ccsds_data_structures.all;
+use work.am_data_types.all;
 
 entity drsr_calc is
 	port ( 
@@ -39,6 +36,7 @@ entity drsr_calc is
 		axis_in_cqbc_d		: in std_logic_vector(CONST_CQBC_BITS - 1 downto 0);
 		axis_in_cqbc_valid  : in std_logic;
 		axis_in_cqbc_ready	: out std_logic;
+		axis_in_cqbc_coord	: in coordinate_bounds_array_t;
 		axis_in_qi_d		: in std_logic_vector(CONST_QI_BITS - 1 downto 0);
 		axis_in_qi_valid 	: in std_logic;
 		axis_in_qi_ready	: out std_logic;
@@ -50,7 +48,8 @@ entity drsr_calc is
 		axis_in_hrpsv_ready	: out std_logic;
 		axis_out_drsr_d		: out std_logic_vector(CONST_DRSR_BITS - 1 downto 0);
 		axis_out_drsr_valid	: out std_logic;
-		axis_out_drsr_ready : in std_logic
+		axis_out_drsr_ready : in std_logic;
+		axis_out_drsr_coord : out coordinate_bounds_array_t
 	);
 end drsr_calc;
 
@@ -77,6 +76,7 @@ architecture Behavioral of drsr_calc is
 	signal joint_sm_valid, joint_sm_ready: std_logic;
 	signal joint_sm_mevqi: std_logic_vector(mev_qi_shifted'range);
 	signal joint_sm_cqbc: std_logic_vector(cqbc_shifted_by_omega'range);
+	signal joint_sm_coord: coordinate_bounds_array_t;
 	
 	signal sm_calc: std_logic_vector(joint_sm_cqbc'high + 3 downto 0);
 	
@@ -86,6 +86,7 @@ architecture Behavioral of drsr_calc is
 	signal joint_last_valid, joint_last_ready: std_logic;
 	signal joint_last_fmsm: std_logic_vector(fm_times_sm_sb2'range);
 	signal joint_last_hrpsv: std_logic_vector(hrpsv_times_damping'range);
+	signal joint_last_coord: coordinate_bounds_array_t;
 	
 	signal final_unshifted: std_logic_vector(fm_times_sm_sb2'range);
 	
@@ -128,7 +129,9 @@ begin
 		Generic map (
 			DATA_WIDTH_0 => mev_qi_shifted'length,
 			DATA_WIDTH_1 => cqbc_shifted_by_omega'length,
-			LATCH 		 => false
+			LATCH 		 => false,
+			USER_WIDTH   => coordinate_bounds_array_t'length,
+			USER_POLICY  => PASS_ONE
 		)
 		Port map (
 			clk => clk , rst => rst,
@@ -139,11 +142,13 @@ begin
 			input_1_valid => axis_in_cqbc_valid,
 			input_1_ready => axis_in_cqbc_ready,
 			input_1_data  => cqbc_shifted_by_omega,
+			input_1_user  => axis_in_cqbc_coord,
 			--to output axi ports
 			output_valid  => joint_sm_valid,
 			output_ready  => joint_sm_ready,
 			output_data_0 => joint_sm_mevqi,
-			output_data_1 => joint_sm_cqbc
+			output_data_1 => joint_sm_cqbc,
+			output_user   => joint_sm_coord
 		);
 		
 	sm_calc <= std_logic_vector(signed("0" & joint_sm_cqbc) - signed(joint_sm_mevqi));
@@ -154,7 +159,9 @@ begin
 		Generic map (
 			DATA_WIDTH_0 => fm_times_sm_sb2'length,
 			DATA_WIDTH_1 => hrpsv_times_damping'length,
-			LATCH 		 => false
+			LATCH 		 => false,
+			USER_WIDTH   => coordinate_bounds_array_t'length,
+			USER_POLICY  => PASS_ZERO
 		)
 		Port map (
 			clk => clk , rst => rst,
@@ -162,6 +169,7 @@ begin
 			input_0_valid => joint_sm_valid,
 			input_0_ready => joint_sm_ready,
 			input_0_data  => fm_times_sm_sb2,
+			input_0_user  => joint_sm_coord,
 			input_1_valid => axis_in_hrpsv_valid,
 			input_1_ready => axis_in_hrpsv_ready,
 			input_1_data  => hrpsv_times_damping,
@@ -169,7 +177,8 @@ begin
 			output_valid  => joint_last_valid,
 			output_ready  => joint_last_ready,
 			output_data_0 => joint_last_fmsm,
-			output_data_1 => joint_last_hrpsv
+			output_data_1 => joint_last_hrpsv,
+			output_user   => joint_last_coord
 		);
 		
 	final_unshifted <= std_logic_vector(signed(joint_last_fmsm) + signed("0" & joint_last_hrpsv) - signed("0" & damping_shifted_by_omega_p1));
@@ -178,6 +187,7 @@ begin
 	axis_out_drsr_d <= std_logic_vector(resize(shift_right(unsigned(final_unshifted), to_integer(unsigned(omega_plus_res_p1))), axis_out_drsr_d'length));
 	axis_out_drsr_valid <= joint_last_valid;
 	joint_last_ready <= axis_out_drsr_ready;
+	axis_out_drsr_coord <= joint_last_coord;
 
 end Behavioral;
 

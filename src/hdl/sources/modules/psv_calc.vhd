@@ -21,35 +21,24 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+use work.ccsds_constants.all;
+use work.ccsds_data_structures.all;
 
 entity psv_calc is
-	generic (
-		PSV_WIDTH: integer := 16;
-		DRPSV_WIDTH: integer := 16 + 1
-	);
 	Port (
-		axis_in_drpsv_d 	: in std_logic_vector(DRPSV_WIDTH - 1 downto 0);
+		axis_in_drpsv_d 	: in std_logic_vector(CONST_DRPSV_BITS - 1 downto 0);
 		axis_in_drpsv_ready	: out std_logic;
 		axis_in_drpsv_valid	: in std_logic;
-		axis_out_psv_d 	: out std_logic_vector(DRPSV_WIDTH - 1 downto 0);
-		axis_out_psv_ready: in std_logic;
-		axis_out_psv_valid: out std_logic
+		axis_in_drpsv_coord : in coordinate_bounds_array_t;
+		axis_out_psv_d 		: out std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+		axis_out_psv_ready	: in std_logic;
+		axis_out_psv_valid	: out std_logic;
+		axis_out_psv_coord 	: out coordinate_bounds_array_t
 	);
 end psv_calc;
 
 architecture Behavioral of psv_calc is
 begin
-	
-	assert PSV_WIDTH = DRPSV_WIDTH - 1 report "ERROR" severity failure;
 	
 	axis_in_drpsv_ready <= axis_out_psv_ready;
 	axis_out_psv_valid <= axis_in_drpsv_valid;

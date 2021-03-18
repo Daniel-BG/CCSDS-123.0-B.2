@@ -56,7 +56,7 @@ begin
 		std_logic_vector(resize(signed(t_minus_samples_shifted_plus_vmin), t_clipped'length));
 		
 	axis_wuse_d <= std_logic_vector(
-		signed("0" & t_clipped) + signed("0" & cfg_depth) + signed("0" & cfg_omega) 
+		signed("00" & t_clipped) + signed("00" & cfg_depth) + signed("00" & cfg_omega) 
 	);
 	axis_wuse_valid <= axis_coord_valid;
 	axis_coord_ready <= axis_wuse_ready;

@@ -65,6 +65,7 @@ package ccsds_constants is
 	constant CONST_MAX_OMEGA_WIDTH_BITS	: integer := BITS(CONST_MAX_OMEGA_WIDTH);		
 	constant CONST_MAX_DATA_WIDTH_BITS	: integer := BITS(CONST_MAX_DATA_WIDTH);	
 	constant CONST_MAX_P_WIDTH_BITS  	: integer := BITS(CONST_MAX_P);
+	constant CONST_MAX_C_BITS			: integer := BITS(CONST_MAX_C);
 	
 	constant CONST_MAX_X_BITS			: integer := BITS(CONST_MAX_X);
 	constant CONST_MAX_Y_BITS			: integer := BITS(CONST_MAX_Y);
@@ -78,6 +79,7 @@ package ccsds_constants is
 	constant CONST_DRSR_BITS 			: integer := CONST_MAX_DATA_WIDTH + 1;
 	constant CONST_DRPSV_BITS 			: integer := CONST_MAX_DATA_WIDTH + 1;
 	constant CONST_DRPE_BITS 			: integer := CONST_MAX_DATA_WIDTH + 2;
+	constant CONST_PR_BITS 				: integer := CONST_MAX_DATA_WIDTH + 1;
 	
 	constant CONST_MEV_BITS 			: integer := MAX(CONST_ABS_ERR_BITS, CONST_REL_ERR_BITS);
 	constant CONST_PCLD_BITS 			: integer := CONST_MAX_OMEGA_WIDTH + 3 + BITS((2**CONST_MAX_DATA_WIDTH - 1)*(8*CONST_MAX_P + 19));
@@ -89,9 +91,12 @@ package ccsds_constants is
 	
 	constant CONST_DIFFVEC_BITS 		: integer := CONST_MAX_C * CONST_LDIF_BITS;
 	constant CONST_CLDVEC_BITS 			: integer := CONST_MAX_P * CONST_LDIF_BITS;
+	constant CONST_DIRDIFFVEC_BITS		: integer := 3 * CONST_LDIF_BITS;
 	constant CONST_WEIGHTVEC_BITS		: integer := CONST_MAX_C * CONST_MAX_OMEGA_WIDTH;
 	
 	constant CONST_W_UPDATE_BITS		: integer := CONST_LDIF_BITS - CONST_VMIN - CONST_WEO_MIN - CONST_DATA_WIDTH_MIN + CONST_OMEGA_WIDTH_MAX; --should be 64
+	
+	constant CONST_THETA_BITS			: integer := CONST_MAX_DATA_WIDTH;
 	--ALGORITM CONSTANTS
 	
 	

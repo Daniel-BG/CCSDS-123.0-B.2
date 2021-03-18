@@ -51,6 +51,12 @@ package ccsds_data_structures is
 	subtype coordinate_bounds_array_t is std_logic_vector(5 downto 0);
 	function CB2STDLV(cb: coordinate_bounds_t) return coordinate_bounds_array_t;
 	function STDLV2CB(stdlv: coordinate_bounds_array_t) return coordinate_bounds_t;
+	subtype coordinate_position_array_t is std_logic_vector(BITS(CONST_MAX_X)+ BITS(CONST_MAX_Y) + BITS(CONST_MAX_Z) + BITS(CONST_MAX_T) - 1 downto 0);
+	function CP2STDLV(cp: coordinate_position_t) return coordinate_position_array_t;
+	function STDLV2CP(stdlv: coordinate_position_array_t) return coordinate_position_t;
+	subtype coordinate_array_t is std_logic_vector(BITS(CONST_MAX_X)+ BITS(CONST_MAX_Y) + BITS(CONST_MAX_Z) + BITS(CONST_MAX_T) + 6 - 1 downto 0);
+	function C2STDLV(ca: coordinate_t) return coordinate_array_t;
+	function STDLV2C(stdlv: coordinate_array_t) return coordinate_t;  
 
 end ccsds_data_structures;
 
@@ -74,6 +80,40 @@ package body ccsds_data_structures is
 		cb.last_y  := stdlv(1);
 		cb.last_z  := stdlv(0);
 		return cb;
+	end function;
+	
+	
+	function CP2STDLV(cp: coordinate_position_t) return coordinate_position_array_t is
+		variable stdlv: coordinate_position_array_t;
+	begin
+		stdlv := cp.x & cp.y & cp.z & cp.t;
+		return stdlv;
+	end function;
+	
+	function STDLV2CP(stdlv: coordinate_position_array_t) return coordinate_position_t is
+		variable cp: coordinate_position_t;
+	begin
+		cp.x := stdlv(stdlv'high downto stdlv'high + 1 - BITS(CONST_MAX_X));
+		cp.y := stdlv(stdlv'high - BITS(CONST_MAX_X) downto stdlv'high - BITS(CONST_MAX_X) - BITS(CONST_MAX_Y));
+		cp.z := stdlv(BITS(CONST_MAX_Z) + BITS(CONST_MAX_T) - 1 downto BITS(CONST_MAX_T));
+		cp.t := stdlv(BITS(CONST_MAX_T) - 1 downto 0);
+		return cp;
+	end function;
+	
+	
+	function C2STDLV(ca: coordinate_t) return coordinate_array_t is
+		variable stdlv: coordinate_array_t;
+	begin
+		stdlv := CP2STDLV(ca.position) & CB2STDLV(ca.bounds);
+		return stdlv;
+	end function;
+	
+	function STDLV2C(stdlv: coordinate_array_t) return coordinate_t is
+		variable c: coordinate_t;
+	begin
+		c.position := STDLV2CP(stdlv(stdlv'high downto coordinate_bounds_array_t'length));
+		c.bounds := STDLV2CB(stdlv(coordinate_bounds_array_t'length - 1 downto 0));
+		return c;
 	end function;
 
 end ccsds_data_structures;

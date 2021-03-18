@@ -24,6 +24,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use work.ccsds_constants.all;
 use work.ccsds_data_structures.all;
 use ieee.numeric_std.all;
+use work.am_data_types.all;
 
 --weights are not updated for t=0. Nonetheless, we perform the calculations since the queues will be full. We then throw away the result
 entity wu_calc is
@@ -46,7 +47,8 @@ entity wu_calc is
 		axis_drpe_valid 	: in std_logic;
 		axis_out_wv_ready	: in std_logic;
 		axis_out_wv_valid 	: out std_logic;
-		axis_out_wv_d		: out std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0)
+		axis_out_wv_d		: out std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
+		axis_out_wv_coord	: out coordinate_bounds_array_t
 	);
 end wu_calc;
 
@@ -58,6 +60,7 @@ architecture Behavioral of wu_calc is
 	signal joint_drpe_dv_dv: std_logic_vector(CONST_DIFFVEC_BITS - 1 downto 0);
 	type mult_out_data_t is array(0 to CONST_MAX_C - 1) of std_logic_vector(CONST_LDIF_BITS - 1 downto 0);
 	signal joint_drpe_dv_data: mult_out_data_t;
+	signal joint_drpe_dv_coord: coordinate_bounds_array_t;
 	
 	--second stage, shift by exponent
 	subtype stage_ctrl_signals_t is std_logic_vector(CONST_MAX_C - 1 downto 0);
@@ -67,6 +70,8 @@ architecture Behavioral of wu_calc is
 	type wuse_array_t is array(0 to CONST_MAX_C - 1) of std_logic_vector(CONST_WUSE_BITS - 1 downto 0);
 	signal joint_add_exp: wuse_array_t;
 	signal joint_add_mult: mult_out_data_t;
+	type coord_arr_t is array(0 to CONST_MAX_C - 1) of coordinate_bounds_array_t;
+	signal joint_add_coord: coord_arr_t;
 	type addreg_t is array(0 to CONST_MAX_C - 1) of std_logic_vector(CONST_W_UPDATE_BITS - 1 downto 0);
 	signal weight_addval, weight_addval_halved: addreg_t;
 	
@@ -76,6 +81,7 @@ architecture Behavioral of wu_calc is
 	type weight_arr_t is array(0 to CONST_MAX_C - 1) of std_logic_vector(CONST_MAX_OMEGA_WIDTH - 1 downto 0);
 	signal joint_unclamped_weight: weight_arr_t;
 	signal joint_unclamped_addval, joint_unclamped_finalres: addreg_t;
+	signal joint_unclamped_coord: coord_arr_t;
 	signal omega_min, omega_max: std_logic_vector(CONST_MAX_OMEGA_WIDTH - 1 downto 0);
 	
 begin
@@ -86,7 +92,9 @@ begin
 		Generic map (
 			DATA_WIDTH_0 => CONST_DRPE_BITS,
 			DATA_WIDTH_1 => CONST_DIFFVEC_BITS,
-			LATCH		 => false
+			LATCH		 => false,
+			USER_WIDTH   => coordinate_bounds_array_t'length,
+			USER_POLICY  => PASS_ONE
 		)
 		Port map (
 			clk => clk, rst => rst,
@@ -97,11 +105,13 @@ begin
 			input_1_valid => axis_dv_valid,
 			input_1_ready => axis_dv_ready,
 			input_1_data  => axis_dv_d_filtered,
+			input_1_user  => axis_dv_coord,
 			--to output axi ports
 			output_valid  => joint_drpe_dv_valid,
 			output_ready  => joint_drpe_dv_ready, 
 			output_data_0 => joint_drpe_dv_drpe,
-			output_data_1 => joint_drpe_dv_dv
+			output_data_1 => joint_drpe_dv_dv,
+			output_user   => joint_drpe_dv_coord
 		);
 		
 	gen_drpe_diff_multipliers: for i in 0 to CONST_MAX_C - 1 generate
@@ -116,7 +126,9 @@ begin
 			Generic map (
 				DATA_WIDTH_0 => CONST_WUSE_BITS,
 				DATA_WIDTH_1 => CONST_LDIF_BITS,
-				LATCH		 => false
+				LATCH		 => false,
+				USER_WIDTH 	 => coordinate_bounds_array_t'length,
+				USER_POLICY  => PASS_ONE
 			)
 			Port map (
 				clk => clk, rst => rst,
@@ -127,11 +139,13 @@ begin
 				input_1_valid => joint_drpe_dv_valid,
 				input_1_ready => mult_exp_syncers_ready(i),
 				input_1_data  => joint_drpe_dv_data(i),
+				input_1_user  => joint_drpe_dv_coord,
 				--to output axi ports
 				output_valid  => joint_add_valid(i),
 				output_ready  => joint_add_ready(i), 
 				output_data_0 => joint_add_exp(i),
-				output_data_1 => joint_add_mult(i)
+				output_data_1 => joint_add_mult(i),
+				output_user   => joint_add_coord(i)
 			);
 			weight_addval(i) <= 
 				std_logic_vector(1 + shift_left(resize(signed(joint_add_mult(i)), CONST_W_UPDATE_BITS), - to_integer(signed(joint_add_exp(i)))))
@@ -150,7 +164,9 @@ begin
 			Generic map (
 				DATA_WIDTH_0 => CONST_MAX_OMEGA_WIDTH,
 				DATA_WIDTH_1 => CONST_W_UPDATE_BITS,
-				LATCH		 => false
+				LATCH		 => false,
+				USER_WIDTH   => coordinate_bounds_array_t'length,
+				USER_POLICY  => PASS_ONE
 			)
 			Port map (
 				clk => clk, rst => rst,
@@ -161,11 +177,13 @@ begin
 				input_1_valid => joint_add_valid(i),
 				input_1_ready => joint_add_ready(i),
 				input_1_data  => weight_addval_halved(i),
+				input_1_user  => joint_add_coord(i),
 				--to output axi ports
 				output_valid  => joint_unclamped_valid(i),
 				output_ready  => joint_unclamped_ready(i),
 				output_data_0 => joint_unclamped_weight(i),
-				output_data_1 => joint_unclamped_addval(i)
+				output_data_1 => joint_unclamped_addval(i),
+				output_user   => joint_unclamped_coord(i)
 			);
 		joint_unclamped_ready(i) <= axis_out_wv_ready;
 		joint_unclamped_finalres(i) <= std_logic_vector(signed(joint_unclamped_addval(i)) + signed(joint_unclamped_weight(i)));
@@ -178,6 +196,7 @@ begin
 	
 	axis_wv_ready <= axis_wv_ready_vec(0);
 	axis_out_wv_valid <= joint_unclamped_valid(0);
+	axis_out_wv_coord <= joint_unclamped_coord(0);
 	
 
 	
