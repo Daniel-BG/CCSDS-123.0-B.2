@@ -28,7 +28,7 @@ entity weight_module is
 	Port ( 
 		clk, rst				: in std_logic;
 		--cfgs
-		cfg_samples				: in std_logic_vector(CONST_MAX_X_BITS - 1 downto 0);
+		cfg_samples				: in std_logic_vector(CONST_MAX_SAMPLES_BITS - 1 downto 0);
 		cfg_tinc				: in std_logic_vector(CONST_TINC_BITS - 1 downto 0);
 		cfg_vmax, cfg_vmin		: in std_logic_vector(CONST_VMINMAX_BITS - 1 downto 0);
 		cfg_depth				: in std_logic_vector(CONST_MAX_DATA_WIDTH_BITS - 1 downto 0);
@@ -43,7 +43,7 @@ entity weight_module is
 		axis_in_coord_valid		: in std_logic;
 		axis_in_coord_ready		: out std_logic;
 		--axis for wuse coordinate
-		axis_in_wuse_coord_t	: in std_logic_vector(CONST_MAX_T_BITS - 1 downto 0);
+		axis_in_wuse_coord_t	: in std_logic_vector(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 		axis_in_wuse_coord_valid: in std_logic;
 		axis_in_wuse_coord_ready: out std_logic;
 		--axis for difference vector (update)
@@ -74,6 +74,8 @@ architecture Behavioral of weight_module is
 	--wuse outputs
 	signal axis_wuse_wu_ready, axis_wuse_wu_valid: std_logic;
 	signal axis_wuse_wu_d: std_logic_vector(CONST_WUSE_BITS - 1 downto 0);
+	signal axis_wuse_wu_l_ready, axis_wuse_wu_l_valid: std_logic;
+	signal axis_wuse_wu_l_d: std_logic_vector(CONST_WUSE_BITS - 1 downto 0);
 	
 	--weight retrieval
 	signal axis_wret_ws_d: std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
@@ -97,7 +99,7 @@ begin
 	input_weight_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_WEIGHTVEC_BITS,
-			FIFO_DEPTH => CONST_MAX_Z
+			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
 			clk => clk, rst => rst,
@@ -113,7 +115,7 @@ begin
 	saved_weight_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_WEIGHTVEC_BITS,
-			FIFO_DEPTH => CONST_MAX_Z
+			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
 			clk => clk, rst => rst,
@@ -169,7 +171,7 @@ begin
 	weight_update_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_WEIGHTVEC_BITS,
-			FIFO_DEPTH => CONST_MAX_Z
+			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
 			clk => clk, rst => rst,
@@ -197,6 +199,20 @@ begin
 			axis_wuse_valid		=> axis_wuse_wu_valid,
 			axis_wuse_d			=> axis_wuse_wu_d
 		);
+		
+	wuse_latch: entity work.AXIS_DATA_LATCH
+		Generic map (
+			DATA_WIDTH => CONST_WUSE_BITS
+		)
+		Port map ( 
+			clk => clk, rst => rst,
+			input_data	=> axis_wuse_wu_d,
+			input_ready => axis_wuse_wu_ready,
+			input_valid => axis_wuse_wu_valid,
+			output_data	=> axis_wuse_wu_l_d,
+			output_ready=> axis_wuse_wu_l_ready,
+			output_valid=> axis_wuse_wu_l_valid
+		);
 
 	weight_update: entity work.wu_calc
 		Port map ( 
@@ -210,9 +226,9 @@ begin
 			axis_wv_d			=> axis_wuq_wu_d,
 			axis_wv_ready		=> axis_wuq_wu_ready,
 			axis_wv_valid 		=> axis_wuq_wu_valid,
-			axis_wuse_d			=> axis_wuse_wu_d,
-			axis_wuse_ready		=> axis_wuse_wu_ready,
-			axis_wuse_valid 	=> axis_wuse_wu_valid,
+			axis_wuse_d			=> axis_wuse_wu_l_d,
+			axis_wuse_ready		=> axis_wuse_wu_l_ready,
+			axis_wuse_valid 	=> axis_wuse_wu_l_valid,
 			axis_drpe_d			=> axis_drpe_d,
 			axis_drpe_ready		=> axis_drpe_ready,
 			axis_drpe_valid 	=> axis_drpe_valid,

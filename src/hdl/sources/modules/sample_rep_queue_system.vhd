@@ -334,7 +334,7 @@ begin
 	north_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
-			FIFO_DEPTH => CONST_MAX_Z
+			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
 			clk => clk, rst => rst,
@@ -350,7 +350,7 @@ begin
 	west_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
-			FIFO_DEPTH => CONST_MAX_Z
+			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
 			clk => clk, rst => rst,
@@ -366,7 +366,7 @@ begin
 	northwest_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
-			FIFO_DEPTH => CONST_MAX_Z
+			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
 			clk => clk, rst => rst,
@@ -382,7 +382,7 @@ begin
 	northeast_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
-			FIFO_DEPTH => CONST_MAX_Z*CONST_MAX_X
+			FIFO_DEPTH => CONST_MAX_BANDS*CONST_MAX_SAMPLES
 		)
 		Port map ( 
 			clk => clk, rst => rst,

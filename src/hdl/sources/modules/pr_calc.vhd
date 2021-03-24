@@ -36,7 +36,7 @@ entity pr_calc is
 		axis_in_psv_valid	: in std_logic;
 		axis_in_psv_ready	: out std_logic;
 		axis_in_psv_coord	: in coordinate_bounds_array_t;
-		axis_out_pr_d		: out std_logic_vector(CONST_PR_BITS downto 0);
+		axis_out_pr_d		: out std_logic_vector(CONST_PR_BITS - 1 downto 0);
 		axis_out_pr_valid	: out std_logic;
 		axis_out_pr_ready	: in std_logic;
 		axis_out_pr_coord	: out coordinate_bounds_array_t

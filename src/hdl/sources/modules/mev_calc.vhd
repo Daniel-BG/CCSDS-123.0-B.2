@@ -61,11 +61,9 @@ begin
 		generic map (
 			DATA_WIDTH_0	=> CONST_REL_ERR_BITS,
 			DATA_WIDTH_1	=> CONST_MAX_DATA_WIDTH,
-			OUTPUT_WIDTH 	=> CONST_REL_ERR_BITS + CONST_MAX_DATA_WIDTH,
-			SIGN_EXTEND_0	=> false,
-			SIGN_EXTEND_1	=> false,
-			SIGNED_OP	 	=> false,
-			DESIRED_STAGES  => 3,
+			SIGNED_0		=> false,
+			SIGNED_1		=> false,
+			STAGES_AFTER_SYNC  => 3,
 			USER_WIDTH 		=> coordinate_bounds_array_t'length,
 			USER_POLICY 	=> PASS_ONE
 		)
@@ -86,7 +84,7 @@ begin
 		
 		rel_err_out_shifted <= rel_err_out(rel_err_out'high downto CONST_MAX_DATA_WIDTH);
 		
-		comb: process(rel_err_out_shifted, cfg_abs_err, axis_out_mev_ready, rel_err_valid, cfg_use_abs_err, cfg_use_rel_err)
+		comb: process(rel_err_out_shifted, rel_err_coord, cfg_abs_err, axis_out_mev_ready, rel_err_valid, cfg_use_abs_err, cfg_use_rel_err)
 		begin
 			axis_out_mev_valid <= rel_err_valid;
 			rel_err_ready <= axis_out_mev_ready;
@@ -95,15 +93,15 @@ begin
 				axis_out_mev_d <= (others => '0');
 			elsif cfg_use_abs_err = '1' and cfg_use_rel_err = '1' then
 				--take minimum
-				if resize(unsigned(cfg_abs_err), CONST_MAX_DATA_WIDTH) < resize(unsigned(rel_err_out_shifted), CONST_MAX_DATA_WIDTH) then
-					axis_out_mev_d <= std_logic_vector(resize(unsigned(cfg_abs_err), CONST_MAX_DATA_WIDTH));
+				if resize(unsigned(cfg_abs_err), CONST_MEV_BITS) < resize(unsigned(rel_err_out_shifted), CONST_MEV_BITS) then
+					axis_out_mev_d <= std_logic_vector(resize(unsigned(cfg_abs_err), CONST_MEV_BITS));
 				else
-					axis_out_mev_d <= std_logic_vector(resize(unsigned(rel_err_out_shifted), CONST_MAX_DATA_WIDTH));
+					axis_out_mev_d <= std_logic_vector(resize(unsigned(rel_err_out_shifted), CONST_MEV_BITS));
 				end if;
 			elsif cfg_use_abs_err = '1' then
-				axis_out_mev_d <= std_logic_vector(resize(unsigned(cfg_abs_err), CONST_MAX_DATA_WIDTH));
+				axis_out_mev_d <= std_logic_vector(resize(unsigned(cfg_abs_err), CONST_MEV_BITS));
 			elsif cfg_use_rel_err = '1' then
-				axis_out_mev_d <= std_logic_vector(resize(unsigned(rel_err_out_shifted), CONST_MAX_DATA_WIDTH));
+				axis_out_mev_d <= std_logic_vector(resize(unsigned(rel_err_out_shifted), CONST_MEV_BITS));
 			else
 				axis_out_mev_d <= (others => '0');
 			end if;

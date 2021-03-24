@@ -22,126 +22,86 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+use work.ccsds_constants.all;
 
 entity coord_gen_vertical is
-	generic (
-		MAX_COORD_X_WIDTH: integer := 9;
-		MAX_COORD_Y_WIDTH: integer := 9;
-		MAX_COORD_Z_WIDTH: integer := 9
-	);
 	port (
 		--control signals 
-		clk, rst, start : in std_logic;
+		clk, rst: in std_logic;
 		finished: out std_logic;
 		--control inputs
-		cfg_bands: in unsigned(MAX_COORD_Z_WIDTH - 1 downto 0);
-		cfg_lines: in unsigned(MAX_COORD_Y_WIDTH - 1 downto 0);
-		cfg_samples: in unsigned(MAX_COORD_X_WIDTH - 1 downto 0);
+		cfg_max_z: in std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+		cfg_max_t: in std_logic_vector(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 		--output bus
 		axis_out_valid: out std_logic;
 		axis_out_ready: in std_logic;
 		axis_out_last: out std_logic;
-		axis_out_data_z: out unsigned(MAX_COORD_Z_WIDTH - 1 downto 0);
-		axis_out_data_y: out unsigned(MAX_COORD_Y_WIDTH - 1 downto 0);
-		axis_out_data_x: out unsigned(MAX_COORD_X_WIDTH - 1 downto 0)
+		axis_out_data_z: out std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+		axis_out_data_t: out std_logic_vector(CONST_MAX_T_VALUE_BITS - 1 downto 0);
+		axis_out_data_tz: out std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0)
 	);
 end coord_gen_vertical;
 
 architecture Behavioral of coord_gen_vertical is
-	type state_t is (ST_IDLE, ST_WORKING, ST_FINISHED);
-	signal state_curr, state_next : state_t;
-
-	signal saved_max_x, next_saved_max_x: unsigned(MAX_COORD_X_WIDTH - 1 downto 0); 
-	signal saved_max_y, next_saved_max_y: unsigned(MAX_COORD_Y_WIDTH - 1 downto 0);
-	signal saved_max_z, next_saved_max_z: unsigned(MAX_COORD_Z_WIDTH - 1 downto 0);
-	
-	signal z_curr, z_next: unsigned(MAX_COORD_Z_WIDTH - 1 downto 0);
-	signal y_curr, y_next: unsigned(MAX_COORD_Y_WIDTH - 1 downto 0);
-	signal x_curr, x_next: unsigned(MAX_COORD_X_WIDTH - 1 downto 0);
-	
-	
+	type state_t is (ST_WORKING, ST_FINISHED);
+	signal state_curr, state_next: state_t;
+		
+	signal z_curr, z_next: unsigned(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+	signal tz_curr, tz_next: unsigned(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+	signal t_curr, t_next: unsigned(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 begin
 
 	seq: process(clk, rst)
 	begin
 		if rst = '1' then
-			state_curr <= ST_IDLE;
-			saved_max_z <= (others => '0');
-			saved_max_x <= (others => '0');
-			saved_max_y <= (others => '0');
+			state_curr <= ST_WORKING;
 			z_curr <= (others => '0');
-			x_curr <= (others => '0');
-			y_curr <= (others => '0');
+			tz_curr <= (others => '0');
+			t_curr <= (others => '0');
 		elsif rising_edge(clk) then
 			state_curr <= state_next;
-			saved_max_z <= next_saved_max_z;
-			saved_max_x <= next_saved_max_x;
-			saved_max_y <= next_saved_max_y;
 			z_curr <= z_next;
-			x_curr <= x_next;
-			y_curr <= y_next;
+			tz_curr <= tz_next;
+			t_curr <= t_next;
 		end if;
 	end process; 
 	
 	
 	comb: process(state_curr,
-			saved_max_x, saved_max_y, saved_max_z,
-			x_curr, y_curr, z_curr ,
-			start,
-			cfg_samples, cfg_lines, cfg_bands,
+			cfg_max_z, cfg_max_t,
+			z_curr, t_curr, tz_curr ,
 			axis_out_ready)
 	begin
 		finished <= '0';
-		
-		next_saved_max_x <= saved_max_x;
-		next_saved_max_y <= saved_max_y;
-		next_saved_max_z <= saved_max_z;
-		
-		x_next <= x_curr;
-		y_next <= y_curr;
+		state_next <= state_curr;
+		t_next <= t_curr;
+		tz_next <= tz_curr;
 		z_next <= z_curr;
 		
 		axis_out_valid 	<= '0';
 		axis_out_last 	<= '0';
-		axis_out_data_z <= z_curr;
-		axis_out_data_y <= y_curr;
-		axis_out_data_x <= x_curr;
-		
-		state_next <= state_curr;
+		axis_out_data_z <= std_logic_vector(z_curr);
+		axis_out_data_t <= std_logic_vector(t_curr);
+		axis_out_data_tz <= std_logic_vector(tz_curr);
 	
-	
-		if state_curr = ST_IDLE then
-			if start = '1' then
-				next_saved_max_x <= cfg_samples - 1;
-				next_saved_max_y <= cfg_lines - 1;
-				next_saved_max_z <= cfg_bands - 1;
-				x_next <= (others => '0');
-				y_next <= (others => '0');
-				z_next <= (others => '0');
-				state_next <= ST_WORKING;
-			end if;
-		elsif state_curr = ST_WORKING then
+		if state_curr = ST_WORKING then
 			axis_out_valid <= '1';
 			if axis_out_ready = '1' then
 				--update coords in BIP mode
-				if z_curr = saved_max_z then
+				if z_curr = unsigned(cfg_max_z)then
 					z_next <= (others => '0');
-					if x_curr = saved_max_x then
-						x_next <= (others => '0');
-						if y_curr = saved_max_y then
-							y_next <= (others => '0');
-							axis_out_last <= '1';
-							state_next <= ST_FINISHED;
-						else
-							y_next <= y_curr + 1;
-						end if;
+					if t_curr = unsigned(cfg_max_t) then
+						t_next <= (others => '0');
+						axis_out_last <= '1';
+						state_next <= ST_FINISHED;
 					else
-						x_next <= x_curr + 1;
+						t_next <= t_curr + 1;
+					end if;
+					--update local t
+					if tz_curr = unsigned(cfg_max_z) then
+						tz_next <= (others => '0');
+					else
+						tz_next <= tz_curr + 1;
 					end if;
 				else
 					z_next <= z_curr + 1;

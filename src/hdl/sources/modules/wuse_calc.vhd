@@ -26,12 +26,12 @@ use ieee.numeric_std.all;
 
 entity wuse_calc is
 	Port ( 
-		cfg_samples			: in std_logic_vector(CONST_MAX_X_BITS - 1 downto 0);
+		cfg_samples			: in std_logic_vector(CONST_MAX_SAMPLES_BITS - 1 downto 0);
 		cfg_tinc			: in std_logic_vector(CONST_TINC_BITS - 1 downto 0);
 		cfg_vmax, cfg_vmin	: in std_logic_vector(CONST_VMINMAX_BITS - 1 downto 0);
 		cfg_depth			: in std_logic_vector(CONST_MAX_DATA_WIDTH_BITS - 1 downto 0);
 		cfg_omega			: in std_logic_vector(CONST_MAX_OMEGA_WIDTH_BITS - 1 downto 0);
-		axis_coord_t		: in std_logic_vector(CONST_MAX_T_BITS - 1 downto 0);
+		axis_coord_t		: in std_logic_vector(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 		axis_coord_valid	: in std_logic;
 		axis_coord_ready	: out std_logic;
 		axis_wuse_ready		: in std_logic;
@@ -41,8 +41,8 @@ entity wuse_calc is
 end wuse_calc;
 
 architecture Behavioral of wuse_calc is
-	signal t_minus_samples: std_logic_vector(CONST_MAX_T_BITS downto 0);
-	signal t_minus_samples_shifted_plus_vmin: std_logic_vector(CONST_MAX_T_BITS downto 0);
+	signal t_minus_samples: std_logic_vector(CONST_MAX_T_VALUE_BITS downto 0);
+	signal t_minus_samples_shifted_plus_vmin: std_logic_vector(CONST_MAX_T_VALUE_BITS downto 0);
 	
 	signal t_clipped: std_logic_vector(CONST_VMINMAX_BITS - 1 downto 0);
 begin

@@ -75,7 +75,7 @@ begin
 	cld_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_CLDVEC_BITS,
-			FIFO_DEPTH => CONST_MAX_Z
+			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
 			clk => clk, rst => rst,
@@ -122,7 +122,7 @@ begin
 	cld_queue2: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_CLDVEC_BITS,
-			FIFO_DEPTH => CONST_MAX_Z
+			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
 			clk => clk, rst => rst,

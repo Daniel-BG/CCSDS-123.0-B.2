@@ -60,8 +60,8 @@ architecture Behavioral of drsr_calc is
 	signal mev_times_offset: std_logic_vector(CONST_MEV_BITS + CONST_OFFSET_BITS - 1 downto 0);
 	signal hrpsv_times_damping: std_logic_vector(CONST_HRPSV_BITS + CONST_DAMPING_BITS - 1 downto 0);
 	signal omega_minus_resolution: std_logic_vector(CONST_MAX_OMEGA_WIDTH_BITS - 1 downto 0);
-	signal cqbc_shifted_by_omega: std_logic_vector(CONST_CQBC_BITS + CONST_MAX_OMEGA_WIDTH - 1 downto 0);
-	signal damping_shifted_by_omega_p1: std_logic_vector(CONST_DAMPING_BITS + CONST_MAX_OMEGA_WIDTH downto 0);
+	signal cqbc_shifted_by_omega: std_logic_vector(CONST_CQBC_BITS + CONST_MAX_OMEGA - 1 downto 0);
+	signal damping_shifted_by_omega_p1: std_logic_vector(CONST_DAMPING_BITS + CONST_MAX_OMEGA downto 0);
 	signal omega_plus_res_p1: std_logic_vector(CONST_MAX_OMEGA_WIDTH_BITS downto 0);
 	
 	--first joiner
@@ -70,7 +70,7 @@ architecture Behavioral of drsr_calc is
 	signal joint_qi_mev_mev: std_logic_vector(mev_times_offset'range);
 	
 	signal mev_qi_signed: std_logic_vector(mev_times_offset'range);
-	signal mev_qi_shifted: std_logic_vector(mev_times_offset'length + CONST_MAX_OMEGA_WIDTH - 1 downto 0);
+	signal mev_qi_shifted: std_logic_vector(mev_times_offset'length + CONST_MAX_OMEGA - 1 downto 0);
 	
 	--second joiner
 	signal joint_sm_valid, joint_sm_ready: std_logic;
@@ -80,7 +80,10 @@ architecture Behavioral of drsr_calc is
 	
 	signal sm_calc: std_logic_vector(joint_sm_cqbc'high + 3 downto 0);
 	
-	signal fm_times_sm_sb2: std_logic_vector(sm_calc'length+fm'length downto 0);
+	signal fm_times_sm: std_logic_vector(sm_calc'length+fm'length - 1 downto 0);
+	signal fm_times_sm_valid, fm_times_sm_ready: std_logic;
+	signal fm_times_sm_coord: coordinate_bounds_array_t;
+	signal fm_times_sm_sb2: std_logic_vector(sm_calc'length+fm'length +1 downto 0);
 	
 	--third joiner
 	signal joint_last_valid, joint_last_ready: std_logic;
@@ -153,7 +156,32 @@ begin
 		
 	sm_calc <= std_logic_vector(signed("0" & joint_sm_cqbc) - signed(joint_sm_mevqi));
 	
-	fm_times_sm_sb2 <= std_logic_vector(shift_left(signed(sm_calc) * signed("0" & fm), 2));
+	fm_times_sm_multiplier: entity work.AXIS_MULTIPLIER
+		Generic map (
+			DATA_WIDTH_0 => sm_calc'length,
+			DATA_WIDTH_1 => fm'length,
+			SIGNED_0	 => true,
+			SIGNED_1	 => false,
+			STAGES_AFTER_SYNC => 3,
+			USER_WIDTH => coordinate_bounds_array_t'length,
+			USER_POLICY => PASS_ZERO
+		)
+		Port map (
+			clk => clk, rst => rst,
+			input_0_data	=> sm_calc,
+			input_0_valid	=> joint_sm_valid,
+			input_0_ready	=> joint_sm_ready,
+			input_0_user    => joint_sm_coord,
+			input_1_data	=> fm,
+			input_1_valid	=> '1',
+			input_1_ready	=> open,
+			input_1_user    => open,
+			output_data		=> fm_times_sm,
+			output_valid	=> fm_times_sm_valid,
+			output_ready	=> fm_times_sm_ready,
+			output_user		=> fm_times_sm_coord
+		);
+	fm_times_sm_sb2 <= std_logic_vector(shift_left(resize(signed(fm_times_sm), fm_times_sm_sb2'length), 2));
 	
 	third_stage: entity work.AXIS_SYNCHRONIZER_2
 		Generic map (
@@ -166,10 +194,10 @@ begin
 		Port map (
 			clk => clk , rst => rst,
 			--to input axi port
-			input_0_valid => joint_sm_valid,
-			input_0_ready => joint_sm_ready,
+			input_0_valid => fm_times_sm_valid,
+			input_0_ready => fm_times_sm_ready,
 			input_0_data  => fm_times_sm_sb2,
-			input_0_user  => joint_sm_coord,
+			input_0_user  => fm_times_sm_coord,
 			input_1_valid => axis_in_hrpsv_valid,
 			input_1_ready => axis_in_hrpsv_ready,
 			input_1_data  => hrpsv_times_damping,

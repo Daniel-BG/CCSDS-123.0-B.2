@@ -68,10 +68,8 @@ begin
 		Generic map (
 			DATA_WIDTH_0 => axis_in_qi_d'length,
 			DATA_WIDTH_1 => axis_in_mev_d'length + 1, --length+1
-			OUTPUT_WIDTH => axis_in_qi_d'length + axis_in_mev_d'length + 1,  
-			SIGN_EXTEND_0=> true,
-			SIGN_EXTEND_1=> false,
-			SIGNED_OP	 => true,
+			SIGNED_0=> true,
+			SIGNED_1=> false,
 			USER_WIDTH   => coordinate_bounds_array_t'length
 		)
 		Port map (

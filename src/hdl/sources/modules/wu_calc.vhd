@@ -78,11 +78,11 @@ architecture Behavioral of wu_calc is
 	--last stage, update weight by adding the previous result, and clamping
 	signal axis_wv_ready_vec: stage_ctrl_signals_t;
 	signal joint_unclamped_valid, joint_unclamped_ready: stage_ctrl_signals_t;
-	type weight_arr_t is array(0 to CONST_MAX_C - 1) of std_logic_vector(CONST_MAX_OMEGA_WIDTH - 1 downto 0);
+	type weight_arr_t is array(0 to CONST_MAX_C - 1) of std_logic_vector(CONST_MAX_WEIGHT_BITS - 1 downto 0);
 	signal joint_unclamped_weight: weight_arr_t;
 	signal joint_unclamped_addval, joint_unclamped_finalres: addreg_t;
 	signal joint_unclamped_coord: coord_arr_t;
-	signal omega_min, omega_max: std_logic_vector(CONST_MAX_OMEGA_WIDTH - 1 downto 0);
+	signal omega_min, omega_max: std_logic_vector(CONST_MAX_WEIGHT_BITS - 1 downto 0);
 	
 begin
 
@@ -157,12 +157,12 @@ begin
 	axis_wuse_ready <= axis_wuse_ready_vec(0);
 
 
-	omega_min <= std_logic_vector(- shift_left(to_signed(1, CONST_MAX_OMEGA_WIDTH), to_integer(unsigned(cfg_omega))+2));
-	omega_max <= std_logic_vector(shift_left(to_signed(1, CONST_MAX_OMEGA_WIDTH), to_integer(unsigned(cfg_omega))+2) - 1);
+	omega_min <= std_logic_vector(- shift_left(to_signed(1, CONST_MAX_WEIGHT_BITS), to_integer(unsigned(cfg_omega))+2));
+	omega_max <= std_logic_vector(shift_left(to_signed(1, CONST_MAX_WEIGHT_BITS), to_integer(unsigned(cfg_omega))+2) - 1);
 	final_sync: for i in 0 to CONST_MAX_C - 1 generate
 		clamped_syncer: entity work.AXIS_SYNCHRONIZER_2
 			Generic map (
-				DATA_WIDTH_0 => CONST_MAX_OMEGA_WIDTH,
+				DATA_WIDTH_0 => CONST_MAX_WEIGHT_BITS,
 				DATA_WIDTH_1 => CONST_W_UPDATE_BITS,
 				LATCH		 => false,
 				USER_WIDTH   => coordinate_bounds_array_t'length,
@@ -173,7 +173,7 @@ begin
 				--to input axi port
 				input_0_valid => axis_wv_valid,
 				input_0_ready => axis_wv_ready_vec(i),
-				input_0_data  => axis_wv_d(CONST_MAX_OMEGA_WIDTH*(i+1) - 1 downto CONST_MAX_OMEGA_WIDTH*i),
+				input_0_data  => axis_wv_d(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i),
 				input_1_valid => joint_add_valid(i),
 				input_1_ready => joint_add_ready(i),
 				input_1_data  => weight_addval_halved(i),
@@ -188,10 +188,10 @@ begin
 		joint_unclamped_ready(i) <= axis_out_wv_ready;
 		joint_unclamped_finalres(i) <= std_logic_vector(signed(joint_unclamped_addval(i)) + signed(joint_unclamped_weight(i)));
 	
-		axis_out_wv_d(CONST_MAX_OMEGA_WIDTH*(i+1)-1 downto CONST_MAX_OMEGA_WIDTH*i) <=
+		axis_out_wv_d(CONST_MAX_WEIGHT_BITS*(i+1)-1 downto CONST_MAX_WEIGHT_BITS*i) <=
 			omega_min when signed(joint_unclamped_finalres(i)) < signed(omega_min) else
 			omega_max when signed(joint_unclamped_finalres(i)) > signed(omega_max) else
-			std_logic_vector(resize(signed(joint_unclamped_finalres(i)), CONST_MAX_OMEGA_WIDTH));	
+			std_logic_vector(resize(signed(joint_unclamped_finalres(i)), CONST_MAX_WEIGHT_BITS));	
 	end generate;
 	
 	axis_wv_ready <= axis_wv_ready_vec(0);

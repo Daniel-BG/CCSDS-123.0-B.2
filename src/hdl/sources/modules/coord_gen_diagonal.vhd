@@ -46,15 +46,15 @@ entity coord_gen_diagonal is
 		clk, rst: in std_logic;
 		finished: out std_logic;
 		--control inputs
-		cfg_max_z: in std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
-		cfg_max_t: in std_logic_vector(CONST_MAX_T_BITS - 1 downto 0);
+		cfg_max_z: in std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+		cfg_max_t: in std_logic_vector(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 		--output bus
 		axis_out_valid: out std_logic;
 		axis_out_ready: in std_logic;
 		axis_out_last: out std_logic;
-		axis_out_data_z: out std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
-		axis_out_data_t: out std_logic_vector(CONST_MAX_T_BITS - 1 downto 0);
-		axis_out_data_tz: out std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0)
+		axis_out_data_z: out std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+		axis_out_data_t: out std_logic_vector(CONST_MAX_T_VALUE_BITS - 1 downto 0);
+		axis_out_data_tz: out std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0)
 	);
 end coord_gen_diagonal;
 
@@ -63,9 +63,9 @@ architecture Behavioral of coord_gen_diagonal is
 	type state_t is (ST_WORKING, ST_FINISHED);
 	signal state_curr, state_next: state_t;
 		
-	signal z_curr, z_next: unsigned(CONST_MAX_Z_BITS - 1 downto 0);
-	signal tz_curr, tz_next: unsigned(CONST_MAX_Z_BITS - 1 downto 0);
-	signal t_curr, t_next: unsigned(CONST_MAX_T_BITS - 1 downto 0);
+	signal z_curr, z_next: unsigned(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+	signal tz_curr, tz_next: unsigned(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+	signal t_curr, t_next: unsigned(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 	 
 
 begin
@@ -88,8 +88,8 @@ begin
 	
 	comb: process(state_curr, z_curr, t_curr, tz_curr, cfg_max_z, cfg_max_t, axis_out_ready)
 	
-		variable z, tz: unsigned(CONST_MAX_Z_BITS - 1 downto 0);
-		variable t: unsigned(CONST_MAX_T_BITS - 1 downto 0);
+		variable z, tz: unsigned(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+		variable t: unsigned(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 		
 		variable last: boolean;
 	
@@ -118,7 +118,7 @@ begin
 			tz:= tz_curr;
 			if (z = 0) then
 				if (t < unsigned(cfg_max_z)) then  --first diagonals
-					z := resize(t + 1, CONST_MAX_Z_BITS);
+					z := resize(t + 1, CONST_MAX_Z_VALUE_BITS);
 					t := (others => '0');
 					tz:= (others => '0');
 				else

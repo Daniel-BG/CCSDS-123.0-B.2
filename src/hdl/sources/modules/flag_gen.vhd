@@ -27,19 +27,21 @@ use work.ccsds_constants.all;
 
 entity flag_gen is
 	port (
-		cfg_max_x				: in std_logic_vector(CONST_MAX_X_BITS - 1 downto 0);
-		cfg_max_y				: in std_logic_vector(CONST_MAX_Y_BITS - 1 downto 0);
-		cfg_max_z				: in std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
-		axis_input_x			: in std_logic_vector(CONST_MAX_X_BITS - 1 downto 0);
-		axis_input_y			: in std_logic_vector(CONST_MAX_Y_BITS - 1 downto 0);
-		axis_input_z			: in std_logic_vector(CONST_MAX_Z_BITS - 1 downto 0);
+		cfg_max_x				: in std_logic_vector(CONST_MAX_X_VALUE_BITS - 1 downto 0);
+		cfg_max_y				: in std_logic_vector(CONST_MAX_Y_VALUE_BITS - 1 downto 0);
+		cfg_max_z				: in std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+		axis_input_x			: in std_logic_vector(CONST_MAX_X_VALUE_BITS - 1 downto 0);
+		axis_input_y			: in std_logic_vector(CONST_MAX_Y_VALUE_BITS - 1 downto 0);
+		axis_input_z			: in std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
 		axis_input_ready		: out std_logic;
 		axis_input_valid		: in std_logic;
 		axis_input_last 		: in std_logic;
+		axis_input_cpa			: in coordinate_position_array_t;
 		axis_output_ready		: in std_logic;
 		axis_output_valid 		: out std_logic;
 		axis_output_last 		: out std_logic;
-		axis_output_flags 		: out coordinate_bounds_array_t
+		axis_output_flags 		: out coordinate_bounds_array_t;
+		axis_output_cpa			: out coordinate_position_array_t
 	);
 end flag_gen;
 
@@ -57,6 +59,7 @@ begin
 
 	axis_output_valid <= axis_input_valid;
 	axis_input_ready  <= axis_output_ready;
+	axis_output_cpa <= axis_input_cpa;
 	
 	
 	axis_output_first_x <= '1' when axis_input_x = (axis_input_x'range => '0') else '0';

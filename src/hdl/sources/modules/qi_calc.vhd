@@ -28,14 +28,14 @@ use work.ccsds_constants.all;
 entity qi_calc is
 	Port ( 
 		clk, rst: in std_logic;
-		axis_in_pr_d 		: in std_logic_vector(CONST_PR_BITS downto 0);
+		axis_in_pr_d 		: in std_logic_vector(CONST_PR_BITS - 1 downto 0);
 		axis_in_pr_coord	: in coordinate_bounds_array_t;
 		axis_in_pr_valid	: in std_logic;
 		axis_in_pr_ready	: out std_logic;
 		axis_in_mev_d 		: in std_logic_vector(CONST_MEV_BITS - 1 downto 0);
 		axis_in_mev_valid	: in std_logic;
 		axis_in_mev_ready	: out std_logic;
-		axis_out_qi_d 		: out std_logic_vector(CONST_QI_BITS downto 0);
+		axis_out_qi_d 		: out std_logic_vector(CONST_QI_BITS - 1 downto 0);
 		axis_out_qi_valid	: out std_logic;
 		axis_out_qi_ready 	: in std_logic;
 		axis_out_qi_coord	: out coordinate_bounds_array_t
@@ -44,13 +44,13 @@ end qi_calc;
 
 architecture Behavioral of qi_calc is
 	signal axis_joint_valid, axis_joint_ready: std_logic;
-	signal axis_joint_pr: std_logic_vector(CONST_PR_BITS downto 0);
-	signal axis_joint_mev: std_logic_vector(CONST_MEV_BITS downto 0);
+	signal axis_joint_pr: std_logic_vector(CONST_PR_BITS - 1 downto 0);
+	signal axis_joint_mev: std_logic_vector(CONST_MEV_BITS - 1 downto 0);
 	signal axis_joint_coord: coordinate_bounds_array_t;
 	
 	--modified signals
 	signal axis_joint_pr_sign: std_logic;
-	signal axis_joint_pr_abs: std_logic_vector(CONST_PR_BITS downto 0);
+	signal axis_joint_pr_abs: std_logic_vector(CONST_PR_BITS - 1 downto 0);
 	signal axis_joint_mev_div: std_logic_vector(axis_joint_mev'length downto 0); --adds one bit
 	
 	

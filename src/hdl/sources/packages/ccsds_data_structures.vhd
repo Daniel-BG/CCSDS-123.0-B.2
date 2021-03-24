@@ -36,10 +36,10 @@ package ccsds_data_structures is
 	end record coordinate_bounds_t;
 	
 	type coordinate_position_t is record
-		x: std_logic_vector (BITS(CONST_MAX_X) - 1 downto 0);
-		y: std_logic_vector (BITS(CONST_MAX_Y) - 1 downto 0);
-		z: std_logic_vector (BITS(CONST_MAX_Z) - 1 downto 0);
-		t: std_logic_vector (BITS(CONST_MAX_T) - 1 downto 0);
+		x: std_logic_vector (BITS(CONST_MAX_X_VALUE) - 1 downto 0);
+		y: std_logic_vector (BITS(CONST_MAX_Y_VALUE) - 1 downto 0);
+		z: std_logic_vector (BITS(CONST_MAX_Z_VALUE) - 1 downto 0);
+		t: std_logic_vector (BITS(CONST_MAX_T_VALUE) - 1 downto 0);
 	end record coordinate_position_t;
 
 	type coordinate_t is record
@@ -51,10 +51,10 @@ package ccsds_data_structures is
 	subtype coordinate_bounds_array_t is std_logic_vector(5 downto 0);
 	function CB2STDLV(cb: coordinate_bounds_t) return coordinate_bounds_array_t;
 	function STDLV2CB(stdlv: coordinate_bounds_array_t) return coordinate_bounds_t;
-	subtype coordinate_position_array_t is std_logic_vector(BITS(CONST_MAX_X)+ BITS(CONST_MAX_Y) + BITS(CONST_MAX_Z) + BITS(CONST_MAX_T) - 1 downto 0);
+	subtype coordinate_position_array_t is std_logic_vector(BITS(CONST_MAX_X_VALUE)+ BITS(CONST_MAX_Y_VALUE) + BITS(CONST_MAX_Z_VALUE) + BITS(CONST_MAX_T_VALUE) - 1 downto 0);
 	function CP2STDLV(cp: coordinate_position_t) return coordinate_position_array_t;
 	function STDLV2CP(stdlv: coordinate_position_array_t) return coordinate_position_t;
-	subtype coordinate_array_t is std_logic_vector(BITS(CONST_MAX_X)+ BITS(CONST_MAX_Y) + BITS(CONST_MAX_Z) + BITS(CONST_MAX_T) + 6 - 1 downto 0);
+	subtype coordinate_array_t is std_logic_vector(BITS(CONST_MAX_X_VALUE)+ BITS(CONST_MAX_Y_VALUE) + BITS(CONST_MAX_Z_VALUE) + BITS(CONST_MAX_T_VALUE) + 6 - 1 downto 0);
 	function C2STDLV(ca: coordinate_t) return coordinate_array_t;
 	function STDLV2C(stdlv: coordinate_array_t) return coordinate_t;  
 
@@ -93,10 +93,10 @@ package body ccsds_data_structures is
 	function STDLV2CP(stdlv: coordinate_position_array_t) return coordinate_position_t is
 		variable cp: coordinate_position_t;
 	begin
-		cp.x := stdlv(stdlv'high downto stdlv'high + 1 - BITS(CONST_MAX_X));
-		cp.y := stdlv(stdlv'high - BITS(CONST_MAX_X) downto stdlv'high - BITS(CONST_MAX_X) - BITS(CONST_MAX_Y));
-		cp.z := stdlv(BITS(CONST_MAX_Z) + BITS(CONST_MAX_T) - 1 downto BITS(CONST_MAX_T));
-		cp.t := stdlv(BITS(CONST_MAX_T) - 1 downto 0);
+		cp.x := stdlv(stdlv'high downto stdlv'high + 1 - BITS(CONST_MAX_X_VALUE));
+		cp.y := stdlv(stdlv'high - BITS(CONST_MAX_X_VALUE) downto stdlv'high + 1 - BITS(CONST_MAX_X_VALUE) - BITS(CONST_MAX_Y_VALUE));
+		cp.z := stdlv(BITS(CONST_MAX_Z_VALUE) + BITS(CONST_MAX_T_VALUE) - 1 downto BITS(CONST_MAX_T_VALUE));
+		cp.t := stdlv(BITS(CONST_MAX_T_VALUE) - 1 downto 0);
 		return cp;
 	end function;
 	
