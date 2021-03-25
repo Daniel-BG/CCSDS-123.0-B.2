@@ -57,12 +57,18 @@ architecture Behavioral of drsr_calc is
 	
 	signal fm: std_logic_vector(CONST_MAX_RES_VAL downto 0);
 	
-	signal mev_times_offset: std_logic_vector(CONST_MEV_BITS + CONST_OFFSET_BITS - 1 downto 0);
-	signal hrpsv_times_damping: std_logic_vector(CONST_HRPSV_BITS + CONST_DAMPING_BITS - 1 downto 0);
 	signal omega_minus_resolution: std_logic_vector(CONST_MAX_OMEGA_WIDTH_BITS - 1 downto 0);
 	signal cqbc_shifted_by_omega: std_logic_vector(CONST_CQBC_BITS + CONST_MAX_OMEGA - 1 downto 0);
 	signal damping_shifted_by_omega_p1: std_logic_vector(CONST_DAMPING_BITS + CONST_MAX_OMEGA downto 0);
 	signal omega_plus_res_p1: std_logic_vector(CONST_MAX_OMEGA_WIDTH_BITS downto 0);
+	
+	--mev times offset mult
+	signal mev_times_offset: std_logic_vector(CONST_MEV_BITS + CONST_OFFSET_BITS - 1 downto 0);
+	signal mev_times_offset_valid, mev_times_offset_ready: std_logic;
+	
+	--hrpsv mult
+	signal hrpsv_times_damping: std_logic_vector(CONST_HRPSV_BITS + CONST_DAMPING_BITS - 1 downto 0);
+	signal hrpsv_times_damping_valid, hrpsv_times_damping_ready: std_logic;
 	
 	--first joiner
 	signal joint_qi_mev_valid, joint_qi_mev_ready: std_logic;
@@ -90,18 +96,62 @@ architecture Behavioral of drsr_calc is
 	signal joint_last_fmsm: std_logic_vector(fm_times_sm_sb2'range);
 	signal joint_last_hrpsv: std_logic_vector(hrpsv_times_damping'range);
 	signal joint_last_coord: coordinate_bounds_array_t;
-	
 	signal final_unshifted: std_logic_vector(fm_times_sm_sb2'range);
+	
+	--latch final result for critical path reasons
+	signal latched_final_unshifted: std_logic_vector(fm_times_sm_sb2'range);
+	signal latched_final_ready, latched_final_valid: std_logic;
+	signal latched_final_coord: coordinate_bounds_array_t;
 	
 begin
 
 	fm 							<= std_logic_vector(shift_left(resize(unsigned(STDLV_ONE), fm'length),to_integer(unsigned(cfg_resolution))) - unsigned(cfg_damping));
-	mev_times_offset 			<= std_logic_vector(unsigned(axis_in_mev_d) * unsigned(cfg_offset));
-	hrpsv_times_damping 		<= std_logic_vector(unsigned(axis_in_hrpsv_d) * unsigned(cfg_damping));
 	omega_minus_resolution 		<= std_logic_vector(unsigned(cfg_omega) - unsigned(cfg_resolution));
 	cqbc_shifted_by_omega 		<= std_logic_vector(shift_left(resize(unsigned(axis_in_cqbc_d), cqbc_shifted_by_omega'length), to_integer(unsigned(cfg_omega))));
-	damping_shifted_by_omega_p1 <= std_logic_vector(shift_left(resize(unsigned(axis_in_cqbc_d), damping_shifted_by_omega_p1'length), to_integer(unsigned(cfg_omega))));
+	damping_shifted_by_omega_p1 <= std_logic_vector(shift_left(resize(unsigned(cfg_damping), damping_shifted_by_omega_p1'length), to_integer(unsigned(cfg_omega) + 1)));
 	omega_plus_res_p1 			<= std_logic_vector(resize(unsigned(cfg_omega), omega_plus_res_p1'length) + unsigned(cfg_resolution) + 1);
+	
+	mev_times_offset_calc: entity work.AXIS_MULTIPLIER
+		Generic map (
+			DATA_WIDTH_0		=> axis_in_mev_d'length,
+			DATA_WIDTH_1		=> cfg_offset'length,
+			SIGNED_0			=> false,
+			SIGNED_1			=> false,
+			STAGES_AFTER_SYNC	=> 3
+		)
+		Port map(
+			clk => clk, rst => rst,
+			input_0_data	=> axis_in_mev_d,
+			input_0_valid	=> axis_in_mev_valid,
+			input_0_ready	=> axis_in_mev_ready,
+			input_1_data	=> cfg_offset,
+			input_1_valid	=> '1',
+			input_1_ready	=> open,
+			output_data		=> mev_times_offset,
+			output_valid	=> mev_times_offset_valid,
+			output_ready	=> mev_times_offset_ready
+		);
+		
+	hrpsv_times_damping_calc: entity work.AXIS_MULTIPLIER
+		Generic map (
+			DATA_WIDTH_0		=> axis_in_hrpsv_d'length,
+			DATA_WIDTH_1		=> cfg_damping'length,
+			SIGNED_0			=> false,
+			SIGNED_1			=> false,
+			STAGES_AFTER_SYNC	=> 3
+		)
+		Port map(
+			clk => clk, rst => rst,
+			input_0_data	=> axis_in_hrpsv_d,
+			input_0_valid	=> axis_in_hrpsv_valid,
+			input_0_ready	=> axis_in_hrpsv_ready,
+			input_1_data	=> cfg_damping,
+			input_1_valid	=> '1',
+			input_1_ready	=> open,
+			output_data		=> hrpsv_times_damping,
+			output_valid	=> hrpsv_times_damping_valid,
+			output_ready	=> hrpsv_times_damping_ready
+		);
 	
 	first_stage: entity work.AXIS_SYNCHRONIZER_2
 		Generic map (
@@ -115,8 +165,8 @@ begin
 			input_0_valid => axis_in_qi_valid,
 			input_0_ready => axis_in_qi_ready,
 			input_0_data  => axis_in_qi_d,
-			input_1_valid => axis_in_mev_valid,
-			input_1_ready => axis_in_mev_ready,
+			input_1_valid => mev_times_offset_valid,
+			input_1_ready => mev_times_offset_ready,
 			input_1_data  => mev_times_offset,
 			--to output axi ports
 			output_valid  => joint_qi_mev_valid,
@@ -198,8 +248,8 @@ begin
 			input_0_ready => fm_times_sm_ready,
 			input_0_data  => fm_times_sm_sb2,
 			input_0_user  => fm_times_sm_coord,
-			input_1_valid => axis_in_hrpsv_valid,
-			input_1_ready => axis_in_hrpsv_ready,
+			input_1_valid => hrpsv_times_damping_valid,
+			input_1_ready => hrpsv_times_damping_ready,
 			input_1_data  => hrpsv_times_damping,
 			--to output axi ports
 			output_valid  => joint_last_valid,
@@ -211,11 +261,27 @@ begin
 		
 	final_unshifted <= std_logic_vector(signed(joint_last_fmsm) + signed("0" & joint_last_hrpsv) - signed("0" & damping_shifted_by_omega_p1));
 	
+	latch_final_unshifted: entity work.AXIS_DATA_LATCH
+		Generic map (
+			DATA_WIDTH => final_unshifted'length,
+			USER_WIDTH => coordinate_bounds_array_t'length
+		)
+		Port map ( 
+			clk => clk, rst => rst,
+			input_data	=> final_unshifted,
+			input_ready => joint_last_ready,
+			input_valid => joint_last_valid,
+			input_user 	=> joint_last_coord,
+			output_data	=> latched_final_unshifted,
+			output_ready=> latched_final_ready,
+			output_valid=> latched_final_valid,
+			output_user => latched_final_coord
+		);
 	
-	axis_out_drsr_d <= std_logic_vector(resize(shift_right(unsigned(final_unshifted), to_integer(unsigned(omega_plus_res_p1))), axis_out_drsr_d'length));
-	axis_out_drsr_valid <= joint_last_valid;
-	joint_last_ready <= axis_out_drsr_ready;
-	axis_out_drsr_coord <= joint_last_coord;
+	axis_out_drsr_d <= std_logic_vector(resize(shift_right(unsigned(latched_final_unshifted), to_integer(unsigned(omega_plus_res_p1))), axis_out_drsr_d'length));
+	axis_out_drsr_valid <= latched_final_valid;
+	latched_final_ready <= axis_out_drsr_ready;
+	axis_out_drsr_coord <= latched_final_coord;
 
 end Behavioral;
 

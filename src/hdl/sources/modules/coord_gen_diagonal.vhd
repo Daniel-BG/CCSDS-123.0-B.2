@@ -39,7 +39,6 @@ use ieee.numeric_std.all;
 
 --module can be improved by having the first position of the next diagonal precalculated so that, 
 --when reaching the last sample of a diagonal, calculations are not needed
---also maxZ - 1 and maxT - 1 can be precalculated
 entity coord_gen_diagonal is
 	port (
 		--control signals 
@@ -60,28 +59,30 @@ end coord_gen_diagonal;
 
 architecture Behavioral of coord_gen_diagonal is
 
-	type state_t is (ST_WORKING, ST_FINISHED);
+	type state_t is (ST_IDLE, ST_WORKING, ST_FINISHED);
 	signal state_curr, state_next: state_t;
 		
 	signal z_curr, z_next: unsigned(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
 	signal tz_curr, tz_next: unsigned(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
 	signal t_curr, t_next: unsigned(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 	 
-
+	signal cfg_max_z_m1, cfg_max_z_m1_next: std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
 begin
 
 	seq: process(clk, rst, state_next) 
 	begin
 		if rst = '1' then
-			state_curr <= ST_WORKING;
+			state_curr <= ST_IDLE;
 			z_curr <= (others => '0');
 			t_curr <= (others => '0');
 			tz_curr<= (others => '0');
+			cfg_max_z_m1 <= (others => '0');
 		elsif rising_edge(clk) then
 			state_curr <= state_next;
 			z_curr <= z_next;
 			t_curr <= t_next;
 			tz_curr<= tz_next;
+			cfg_max_z_m1 <= cfg_max_z_m1_next;
 		end if;
 	end process;
 	
@@ -111,8 +112,14 @@ begin
 		t := (others => '0');
 		tz:= (others => '0');
 		last := false;
+		--saved cfg values
+		cfg_max_z_m1_next <= cfg_max_z_m1;
 
-		if state_curr = ST_WORKING then
+		if state_curr = ST_IDLE then
+			--precalculate cfgmaxz - 1 and cfgmaxt - 1
+			cfg_max_z_m1_next <= std_logic_vector(unsigned(cfg_max_z) - 1);
+			state_next <= ST_WORKING;
+		elsif state_curr = ST_WORKING then
 			z := z_curr;
 			t := t_curr;
 			tz:= tz_curr;
@@ -123,10 +130,10 @@ begin
 					tz:= (others => '0');
 				else
 					z := unsigned(cfg_max_z);
-					t := t - unsigned(cfg_max_z) + 1;
+					t := t - unsigned(cfg_max_z_m1);
 					if tz = unsigned(cfg_max_z) then
 						tz := (tz'range => '0') + 1;
-					elsif tz = unsigned(cfg_max_z) - 1 then
+					elsif tz = unsigned(cfg_max_z_m1) then
 						tz := (others => '0');
 					else
 						tz := tz + 2;
@@ -137,11 +144,11 @@ begin
 					last := true;
 					axis_out_last <= '1';
 				else --last diagonals
-					t := t + z - unsigned(cfg_max_z) + 1;
-					if (tz + z + 1 < unsigned(cfg_max_z)) then
+					t := t + z - unsigned(cfg_max_z_m1);
+					if (tz + z < unsigned(cfg_max_z_m1)) then
 						tz := tz + z + 2;
 					else 
-						tz := tz + z + 1 - unsigned(cfg_max_z);	
+						tz := tz + z - unsigned(cfg_max_z_m1);	
 					end if;
 					z := unsigned(cfg_max_z);
 				end if;

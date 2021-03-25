@@ -52,7 +52,7 @@ begin
 		Generic map (
 			DATA_WIDTH_0 => CONST_CQBC_BITS,
 			DATA_WIDTH_1 => CONST_DRPSV_BITS,
-			LATCH => false
+			LATCH => true
 		)
 		Port map (
 			clk => clk, rst => rst,

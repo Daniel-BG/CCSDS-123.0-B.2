@@ -331,7 +331,7 @@ begin
 			axis_out_ready	=> axis_wqp_wq_ready
 		);
 		
-	north_queue: entity work.AXIS_FIFO 
+	north_queue: entity work.axis_fifo_latched 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
 			FIFO_DEPTH => CONST_MAX_BANDS
@@ -343,11 +343,10 @@ begin
 			input_data	=> axis_nqp_nq_d,
 			output_ready=> axis_nq_nrn_ready,
 			output_data	=> axis_nq_nrn_d,
-			output_valid=> axis_nq_nrn_valid,
-			flag_almost_full => open, flag_almost_empty => open
+			output_valid=> axis_nq_nrn_valid
 		);
 		
-	west_queue: entity work.AXIS_FIFO 
+	west_queue: entity work.axis_fifo_latched 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
 			FIFO_DEPTH => CONST_MAX_BANDS
@@ -359,11 +358,10 @@ begin
 			input_data	=> axis_wqp_wq_d,
 			output_ready=> axis_wq_nrw_ready,
 			output_data	=> axis_wq_nrw_d,
-			output_valid=> axis_wq_nrw_valid,
-			flag_almost_full => open, flag_almost_empty => open
+			output_valid=> axis_wq_nrw_valid
 		);
 		
-	northwest_queue: entity work.AXIS_FIFO 
+	northwest_queue: entity work.axis_fifo_latched 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
 			FIFO_DEPTH => CONST_MAX_BANDS
@@ -375,11 +373,10 @@ begin
 			input_data	=> axis_nwqp_nwq_d,
 			output_ready=> axis_nwq_nrnw_ready,
 			output_data	=> axis_nwq_nrnw_d,
-			output_valid=> axis_nwq_nrnw_valid,
-			flag_almost_full => open, flag_almost_empty => open
+			output_valid=> axis_nwq_nrnw_valid
 		);
 		
-	northeast_queue: entity work.AXIS_FIFO 
+	northeast_queue: entity work.axis_fifo_latched 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
 			FIFO_DEPTH => CONST_MAX_BANDS*CONST_MAX_SAMPLES
@@ -391,8 +388,7 @@ begin
 			input_data	=> axis_neqp_neq_d,
 			output_ready=> axis_neq_nrne_ready,
 			output_data	=> axis_neq_nrne_d,
-			output_valid=> axis_neq_nrne_valid,
-			flag_almost_full => open, flag_almost_empty => open
+			output_valid=> axis_neq_nrne_valid
 		);
 		
 	neigh_retrieval_syncrhonizer: entity work.axis_symmetric_synchronizer_latched_4

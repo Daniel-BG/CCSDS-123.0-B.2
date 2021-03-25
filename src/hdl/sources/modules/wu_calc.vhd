@@ -66,13 +66,23 @@ architecture Behavioral of wu_calc is
 	subtype stage_ctrl_signals_t is std_logic_vector(CONST_MAX_C - 1 downto 0);
 	signal mult_exp_syncers_ready, axis_wuse_ready_vec: stage_ctrl_signals_t;
 	signal exponent: std_logic_vector(CONST_WUSE_BITS - 1 downto 0);
-	signal joint_add_valid, joint_add_ready: stage_ctrl_signals_t;
+	signal joint_pre_add_valid, joint_pre_add_ready: stage_ctrl_signals_t;
 	type wuse_array_t is array(0 to CONST_MAX_C - 1) of std_logic_vector(CONST_WUSE_BITS - 1 downto 0);
-	signal joint_add_exp: wuse_array_t;
-	signal joint_add_mult: mult_out_data_t;
+	signal joint_pre_add_exp, joint_pre_add_minus: wuse_array_t;
+	signal joint_pre_add_mult: mult_out_data_t;
 	type coord_arr_t is array(0 to CONST_MAX_C - 1) of coordinate_bounds_array_t;
-	signal joint_add_coord: coord_arr_t;
+	signal joint_pre_add_coord: coord_arr_t;
+	signal joint_pre_add_mult_use_left: stage_ctrl_signals_t;
 	type addreg_t is array(0 to CONST_MAX_C - 1) of std_logic_vector(CONST_W_UPDATE_BITS - 1 downto 0);
+	signal joint_pre_add_mult_shifted_left, joint_pre_add_mult_shifted_right: addreg_t;
+	
+	--substage here
+	signal joint_add_valid, joint_add_ready: stage_ctrl_signals_t;
+	signal joint_add_mult_shifted_left, joint_add_mult_shifted_right: addreg_t;
+	signal joint_add_mult_use_left: stage_ctrl_signals_t;
+	signal joint_add_coord: coord_arr_t;
+	
+	
 	signal weight_addval, weight_addval_halved: addreg_t;
 	
 	--last stage, update weight by adding the previous result, and clamping
@@ -92,7 +102,7 @@ begin
 		Generic map (
 			DATA_WIDTH_0 => CONST_DRPE_BITS,
 			DATA_WIDTH_1 => CONST_DIFFVEC_BITS,
-			LATCH		 => false,
+			LATCH		 => true,
 			USER_WIDTH   => coordinate_bounds_array_t'length,
 			USER_POLICY  => PASS_ONE
 		)
@@ -126,7 +136,7 @@ begin
 			Generic map (
 				DATA_WIDTH_0 => CONST_WUSE_BITS,
 				DATA_WIDTH_1 => CONST_LDIF_BITS,
-				LATCH		 => false,
+				LATCH		 => true,
 				USER_WIDTH 	 => coordinate_bounds_array_t'length,
 				USER_POLICY  => PASS_ONE
 			)
@@ -141,18 +151,52 @@ begin
 				input_1_data  => joint_drpe_dv_data(i),
 				input_1_user  => joint_drpe_dv_coord,
 				--to output axi ports
-				output_valid  => joint_add_valid(i),
-				output_ready  => joint_add_ready(i), 
-				output_data_0 => joint_add_exp(i),
-				output_data_1 => joint_add_mult(i),
-				output_user   => joint_add_coord(i)
+				output_valid  => joint_pre_add_valid(i),
+				output_ready  => joint_pre_add_ready(i), 
+				output_data_0 => joint_pre_add_exp(i),
+				output_data_1 => joint_pre_add_mult(i),
+				output_user   => joint_pre_add_coord(i)
 			);
-			weight_addval(i) <= 
-				std_logic_vector(1 + shift_left(resize(signed(joint_add_mult(i)), CONST_W_UPDATE_BITS), - to_integer(signed(joint_add_exp(i)))))
-				when signed(joint_add_exp(i)) < 0 else
-				std_logic_vector(1 + shift_right(resize(signed(joint_add_mult(i)), CONST_W_UPDATE_BITS), to_integer(signed(joint_add_exp(i)))));
-				
-			weight_addval_halved(i) <= weight_addval(i)(CONST_W_UPDATE_BITS-1) & weight_addval(i)(CONST_W_UPDATE_BITS-1 downto 1);
+		
+		joint_pre_add_minus(i) <= std_logic_vector(- signed (joint_pre_add_exp(i)));
+		joint_pre_add_mult_shifted_left(i) 	<= std_logic_vector(shift_left (resize(signed(joint_pre_add_mult(i)), CONST_W_UPDATE_BITS), to_integer(unsigned(joint_pre_add_minus(i)))));
+		joint_pre_add_mult_shifted_right(i) <= std_logic_vector(shift_right(resize(signed(joint_pre_add_mult(i)), CONST_W_UPDATE_BITS), to_integer(unsigned(joint_pre_add_exp(i)))));
+		gen_flag: process(joint_pre_add_exp)
+		begin
+			if signed(joint_pre_add_exp(i)) < 0 then
+				joint_pre_add_mult_use_left(i) <= '1';
+			else
+				joint_pre_add_mult_use_left(i) <= '0';
+			end if;
+		end process;
+		
+		latch_mult_exp: entity work.AXIS_LATCHED_CONNECTION
+			Generic map (
+				DATA_WIDTH => CONST_W_UPDATE_BITS*2,
+				USER_WIDTH => coordinate_bounds_array_t'length
+			)
+			Port map (
+				clk => clk, rst => rst,
+				input_ready => joint_pre_add_ready(i),
+				input_valid => joint_pre_add_valid(i),
+				input_data(CONST_W_UPDATE_BITS*2 - 1 downto CONST_W_UPDATE_BITS)  =>  joint_pre_add_mult_shifted_left(i),
+				input_data(CONST_W_UPDATE_BITS - 1 downto 0)  =>  joint_pre_add_mult_shifted_right(i),
+				input_last  => joint_pre_add_mult_use_left(i),
+				input_user  => joint_pre_add_coord(i),
+				output_ready=> joint_add_ready(i),
+				output_valid=> joint_add_valid(i),
+				output_data(CONST_W_UPDATE_BITS*2 - 1 downto CONST_W_UPDATE_BITS)  =>  joint_add_mult_shifted_left(i),
+				output_data(CONST_W_UPDATE_BITS - 1 downto 0)  =>  joint_add_mult_shifted_right(i),
+				output_last => joint_add_mult_use_left(i),
+				output_user => joint_add_coord(i)
+			);
+		
+		weight_addval(i) <= 
+			std_logic_vector(1 + signed(joint_add_mult_shifted_left(i)))
+			when joint_add_mult_use_left(i) = '1' else
+			std_logic_vector(1 + signed(joint_add_mult_shifted_right(i)));
+			
+		weight_addval_halved(i) <= weight_addval(i)(CONST_W_UPDATE_BITS-1) & weight_addval(i)(CONST_W_UPDATE_BITS-1 downto 1);
 	end generate;
 	axis_wuse_ready <= axis_wuse_ready_vec(0);
 
@@ -164,7 +208,7 @@ begin
 			Generic map (
 				DATA_WIDTH_0 => CONST_MAX_WEIGHT_BITS,
 				DATA_WIDTH_1 => CONST_W_UPDATE_BITS,
-				LATCH		 => false,
+				LATCH		 => true,
 				USER_WIDTH   => coordinate_bounds_array_t'length,
 				USER_POLICY  => PASS_ONE
 			)

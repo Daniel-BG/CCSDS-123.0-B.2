@@ -43,5 +43,6 @@ begin
 	axis_in_drpsv_ready <= axis_out_psv_ready;
 	axis_out_psv_valid <= axis_in_drpsv_valid;
 	axis_out_psv_d <= axis_in_drpsv_d(axis_out_psv_d'high downto 0);
+	axis_out_psv_coord <= axis_in_drpsv_coord;
 
 end Behavioral;

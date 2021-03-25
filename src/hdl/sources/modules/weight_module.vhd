@@ -186,21 +186,22 @@ begin
 
 	wuse_calc: entity work.wuse_calc 
 		Port map ( 
+			clk => clk, rst => rst,
 			cfg_samples			=> cfg_samples,
 			cfg_tinc			=> cfg_tinc,
 			cfg_vmax			=> cfg_vmax,
 			cfg_vmin			=> cfg_vmin,
 			cfg_depth			=> cfg_depth,
 			cfg_omega			=> cfg_omega,
-			axis_coord_t		=> axis_in_wuse_coord_t,
-			axis_coord_valid	=> axis_in_wuse_coord_valid,
-			axis_coord_ready	=> axis_in_wuse_coord_ready,
-			axis_wuse_ready		=> axis_wuse_wu_ready,
-			axis_wuse_valid		=> axis_wuse_wu_valid,
-			axis_wuse_d			=> axis_wuse_wu_d
+			axis_in_coord_t		=> axis_in_wuse_coord_t,
+			axis_in_coord_valid	=> axis_in_wuse_coord_valid,
+			axis_in_coord_ready	=> axis_in_wuse_coord_ready,
+			axis_out_wuse_ready	=> axis_wuse_wu_ready,
+			axis_out_wuse_valid	=> axis_wuse_wu_valid,
+			axis_out_wuse_d		=> axis_wuse_wu_d
 		);
 		
-	wuse_latch: entity work.AXIS_DATA_LATCH
+	wuse_latch: entity work.AXIS_LATCHED_CONNECTION
 		Generic map (
 			DATA_WIDTH => CONST_WUSE_BITS
 		)

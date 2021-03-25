@@ -30,14 +30,14 @@ entity accumulator is
 	Port ( 
 		clk, rst				: in std_logic;
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+		cfg_axis_in_iacc_d		: in std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+		cfg_axis_in_iacc_valid	: in std_logic;
+		cfg_axis_in_iacc_ready	: out std_logic;
 		axis_in_mqi				: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 		axis_in_coord			: in coordinate_bounds_array_t;
 		axis_in_counter			: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		axis_in_ready			: out std_logic;
 		axis_in_valid			: in std_logic;
-		axis_in_iacc_d			: in std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-		axis_in_iacc_valid		: in std_logic;
-		axis_in_iacc_ready		: out std_logic;
 		axis_out_valid			: out std_logic;
 		axis_out_ready			: in std_logic;
 		axis_out_mqi			: out std_logic_vector(CONST_MQI_BITS - 1 downto 0);
@@ -47,59 +47,55 @@ entity accumulator is
 end accumulator;
 
 architecture Behavioral of accumulator is
-	--modified input stream
-	signal axis_in_cond: std_logic;
-	signal axis_in_cond_user: std_logic_vector(CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto 0);
-	
 	--iacc queue
-	signal axis_in_iaccq_d			: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-	signal axis_in_iaccq_valid		: std_logic;
-	signal axis_in_iaccq_ready		: std_logic;
+	signal axis_iaccq_d: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+	signal axis_iaccq_valid, axis_iaccq_ready: std_logic;
 	
-	--synced input stream
-	signal axis_synced_acc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-	signal axis_synced_valid, axis_synced_ready: std_logic;
-	signal axis_synced_user: std_logic_vector(CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto 0);
-	--signal axis_synced_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
-	--signal axis_synced_coord: coordinate_bounds_array_t;
-	--signal axis_synced_counter: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	--condition for selection
+	signal axis_in_cond: std_logic;
 	
-	--splitter
-	signal axis_acc_lb_acc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-	signal axis_acc_lb_valid, axis_acc_lb_ready: std_logic;
-	signal axis_acc_lb_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
-	signal axis_acc_lb_counter: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
-	signal axis_acc_lb_newacc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+	--sacc queue
+	signal axis_na_saq_d: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+	signal axis_na_saq_valid, axis_na_saq_ready: std_logic;
+	signal axis_na_saq_latched_d: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+	signal axis_na_saq_latched_valid, axis_na_saq_latched_ready: std_logic;
+	signal axis_saccq_d: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+	signal axis_saccq_valid, axis_saccq_ready: std_logic;
 	
-	signal axis_precalc_pm_acc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-	signal axis_precalc_pm_valid, axis_precalc_pm_ready: std_logic;
-	signal axis_precalc_pm_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
-	signal axis_precalc_pm_counter: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
-	signal axis_precalc_pm_coord: coordinate_bounds_array_t;
-	signal axis_precalc_pm_k: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
-	signal axis_precalc_pm_user: std_logic_vector(CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto 0);
-	
-	
-	signal axis_precalc_acc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-	signal axis_precalc_valid, axis_precalc_ready: std_logic;
-	signal axis_precalc_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
-	signal axis_precalc_counter: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
-	signal axis_precalc_cnt_times_49: std_logic_vector(CONST_MAX_COUNTER_BITS + 6 - 1 downto 0);
-	signal axis_precalc_coord: coordinate_bounds_array_t;
-	signal axis_precalc_k: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
-	signal axis_precalc_user: std_logic_vector(CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto 0);
-	
-	--fifo
-	signal axis_sacc_d : std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-	signal axis_sacc_valid, axis_sacc_ready	: std_logic;
+	--acc retrieval split
+	signal axis_ar_ars_acc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+	signal axis_ar_ars_valid, axis_ar_ars_ready: std_logic;
+	signal axis_ar_ars_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
+	signal axis_ar_ars_cnt: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal axis_ar_ars_coord: coordinate_bounds_array_t;
+	signal axis_ars_na_acc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+	signal axis_ars_na_valid, axis_ars_na_ready: std_logic;
+	signal axis_ars_na_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
+	signal axis_ars_na_cnt: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal axis_ars_t49_acc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+	signal axis_ars_t49_valid, axis_ars_t49_ready: std_logic;
+	signal axis_ars_t49_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
+	signal axis_ars_t49_cnt: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal axis_ars_t49_coord: coordinate_bounds_array_t;
 
+	--after x49 multiplication
+	signal axis_t49_cmpg_ct49: std_logic_vector(CONST_MAX_COUNTER_BITS + 6 - 1 downto 0);
+	signal axis_t49_cmpg_valid, axis_t49_cmpg_ready: std_logic;
+	signal axis_t49_cmpg_acc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+	signal axis_t49_cmpg_cnt: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal axis_t49_cmpg_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
+	signal axis_t49_cmpg_ct49sb7: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal axis_t49_cmpg_coord: coordinate_bounds_array_t;
+	
+	--k generation
+	signal axis_cmpg_kgen_cmpv: std_logic_vector(CONST_MAX_ACC_BITS + 1 - 1 downto 0);
+	signal axis_cmpg_kgen_valid, axis_cmpg_kgen_ready: std_logic;
+	signal axis_cmpg_kgen_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
+	signal axis_cmpg_kgen_cnt: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal axis_cmpg_kgen_coord: coordinate_bounds_array_t;
 	
 begin
 
-
-	axis_in_cond <= '0' when STDLV2CB(axis_in_coord).first_x = '1' and STDLV2CB(axis_in_coord).first_y = '1' else '1';
-	axis_in_cond_user <= axis_in_mqi & axis_in_coord & axis_in_counter;
-	
 	input_acc_queue: entity work.AXIS_FIFO
 		Generic map (
 			DATA_WIDTH => CONST_MAX_ACC_BITS,
@@ -107,143 +103,196 @@ begin
 		)
 		Port map ( 
 			clk	=> clk, rst => rst,
-			input_valid		=> axis_in_iacc_valid,
-			input_ready		=> axis_in_iacc_ready,
-			input_data		=> axis_in_iacc_d,
+			input_valid		=> cfg_axis_in_iacc_valid,
+			input_ready		=> cfg_axis_in_iacc_ready,
+			input_data		=> cfg_axis_in_iacc_d,
 			--out axi port
-			output_ready	=> axis_in_iaccq_ready,
-			output_data		=> axis_in_iaccq_d,
-			output_valid	=> axis_in_iaccq_valid
-		);
-
-	input_selector: entity work.axis_conditioned_selector
-		generic map (
-			DATA_WIDTH 	=> CONST_MAX_ACC_BITS,
-			USER_WIDTH	=> CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS
-		)
-		port map ( 
-			clk => clk, rst => rst,
-			axis_in_cond	   		=> axis_in_cond,
-			axis_in_cond_valid 		=> axis_in_valid,
-			axis_in_cond_ready 		=> axis_in_ready,
-			axis_in_cond_user  		=> axis_in_cond_user,
-			axis_in_data_0_d   		=> axis_in_iaccq_d,
-			axis_in_data_0_valid	=> axis_in_iaccq_valid,
-			axis_in_data_0_ready	=> axis_in_iaccq_ready,
-			axis_in_data_1_d		=> axis_sacc_d,
-			axis_in_data_1_valid	=> axis_sacc_valid,
-			axis_in_data_1_ready	=> axis_sacc_ready,
-			axis_out_data_d			=> axis_synced_acc,
-			axis_out_data_valid		=> axis_synced_valid,
-			axis_out_data_ready		=> axis_synced_ready,
-			axis_out_data_user		=> axis_synced_user
+			output_ready	=> axis_iaccq_ready,
+			output_data		=> axis_iaccq_d,
+			output_valid	=> axis_iaccq_valid
 		);
 		
-	splitter: entity work.AXIS_SPLITTER_2
+	saved_acc_data_latch: entity work.AXIS_DATA_LATCH 
 		Generic map (
-			DATA_WIDTH 	=> CONST_MAX_ACC_BITS,
-			USER_WIDTH	=> CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS
+			DATA_WIDTH => axis_na_saq_d'length
 		)
-		Port map (
-			clk => clk, rst	=> rst,
-			--to input axi port
-			input_valid		=> axis_synced_valid,
-			input_data		=> axis_synced_acc,
-			input_ready		=> axis_synced_ready,
-			input_user		=> axis_synced_user,
-			--to output axi ports
-			output_0_valid	=> axis_acc_lb_valid,
-			output_0_data	=> axis_acc_lb_acc,
-			output_0_ready	=> axis_acc_lb_ready,
-			output_0_user(CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS)	=> axis_acc_lb_mqi,
-			output_0_user(coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => open,
-			output_0_user(CONST_MAX_COUNTER_BITS - 1 downto 0)	=> axis_acc_lb_counter,
-			output_1_valid	=> axis_precalc_pm_valid,
-			output_1_data	=> axis_precalc_pm_acc,
-			output_1_ready	=> axis_precalc_pm_ready,
-			output_1_user 	=> axis_precalc_pm_user
-			--output_1_user(CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS) => axis_precalc_mqi,
-			--output_1_user(coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => axis_precalc_coord,
-			--output_1_user(CONST_MAX_COUNTER_BITS - 1 downto 0) => axis_precalc_counter
-		);
-		
-		
-	axis_precalc_pm_counter <= axis_precalc_pm_user(CONST_MAX_COUNTER_BITS - 1 downto 0);
-	mult_by_49: entity work.AXIS_MULTIPLIER
-		Generic map (
-			DATA_WIDTH_0		=> axis_precalc_pm_counter'length,
-			DATA_WIDTH_1		=> 6,
-			SIGNED_0			=> false,
-			SIGNED_1			=> false,
-			USER_WIDTH			=> axis_precalc_pm_acc'length + axis_precalc_pm_user'length,
-			USER_POLICY 		=> PASS_ZERO,
-			STAGES_AFTER_SYNC	=> 3
-		)
-		Port map (
+		Port map ( 
 			clk => clk, rst => rst,
-			input_0_data	=> axis_precalc_pm_counter,
-			input_0_valid	=> axis_precalc_pm_valid,
-			input_0_ready	=> axis_precalc_pm_ready,
-			input_0_user(axis_precalc_pm_acc'length + axis_precalc_pm_user'length - 1 downto axis_precalc_pm_user'length) => axis_precalc_pm_acc,
-			input_0_user(axis_precalc_pm_user'high downto 0)    => axis_precalc_pm_user,
-			input_1_data	=> "110001",
-			input_1_valid	=> '1',
-			input_1_ready	=> open,
-			output_data		=> axis_precalc_cnt_times_49,
-			output_valid	=> axis_precalc_valid,
-			output_ready	=> axis_precalc_ready,
-			output_user(axis_precalc_pm_acc'length + axis_precalc_pm_user'length - 1 downto axis_precalc_pm_user'length) => axis_precalc_acc,
-			output_user(axis_precalc_pm_user'high downto 0)    => axis_precalc_user
+			input_data	=> axis_na_saq_d,
+			input_ready => axis_na_saq_ready,
+			input_valid => axis_na_saq_valid,
+			output_data	=> axis_na_saq_latched_d,
+			output_ready=> axis_na_saq_latched_ready,
+			output_valid=> axis_na_saq_latched_valid
 		);
-	axis_precalc_mqi <= axis_precalc_user(CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS);
-	axis_precalc_coord <= axis_precalc_user(coordinate_bounds_array_t'length + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS);
-	axis_precalc_counter <= axis_precalc_user(CONST_MAX_COUNTER_BITS - 1 downto 0);
-	
-	--parameter calculation for output
-	k_calc: process(axis_precalc_counter, axis_precalc_acc, axis_precalc_cnt_times_49)
-		variable new_k: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
-	begin
-		new_k := (others => '0');
-		for i in 1 to CONST_MAX_DATA_WIDTH - 2 loop
-			if (resize(unsigned(axis_precalc_counter), axis_precalc_acc'length)*(2**i) <= unsigned(axis_precalc_acc) + resize(unsigned(axis_precalc_cnt_times_49), axis_precalc_acc'length)/(2**7)) then
-				new_k := std_logic_vector(to_unsigned(i, new_k'length));
-			end if;
-		end loop;
-		axis_precalc_k <= new_k;
-	end process;
-	
-	axis_out_valid <= axis_precalc_valid;
-	axis_precalc_ready <= axis_out_ready;
-	axis_out_k <= axis_precalc_k;
-	axis_out_mqi <= axis_precalc_mqi;
-	axis_out_coord <= axis_precalc_coord;
-	
-	--next accumulator calculation
-	calc_newacc: process(axis_acc_lb_counter, cfg_final_counter,
-			axis_acc_lb_acc, axis_acc_lb_mqi)
-	begin
-		if unsigned(axis_acc_lb_counter) < unsigned(cfg_final_counter) then
-			axis_acc_lb_newacc <= std_logic_vector(unsigned(axis_acc_lb_acc) + unsigned(axis_acc_lb_mqi));
-		else
-			axis_acc_lb_newacc <= std_logic_vector((unsigned(axis_acc_lb_acc) + unsigned(axis_acc_lb_mqi) + 1) / 2);
-		end if;
 		
-	end process;
-	
-	acc_fifo: entity work.AXIS_FIFO
+	saved_acc_fifo: entity work.AXIS_FIFO
 		Generic map (
 			DATA_WIDTH => CONST_MAX_ACC_BITS,
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
 			clk	=> clk, rst => rst,
-			input_valid		=> axis_acc_lb_valid,
-			input_ready		=> axis_acc_lb_ready,
-			input_data		=> axis_acc_lb_newacc,
-			--out axi port
-			output_ready	=> axis_sacc_ready,
-			output_data		=> axis_sacc_d,
-			output_valid	=> axis_sacc_valid
+			input_valid		=> axis_na_saq_latched_valid,
+			input_ready		=> axis_na_saq_latched_ready,
+			input_data		=> axis_na_saq_latched_d,
+			output_ready	=> axis_saccq_ready,
+			output_data		=> axis_saccq_d,
+			output_valid	=> axis_saccq_valid
 		);
+
+	axis_in_cond <= '0' when STDLV2CB(axis_in_coord).first_x = '1' and STDLV2CB(axis_in_coord).first_y = '1' else '1';
+	acc_retrieval: entity work.axis_conditioned_selector
+		generic map (
+			DATA_WIDTH 	=> CONST_MAX_ACC_BITS,
+			USER_WIDTH	=> coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS
+		)
+		port map ( 
+			clk => clk, rst => rst,
+			axis_in_cond	   		=> axis_in_cond,
+			axis_in_cond_valid 		=> axis_in_valid,
+			axis_in_cond_ready 		=> axis_in_ready,
+			axis_in_cond_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS) => axis_in_coord,
+			axis_in_cond_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => axis_in_mqi,
+			axis_in_cond_user(CONST_MAX_COUNTER_BITS - 1 downto 0) => axis_in_counter,
+			axis_in_data_0_d   		=> axis_iaccq_d,
+			axis_in_data_0_valid	=> axis_iaccq_valid,
+			axis_in_data_0_ready	=> axis_iaccq_ready,
+			axis_in_data_1_d		=> axis_saccq_d,
+			axis_in_data_1_valid	=> axis_saccq_valid,
+			axis_in_data_1_ready	=> axis_saccq_ready,
+			axis_out_data_d			=> axis_ar_ars_acc,
+			axis_out_data_valid		=> axis_ar_ars_valid,
+			axis_out_data_ready		=> axis_ar_ars_ready,
+			axis_out_data_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS) => axis_ar_ars_coord,
+			axis_out_data_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => axis_ar_ars_mqi,
+			axis_out_data_user(CONST_MAX_COUNTER_BITS - 1 downto 0)	=> axis_ar_ars_cnt
+		);
+		
+	acc_split: entity work.AXIS_SPLITTER_2
+		Generic map (
+			DATA_WIDTH 	=> CONST_MAX_ACC_BITS,
+			USER_WIDTH	=> coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS
+		)
+		Port map (
+			clk => clk, rst	=> rst,
+			--to input axi port
+			input_valid		=> axis_ar_ars_valid,
+			input_data		=> axis_ar_ars_acc,
+			input_ready		=> axis_ar_ars_ready,
+			input_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS) => axis_ar_ars_coord,
+			input_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => axis_ar_ars_mqi,
+			input_user(CONST_MAX_COUNTER_BITS - 1 downto 0)	=> axis_ar_ars_cnt,
+			--to output axi ports
+			output_0_valid		=> axis_ars_na_valid,
+			output_0_data		=> axis_ars_na_acc,
+			output_0_ready		=> axis_ars_na_ready,
+			output_0_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS) => open,
+			output_0_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => axis_ars_na_mqi,
+			output_0_user(CONST_MAX_COUNTER_BITS - 1 downto 0)	=> axis_ars_na_cnt,
+			output_1_valid		=> axis_ars_t49_valid,
+			output_1_data		=> axis_ars_t49_acc,
+			output_1_ready		=> axis_ars_t49_ready,
+			output_1_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS) => axis_ars_t49_coord,
+			output_1_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => axis_ars_t49_mqi,
+			output_1_user(CONST_MAX_COUNTER_BITS - 1 downto 0)	=> axis_ars_t49_cnt
+		);
+		
+	update_acc: process(axis_ars_na_valid, axis_na_saq_ready,
+			cfg_final_counter, axis_ars_na_cnt, axis_ars_na_acc, axis_ars_na_mqi)
+	begin
+		axis_na_saq_valid <= axis_ars_na_valid;
+		axis_ars_na_ready <= axis_na_saq_ready;
+		
+		if unsigned(axis_ars_na_cnt) = unsigned(cfg_final_counter) then
+			axis_na_saq_d <= std_logic_vector((unsigned(axis_ars_na_acc) + unsigned(axis_ars_na_mqi) + 1) / 2);
+		else
+			axis_na_saq_d <= std_logic_vector(unsigned(axis_ars_na_acc) + unsigned(axis_ars_na_mqi));
+		end if;	
+	end process;
+		
+	mult_by_49: entity work.AXIS_MULTIPLIER
+		Generic map (
+			DATA_WIDTH_0		=> CONST_MAX_COUNTER_BITS, 
+			DATA_WIDTH_1		=> 6,
+			SIGNED_0			=> false,
+			SIGNED_1			=> false,
+			USER_WIDTH			=> coordinate_bounds_array_t'length + CONST_MAX_ACC_BITS + CONST_MAX_COUNTER_BITS + CONST_MQI_BITS, 
+			USER_POLICY 		=> PASS_ZERO,
+			STAGES_AFTER_SYNC	=> 3
+		)
+		Port map (
+			clk => clk, rst => rst,
+			input_0_data	=> axis_ars_t49_cnt,
+			input_0_valid	=> axis_ars_t49_valid,
+			input_0_ready	=> axis_ars_t49_ready,
+			input_0_user(coordinate_bounds_array_t'length + CONST_MAX_ACC_BITS + CONST_MAX_COUNTER_BITS + CONST_MQI_BITS - 1 downto CONST_MAX_ACC_BITS + CONST_MAX_COUNTER_BITS + CONST_MQI_BITS) => axis_ars_t49_coord,
+			input_0_user(CONST_MAX_ACC_BITS + CONST_MAX_COUNTER_BITS + CONST_MQI_BITS - 1 downto CONST_MAX_COUNTER_BITS + CONST_MQI_BITS) => axis_ars_t49_acc,
+			input_0_user(CONST_MAX_COUNTER_BITS + CONST_MQI_BITS - 1 downto CONST_MQI_BITS) => axis_ars_t49_cnt,
+			input_0_user(CONST_MQI_BITS - 1 downto 0) => axis_ars_t49_mqi,
+			input_1_data	=> "110001",
+			input_1_valid	=> '1',
+			input_1_ready	=> open,
+			output_data		=> axis_t49_cmpg_ct49,
+			output_valid	=> axis_t49_cmpg_valid,
+			output_ready	=> axis_t49_cmpg_ready,
+			output_user(coordinate_bounds_array_t'length + CONST_MAX_ACC_BITS + CONST_MAX_COUNTER_BITS + CONST_MQI_BITS - 1 downto CONST_MAX_ACC_BITS + CONST_MAX_COUNTER_BITS + CONST_MQI_BITS) => axis_t49_cmpg_coord,
+			output_user(CONST_MAX_ACC_BITS + CONST_MAX_COUNTER_BITS + CONST_MQI_BITS - 1 downto CONST_MAX_COUNTER_BITS + CONST_MQI_BITS) => axis_t49_cmpg_acc,
+			output_user(CONST_MAX_COUNTER_BITS + CONST_MQI_BITS - 1 downto CONST_MQI_BITS) => axis_t49_cmpg_cnt,
+			output_user(CONST_MQI_BITS - 1 downto 0) => axis_t49_cmpg_mqi
+		);
+	axis_t49_cmpg_ct49sb7 <= std_logic_vector(resize(shift_right(unsigned(axis_t49_cmpg_ct49), 7), CONST_MAX_COUNTER_BITS));
+		
+	create_comp: entity work.AXIS_ARITHMETIC_OP 
+		Generic map (
+			DATA_WIDTH_0 => CONST_MAX_ACC_BITS,
+			DATA_WIDTH_1 => CONST_MAX_COUNTER_BITS,
+			OUTPUT_DATA_WIDTH => CONST_MAX_ACC_BITS + 1,
+			IS_ADD => true,
+			SIGN_EXTEND_0	=> false,
+			SIGN_EXTEND_1	=> false,
+			SIGNED_OP		=> false,
+			LATCH_INPUT_SYNC=> false,
+			USER_WIDTH		=> coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS,
+			USER_POLICY		=> PASS_ZERO
+		)
+		Port map (
+			clk => clk, rst => rst,
+			input_0_data	=> axis_t49_cmpg_acc,
+			input_0_valid	=> axis_t49_cmpg_valid,
+			input_0_ready	=> axis_t49_cmpg_ready,
+			input_0_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS)  => axis_t49_cmpg_coord,
+			input_0_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS)  => axis_t49_cmpg_mqi,
+			input_0_user(CONST_MAX_COUNTER_BITS - 1 downto 0)  => axis_t49_cmpg_cnt,
+			input_1_data	=> axis_t49_cmpg_ct49sb7,
+			input_1_valid	=> axis_t49_cmpg_valid,
+			input_1_ready	=> open,
+			output_data		=> axis_cmpg_kgen_cmpv,
+			output_valid	=> axis_cmpg_kgen_valid,
+			output_ready	=> axis_cmpg_kgen_ready,
+			output_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS)  => axis_cmpg_kgen_coord,
+			output_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS)  => axis_cmpg_kgen_mqi,
+			output_user(CONST_MAX_COUNTER_BITS - 1 downto 0)  => axis_cmpg_kgen_cnt
+		);
+
+	--parameter calculation for output
+	k_calc: process(axis_cmpg_kgen_cmpv, axis_cmpg_kgen_cnt, axis_cmpg_kgen_valid, axis_out_ready, axis_cmpg_kgen_mqi, axis_cmpg_kgen_coord)
+		variable new_k: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
+	begin
+		new_k := (others => '0');
+		for i in 1 to CONST_MAX_DATA_WIDTH - 2 loop
+			if shift_left(resize(unsigned(axis_cmpg_kgen_cnt), CONST_MAX_ACC_BITS + 1), i) <= unsigned(axis_cmpg_kgen_cmpv) then
+				new_k := std_logic_vector(to_unsigned(i, new_k'length));
+			end if;
+		end loop;
+		axis_out_k <= new_k;
+		
+		axis_out_valid <= axis_cmpg_kgen_valid;
+		axis_cmpg_kgen_ready <= axis_out_ready;
+		axis_out_mqi <= axis_cmpg_kgen_mqi;
+		axis_out_coord <= axis_cmpg_kgen_coord;
+	end process;
+	
+
 
 end Behavioral;
