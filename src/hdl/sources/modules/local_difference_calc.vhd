@@ -55,28 +55,28 @@ begin
 		--calculate output
 		if STDLV2CB(axis_in_coord).first_x = '0' and STDLV2CB(axis_in_coord).first_y = '0' then
 			axis_out_nd <= std_logic_vector(
-					resize(unsigned(axis_in_n & "00"),CONST_LDIF_BITS)  -
+					resize(unsigned(unsigned(axis_in_n) & "00"),CONST_LDIF_BITS)  -
 					resize(unsigned(axis_in_ls),CONST_LDIF_BITS)
 				);
 			axis_out_wd <= std_logic_vector(
-					resize(unsigned(axis_in_w & "00"),CONST_LDIF_BITS)  -
+					resize(unsigned(unsigned(axis_in_w) & "00"),CONST_LDIF_BITS)  -
 					resize(unsigned(axis_in_ls),CONST_LDIF_BITS)
 				);
 			axis_out_nwd <= std_logic_vector(
-					resize(unsigned(axis_in_nw & "00"),CONST_LDIF_BITS)  -
+					resize(unsigned(unsigned(axis_in_nw) & "00"),CONST_LDIF_BITS)  -
 					resize(unsigned(axis_in_ls),CONST_LDIF_BITS)
 				);
 		elsif STDLV2CB(axis_in_coord).first_x = '1' and STDLV2CB(axis_in_coord).first_y = '0' then
 			axis_out_nd <= std_logic_vector(
-					resize(unsigned(axis_in_n & "00"),CONST_LDIF_BITS)  -
+					resize(unsigned(unsigned(axis_in_n) & "00"),CONST_LDIF_BITS)  -
 					resize(unsigned(axis_in_ls),CONST_LDIF_BITS)
 				);
 			axis_out_wd <= std_logic_vector(
-					resize(unsigned(axis_in_n & "00"),CONST_LDIF_BITS)  -
+					resize(unsigned(unsigned(axis_in_n) & "00"),CONST_LDIF_BITS)  -
 					resize(unsigned(axis_in_ls),CONST_LDIF_BITS)
 				);
 			axis_out_nwd <= std_logic_vector(
-					resize(unsigned(axis_in_n & "00"),CONST_LDIF_BITS)  -
+					resize(unsigned(unsigned(axis_in_n) & "00"),CONST_LDIF_BITS)  -
 					resize(unsigned(axis_in_ls),CONST_LDIF_BITS)
 				);
 		else

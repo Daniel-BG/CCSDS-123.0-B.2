@@ -56,7 +56,10 @@ package ccsds_data_structures is
 	function STDLV2CP(stdlv: coordinate_position_array_t) return coordinate_position_t;
 	subtype coordinate_array_t is std_logic_vector(BITS(CONST_MAX_X_VALUE)+ BITS(CONST_MAX_Y_VALUE) + BITS(CONST_MAX_Z_VALUE) + BITS(CONST_MAX_T_VALUE) + 6 - 1 downto 0);
 	function C2STDLV(ca: coordinate_t) return coordinate_array_t;
-	function STDLV2C(stdlv: coordinate_array_t) return coordinate_t;  
+	function STDLV2C(stdlv: coordinate_array_t) return coordinate_t;
+	
+	--first is if it flushes (1) second is the bit itself
+	subtype flush_bit_t is std_logic_vector (1 downto 0);  
 
 end ccsds_data_structures;
 

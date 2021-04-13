@@ -72,6 +72,6 @@ begin
 			output_data_1 => axis_joint_psv,
 			output_user   => axis_out_pr_coord
 		);
-		axis_out_pr_d <= std_logic_vector(signed("0" & axis_joint_sample) - signed("0" & axis_joint_psv));
+		axis_out_pr_d <= std_logic_vector(signed("0" & unsigned(axis_joint_sample)) - signed("0" & unsigned(axis_joint_psv)));
 
 end Behavioral;

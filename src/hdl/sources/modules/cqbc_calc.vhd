@@ -119,7 +119,7 @@ begin
 	axis_out_cqbc_valid <= joint_valid;
 	axis_out_cqbc_d <= 
 				(others => '0') when -signed(joint_psv) > signed(joint_mult)
-		else 	cfg_smax when signed(joint_psv) + signed(joint_mult) > signed("0" & cfg_smax)
+		else 	cfg_smax when signed(joint_psv) + signed(joint_mult) > signed("0" & unsigned(cfg_smax))
 		else    std_logic_vector(resize(signed(joint_psv) + signed(joint_mult), axis_out_cqbc_d'length));
 	
 

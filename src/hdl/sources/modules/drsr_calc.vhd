@@ -204,7 +204,7 @@ begin
 			output_user   => joint_sm_coord
 		);
 		
-	sm_calc <= std_logic_vector(signed("0" & joint_sm_cqbc) - signed(joint_sm_mevqi));
+	sm_calc <= std_logic_vector(signed("0" & unsigned(joint_sm_cqbc)) - signed(joint_sm_mevqi));
 	
 	fm_times_sm_multiplier: entity work.AXIS_MULTIPLIER
 		Generic map (
@@ -259,7 +259,7 @@ begin
 			output_user   => joint_last_coord
 		);
 		
-	final_unshifted <= std_logic_vector(signed(joint_last_fmsm) + signed("0" & joint_last_hrpsv) - signed("0" & damping_shifted_by_omega_p1));
+	final_unshifted <= std_logic_vector(signed(joint_last_fmsm) + signed("0" & unsigned(joint_last_hrpsv)) - signed("0" & unsigned(damping_shifted_by_omega_p1)));
 	
 	latch_final_unshifted: entity work.AXIS_DATA_LATCH
 		Generic map (

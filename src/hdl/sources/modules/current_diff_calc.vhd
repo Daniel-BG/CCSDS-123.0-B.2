@@ -73,6 +73,6 @@ begin
 			output_user	  => axis_out_coord
 		);
 		axis_out_cd_coord <= axis_out_coord;
-		axis_out_cd_d <= std_logic_vector(signed("000" & axis_out_repr) - signed("0" & axis_out_ls));
+		axis_out_cd_d <= std_logic_vector(signed("000" & unsigned(axis_out_repr)) - signed("0" & unsigned(axis_out_ls)));
 
 end Behavioral;

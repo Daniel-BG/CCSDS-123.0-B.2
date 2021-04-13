@@ -72,6 +72,6 @@ begin
 		
 	axis_out_drpe_valid <= joint_valid;
 	joint_ready <= axis_out_drpe_ready;
-	axis_out_drpe_d <= std_logic_vector(signed("0" & joint_cqbc & "0") - signed("0" & joint_drpsv));
+	axis_out_drpe_d <= std_logic_vector(signed("0" & unsigned(joint_cqbc) & "0") - signed("0" & unsigned(joint_drpsv)));
 
 end Behavioral;

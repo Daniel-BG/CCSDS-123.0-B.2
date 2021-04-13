@@ -152,6 +152,9 @@ begin
 		);
 		
 	axis_enc_alg_last <= '1' when STDLV2CB(axis_enc_alg_coord).last_x = '1' and STDLV2CB(axis_enc_alg_coord).last_y = '1' and STDLV2CB(axis_enc_alg_coord).last_z = '1' else '0';
+	
+	assert axis_enc_alg_code'length <= 64 report "The aligner does not support codes bigger than 64, change it" severity failure;
+	
 	axis_enc_alg_resized_code <= std_logic_vector(resize(unsigned(axis_enc_alg_code), 64));
 	axis_enc_alg_resized_length <= std_logic_vector(resize(unsigned(axis_enc_alg_length), 7));
 	aligner: entity work.code_aligner
