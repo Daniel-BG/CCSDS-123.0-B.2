@@ -110,7 +110,7 @@ begin
 	final_ready <= axis_out_mqi_ready;
 	axis_out_mqi_valid <= final_valid;
 	
-	gen_out: process(final_theta, final_qi, final_drpsv)
+	gen_out: process(final_theta, final_qi, final_drpsv, final_qi_abs)
 		variable qi_times_drpsv_pos: boolean;
 	begin
 		axis_out_mqi_d <= (others => '0');

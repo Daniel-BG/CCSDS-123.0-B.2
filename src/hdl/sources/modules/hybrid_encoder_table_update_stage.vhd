@@ -80,20 +80,19 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 	signal ss_coord				: coordinate_bounds_array_t;
 	signal ss_flush_bit			: flush_bit_t;
 	signal ss_code_table_addr	: std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0);
-	signal ss_code_table_data	: bin_table_t;
 	signal ss_input_symbol		: std_logic_vector(3 downto 0);
 	
 	--third stage signals
 	type ts_code_table_enties_t is array(0 to 13) of std_logic_vector(31 downto 0);
 	signal ts_code_table_entries: ts_code_table_enties_t;
 	signal ts_selected_table_entry: std_logic_vector(31 downto 0);
-	signal ts_current_table_code: std_logic_vector(31 downto 0);
 	signal ts_mqi				: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 	signal ts_coord				: coordinate_bounds_array_t;
 	signal ts_ready, ts_valid	: std_logic;
 	signal ts_flush_bit			: flush_bit_t;
 	signal ts_code_index		: std_logic_vector(3 downto 0);
 	signal ts_input_symbol		: std_logic_vector(3 downto 0);
+	signal ts_code_table_addr	: std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0);
 	signal ts_code_table_data	: bin_table_t;
 	signal ts_ihe				: std_logic;
 	signal ts_cw_bits 			: std_logic_vector(CONST_CODEWORD_BITS - 1 downto 0);
@@ -243,12 +242,6 @@ begin
 			write_index => ts_code_index,
 			write_addr => ts_at_next_addr
 		);
-	--code table ROM
-	code_rom: entity work.code_table_rom
-		Port map ( 
-			addr => ss_code_table_addr,
-			data => ss_code_table_data
-		);
 	
 	--calc input symbol , very important
 	input_symbol_calc: process(ss_mqi, ss_code_index)
@@ -266,35 +259,41 @@ begin
 	ts_latch: entity work.AXIS_DATA_LATCH 
 		Generic map (
 			DATA_WIDTH => CONST_MQI_BITS,
-			USER_WIDTH => coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 + bin_table_t'length
+			USER_WIDTH => CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS + coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4
 		)
 		Port map ( 
 			clk => clk, rst => rst,
 			input_data => ss_mqi,
 			input_ready => ss_ready,
 			input_valid => ss_valid,
-			input_user(coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 + bin_table_t'length - 1 downto CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 + bin_table_t'length)  => ss_coord,
-			input_user(CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 + bin_table_t'length - 1 downto flush_bit_t'length + 4 + 4 + bin_table_t'length)  => ss_k,
-			input_user(flush_bit_t'length + 4 + 4 + bin_table_t'length - 1 downto 4 + 4 + bin_table_t'length)  => ss_flush_bit,
-			input_user(4 + 4 + bin_table_t'length - 1 downto 4 + bin_table_t'length)  => ss_code_index,
-			input_user(4 + bin_table_t'length - 1 downto bin_table_t'length)  => ss_input_symbol,
-			input_user(bin_table_t'length - 1 downto 0)  => ss_code_table_data,
+			input_user(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS + coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 - 1 downto coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4)  => ss_code_table_addr,
+			input_user(coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 - 1 downto CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4)  => ss_coord,
+			input_user(CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 - 1 downto flush_bit_t'length + 4 + 4)  => ss_k,
+			input_user(flush_bit_t'length + 4 + 4 - 1 downto 4 + 4)  => ss_flush_bit,
+			input_user(4 + 4 - 1 downto 4)  => ss_code_index,
+			input_user(4 - 1 downto 0)  => ss_input_symbol,
 			input_last  => ss_ihe,
 			output_data	=> ts_mqi,
 			output_ready=> ts_ready,
 			output_valid=> ts_valid,
-			output_user(coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 + bin_table_t'length - 1 downto CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 + bin_table_t'length)  => ts_coord,
-			output_user(CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 + bin_table_t'length - 1 downto flush_bit_t'length + 4 + 4 + bin_table_t'length)  => ts_k,
-			output_user(flush_bit_t'length + 4 + 4 + bin_table_t'length - 1 downto 4 + 4 + bin_table_t'length)  => ts_flush_bit,
-			output_user(4 + 4 + bin_table_t'length - 1 downto 4 + bin_table_t'length)  => ts_code_index,
-			output_user(4 + bin_table_t'length - 1 downto bin_table_t'length)  => ts_input_symbol,
-			output_user(bin_table_t'length - 1 downto 0)  => ts_code_table_data,
+			output_user(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS + coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 - 1 downto coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4)  => ts_code_table_addr,
+			output_user(coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 - 1 downto CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4)  => ts_coord,
+			output_user(CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4 - 1 downto flush_bit_t'length + 4 + 4)  => ts_k,
+			output_user(flush_bit_t'length + 4 + 4 - 1 downto 4 + 4)  => ts_flush_bit,
+			output_user(4 + 4 - 1 downto 4)  => ts_code_index,
+			output_user(4 - 1 downto 0) => ts_input_symbol,
 			output_last => ts_ihe
+		);
+		
+	--code table ROM
+	code_rom: entity work.code_table_rom
+		Port map ( 
+			addr => ts_code_table_addr,
+			data => ts_code_table_data
 		);
 		
 	assign_ts_table_entries: process(ts_code_table_data)
 	begin
-		ts_current_table_code <= ts_code_table_data(32*15 - 1 downto 32*14);
 		for i in 0 to 13 loop
 			ts_code_table_entries(i) <= ts_code_table_data(32*15 - (i+1)*32 - 1 downto 32*15 - (i+2)*32);
 		end loop;
@@ -327,7 +326,7 @@ begin
 	
 	--fourth stage latch (Fourth stage generates the final outputs)
 	--third stage latch
-	fs_latch: entity work.AXIS_LATCHED_CONNECTION
+	fourth_stage_latch: entity work.AXIS_LATCHED_CONNECTION
 		Generic map (
 			DATA_WIDTH => CONST_MQI_BITS,
 			USER_WIDTH => flush_bit_t'length + coordinate_bounds_array_t'length + CONST_MAX_K_BITS + 4 + CONST_MQI_BITS + 1 + CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS

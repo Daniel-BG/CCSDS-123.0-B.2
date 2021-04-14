@@ -26,6 +26,9 @@ use work.ccsds_data_structures.all;
 use ieee.numeric_std.all;
 
 entity ccsds_123b2_core is
+	generic (
+		USE_HYBRID_CODER		: boolean := true
+	);
 	port ( 
 		clk, rst				: in std_logic;
 		--core config
@@ -60,7 +63,7 @@ entity ccsds_123b2_core is
 		cfg_initial_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_u_max				: in std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
-		cfg_iacc_d				: in std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
+		cfg_iacc_d				: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 		cfg_iacc_valid			: in std_logic;
 		cfg_iacc_ready			: out std_logic;
 		--input port
@@ -80,10 +83,8 @@ architecture Behavioral of ccsds_123b2_core is
 	signal axis_pred_enc_ready, axis_pred_enc_valid: std_logic;
 	signal axis_pred_enc_coord: coordinate_bounds_array_t;
 			
-	signal axis_enc_alg_code: std_logic_vector(CONST_MAX_CODE_LENGTH - 1 downto 0);
-	signal axis_enc_alg_resized_code: std_logic_vector(63 downto 0);
-	signal axis_enc_alg_length: std_logic_vector(CONST_MAX_CODE_LENGTH_BITS - 1 downto 0);
-	signal axis_enc_alg_resized_length: std_logic_vector(6 downto 0);
+	signal axis_enc_alg_code: std_logic_vector(CONST_OUTPUT_CODE_LENGTH - 1 downto 0);
+	signal axis_enc_alg_length: std_logic_vector(CONST_OUTPUT_CODE_LENGTH_BITS - 1 downto 0);
 	signal axis_enc_alg_coord: coordinate_bounds_array_t;
 	signal axis_enc_alg_valid, axis_enc_alg_ready, axis_enc_alg_last: std_logic;
 begin
@@ -131,12 +132,16 @@ begin
 			axis_out_mqi_coord		=> axis_pred_enc_coord
 		);
 		
-	encoder: entity work.encoder
+	encoder: entity work.encoder_bypass
+		generic map (
+			USE_HYBRID_CODER => USE_HYBRID_CODER
+		)
 		Port map ( 
 			clk => clk, rst => rst,
 			cfg_initial_counter		=> cfg_initial_counter,
 			cfg_final_counter		=> cfg_final_counter,
 			cfg_u_max				=> cfg_u_max,
+			cfg_depth 				=> cfg_depth,
 			cfg_iacc_d				=> cfg_iacc_d,
 			cfg_iacc_valid			=> cfg_iacc_valid,
 			cfg_iacc_ready			=> cfg_iacc_ready,
@@ -155,13 +160,11 @@ begin
 	
 	assert axis_enc_alg_code'length <= 64 report "The aligner does not support codes bigger than 64, change it" severity failure;
 	
-	axis_enc_alg_resized_code <= std_logic_vector(resize(unsigned(axis_enc_alg_code), 64));
-	axis_enc_alg_resized_length <= std_logic_vector(resize(unsigned(axis_enc_alg_length), 7));
 	aligner: entity work.code_aligner
 		Port map ( 
 			clk => clk, rst => rst,
-			axis_in_code		=> axis_enc_alg_resized_code,
-			axis_in_length		=> axis_enc_alg_resized_length,
+			axis_in_code		=> axis_enc_alg_code,
+			axis_in_length		=> axis_enc_alg_length,
 			axis_in_valid		=> axis_enc_alg_valid,
 			axis_in_last		=> axis_enc_alg_last,
 			axis_in_ready		=> axis_enc_alg_ready,

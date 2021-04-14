@@ -27,6 +27,7 @@ use ieee.numeric_std.all;
 entity code_gen is
 	Port ( 
 		cfg_u_max				: in std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
+		cfg_depth				: in std_logic_vector(CONST_MAX_DATA_WIDTH_BITS - 1 downto 0);
 		axis_in_valid			: in std_logic;
 		axis_in_ready			: out std_logic;
 		axis_in_mqi				: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
@@ -59,7 +60,7 @@ begin
 		else
 			and_mask <= (others => '0');
 			or_mask  <= (others => '0');
-			axis_out_length <= std_logic_vector(to_unsigned(CONST_MAX_CODE_LENGTH, CONST_MAX_CODE_LENGTH_BITS));
+			axis_out_length <= std_logic_vector(resize(unsigned(cfg_u_max) + unsigned(cfg_depth), CONST_MAX_CODE_LENGTH_BITS));
 		end if;
 	end process;
 

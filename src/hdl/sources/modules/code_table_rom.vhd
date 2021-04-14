@@ -26,6 +26,7 @@ use work.ccsds_constants.all;
 
 entity code_table_rom is
 	Port ( 
+--		clk, enable: in std_logic;
 		addr: in std_logic_vector(9 downto 0);
 		data: out std_logic_vector(15*32-1 downto 0)
 	);
@@ -33,13 +34,17 @@ end code_table_rom;
 
 architecture Behavioral of code_table_rom is
 	signal table_data: table_rom_t := CONST_LOW_ENTROPY_CODING_TABLE;
+--	attribute ram_style : string;
+--	attribute ram_style of table_data : signal is "block";
 begin
-	data <= table_data(to_integer(unsigned(addr)));
+
+data <= table_data(to_integer(unsigned(addr)));
+
 --	seq: process(clk, enable)
 --	begin
 --		if rising_edge(clk) then
 --			if enable = '1' then
---				data <= low_entropy_coding_table(to_integer(unsigned(addr)));
+--				data <= table_data(to_integer(unsigned(addr)));
 --			end if;
 --		end if;
 --	end process;

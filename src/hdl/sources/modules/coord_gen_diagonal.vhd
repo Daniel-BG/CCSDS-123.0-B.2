@@ -87,7 +87,7 @@ begin
 	end process;
 	
 	
-	comb: process(state_curr, z_curr, t_curr, tz_curr, cfg_max_z, cfg_max_t, axis_out_ready)
+	comb: process(state_curr, z_curr, t_curr, tz_curr, cfg_max_z, cfg_max_t, axis_out_ready, cfg_max_z_m1)
 	
 		variable z, tz: unsigned(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
 		variable t: unsigned(CONST_MAX_T_VALUE_BITS - 1 downto 0);

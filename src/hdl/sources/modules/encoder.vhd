@@ -23,6 +23,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.ccsds_constants.all;
 use work.ccsds_data_structures.all;
+use ieee.numeric_std.all;
 
 entity encoder is
 	Port ( 
@@ -30,6 +31,7 @@ entity encoder is
 		cfg_initial_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_u_max				: in std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
+		cfg_depth				: in std_logic_vector(CONST_MAX_DATA_WIDTH_BITS - 1 downto 0);
 		cfg_iacc_d				: in std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
 		cfg_iacc_valid			: in std_logic;
 		cfg_iacc_ready			: out std_logic;
@@ -37,8 +39,8 @@ entity encoder is
 		axis_in_mqi_ready		: out std_logic;
 		axis_in_mqi_valid		: in std_logic;
 		axis_in_mqi_coord		: in coordinate_bounds_array_t;
-		axis_out_code			: out std_logic_vector(CONST_MAX_CODE_LENGTH - 1 downto 0);
-		axis_out_length			: out std_logic_vector(CONST_MAX_CODE_LENGTH_BITS - 1 downto 0);
+		axis_out_code			: out std_logic_vector(CONST_OUTPUT_CODE_LENGTH - 1 downto 0);
+		axis_out_length			: out std_logic_vector(CONST_OUTPUT_CODE_LENGTH_BITS - 1 downto 0);
 		axis_out_coord			: out coordinate_bounds_array_t;
 		axis_out_valid			: out std_logic;
 		axis_out_ready			: in std_logic
@@ -62,6 +64,8 @@ architecture Behavioral of encoder is
 	signal axis_acc_cg_l_k: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
 	signal axis_acc_cg_l_coord: coordinate_bounds_array_t;
 	
+	signal axis_out_code_raw: std_logic_vector(CONST_MAX_CODE_LENGTH - 1 downto 0);
+	signal axis_out_length_raw: std_logic_vector(CONST_MAX_CODE_LENGTH_BITS - 1 downto 0);
 begin
 
 	counter: entity work.counter
@@ -121,16 +125,20 @@ begin
 	code_gen: entity work.code_gen
 		Port map ( 
 			cfg_u_max				=> cfg_u_max,
+			cfg_depth 				=> cfg_depth,
 			axis_in_valid			=> axis_acc_cg_l_valid,
 			axis_in_ready			=> axis_acc_cg_l_ready,
 			axis_in_mqi				=> axis_acc_cg_l_mqi,
 			axis_in_k				=> axis_acc_cg_l_k,
 			axis_in_coord			=> axis_acc_cg_l_coord,
-			axis_out_code			=> axis_out_code,
-			axis_out_length			=> axis_out_length,
+			axis_out_code			=> axis_out_code_raw,
+			axis_out_length			=> axis_out_length_raw,
 			axis_out_coord			=> axis_out_coord,
 			axis_out_valid			=> axis_out_valid,
 			axis_out_ready			=> axis_out_ready
 		);
+		
+	axis_out_code <= std_logic_vector(resize(unsigned(axis_out_code_raw), axis_out_code'length));
+	axis_out_length <= std_logic_vector(resize(unsigned(axis_out_length_raw), axis_out_length'length));
 
 end Behavioral;

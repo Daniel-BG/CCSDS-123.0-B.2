@@ -128,6 +128,9 @@ package ccsds_constants is
 	constant CONST_MAX_CODE_LENGTH		: integer := CONST_U_MAX_MAX + CONST_MAX_DATA_WIDTH;
 	constant CONST_MAX_CODE_LENGTH_BITS : integer := BITS(CONST_MAX_CODE_LENGTH);
 	
+	constant CONST_OUTPUT_CODE_LENGTH 	: integer := 64;
+	constant CONST_OUTPUT_CODE_LENGTH_BITS: integer := 7;
+	
 	
 	subtype threshold_value_t is std_logic_vector (18 downto 0);
     type threshold_table_t is array (0 to 15) of threshold_value_t;
