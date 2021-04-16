@@ -33,9 +33,7 @@ entity encoder_bypass is
 		clk, rst				: in std_logic;
 		cfg_initial_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
-		cfg_iacc_d				: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
-		cfg_iacc_valid			: in std_logic;
-		cfg_iacc_ready			: out std_logic;
+		cfg_iacc				: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 		cfg_u_max				: in std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
 		cfg_depth				: in std_logic_vector(CONST_MAX_DATA_WIDTH_BITS - 1 downto 0);
 		axis_in_mqi_d			: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
@@ -46,7 +44,8 @@ entity encoder_bypass is
 		axis_out_length			: out std_logic_vector(CONST_OUTPUT_CODE_LENGTH_BITS - 1 downto 0);
 		axis_out_coord			: out coordinate_bounds_array_t;
 		axis_out_valid			: out std_logic;
-		axis_out_ready			: in std_logic
+		axis_out_ready			: in std_logic;
+		axis_out_last			: out std_logic
 	);
 end encoder_bypass;
 
@@ -67,6 +66,7 @@ architecture Behavioral of encoder_bypass is
 	signal coder_axis_out_coord			: coordinate_bounds_array_t;
 	signal coder_axis_out_valid			: std_logic;
 	signal coder_axis_out_ready			: std_logic;
+	signal coder_axis_out_last			: std_logic;
 	
 	--output latch input
 	signal olatch_in_code				: std_logic_vector(CONST_OUTPUT_CODE_LENGTH - 1 downto 0);
@@ -74,6 +74,7 @@ architecture Behavioral of encoder_bypass is
 	signal olatch_in_coord				: coordinate_bounds_array_t;
 	signal olatch_in_valid				: std_logic;
 	signal olatch_in_ready				: std_logic;
+	signal olatch_in_last				: std_logic;
 	
 	
 	--fsm control
@@ -107,13 +108,14 @@ begin
 		end if; 
 	end process;
 		
-	bypass_logic: process(latched_mqi_coord, latched_mqi_d, latched_mqi_valid, 
-			olatch_in_ready,
+	bypass_logic: process(latched_mqi_coord, latched_mqi_d, latched_mqi_valid,
+			olatch_in_ready, 
 			coder_axis_in_mqi_ready,
 			coder_axis_out_code,
 			coder_axis_out_length,
 			coder_axis_out_coord,
 			coder_axis_out_valid,
+			coder_axis_out_last,
 			cfg_depth,
 			state_curr)
 	begin
@@ -125,6 +127,7 @@ begin
 			olatch_in_length	<= std_logic_vector(resize(unsigned(cfg_depth), olatch_in_length'length));
 			olatch_in_coord		<= latched_mqi_coord;
 			olatch_in_valid		<= latched_mqi_valid;
+			olatch_in_last 		<= '0';
 			latched_mqi_ready 	<= olatch_in_ready;
 			
 			--defaults for non-used signals
@@ -149,6 +152,7 @@ begin
 			olatch_in_length	<= coder_axis_out_length;
 			olatch_in_coord		<= coder_axis_out_coord;
 			olatch_in_valid		<= coder_axis_out_valid;
+			olatch_in_last 		<= coder_axis_out_last;
 			coder_axis_out_ready<= olatch_in_ready;
 		end if;
 	end process;
@@ -161,9 +165,7 @@ begin
 				cfg_final_counter		=> cfg_final_counter,
 				cfg_u_max				=> cfg_u_max,
 				cfg_depth 				=> cfg_depth,
-				cfg_iacc_d				=> cfg_iacc_d(CONST_MAX_ACC_BITS - 1 downto 0),
-				cfg_iacc_valid			=> cfg_iacc_valid,
-				cfg_iacc_ready			=> cfg_iacc_ready,
+				cfg_iacc				=> cfg_iacc(CONST_MAX_ACC_BITS - 1 downto 0),
 				axis_in_mqi_d			=> coder_axis_in_mqi_d,
 				axis_in_mqi_ready		=> coder_axis_in_mqi_ready,
 				axis_in_mqi_valid		=> coder_axis_in_mqi_valid,
@@ -172,7 +174,8 @@ begin
 				axis_out_length			=> coder_axis_out_length,
 				axis_out_coord			=> coder_axis_out_coord,
 				axis_out_valid			=> coder_axis_out_valid,
-				axis_out_ready			=> coder_axis_out_ready
+				axis_out_ready			=> coder_axis_out_ready,
+				axis_out_last			=> coder_axis_out_last
 			);
 	end generate;
 	
@@ -182,9 +185,7 @@ begin
 				clk => clk, rst	=> rst,
 				cfg_initial_counter		=> cfg_initial_counter,
 				cfg_final_counter		=> cfg_final_counter,
-				cfg_axis_in_ihra_d		=> cfg_iacc_d,
-				cfg_axis_in_ihra_valid	=> cfg_iacc_valid,
-				cfg_axis_in_ihra_ready	=> cfg_iacc_ready,
+				cfg_ihra				=> cfg_iacc,
 				cfg_u_max				=> cfg_u_max,
 				cfg_depth				=> cfg_depth,
 				axis_in_mqi_d			=> coder_axis_in_mqi_d,
@@ -195,7 +196,8 @@ begin
 				axis_out_length			=> coder_axis_out_length,
 				axis_out_coord			=> coder_axis_out_coord,
 				axis_out_valid			=> coder_axis_out_valid,
-				axis_out_ready			=> coder_axis_out_ready
+				axis_out_ready			=> coder_axis_out_ready,
+				axis_out_last			=> coder_axis_out_last
 			);
 	end generate;
 	
@@ -211,11 +213,13 @@ begin
 			input_data(coordinate_bounds_array_t'length - 1 downto 0)	=> olatch_in_coord,
 			input_ready => olatch_in_ready,
 			input_valid => olatch_in_valid,
+			input_last  => olatch_in_last,
 			output_data(CONST_OUTPUT_CODE_LENGTH + CONST_OUTPUT_CODE_LENGTH_BITS + coordinate_bounds_array_t'length - 1 downto CONST_OUTPUT_CODE_LENGTH_BITS + coordinate_bounds_array_t'length)	=> axis_out_code,
 			output_data(CONST_OUTPUT_CODE_LENGTH_BITS + coordinate_bounds_array_t'length - 1 downto coordinate_bounds_array_t'length)	=> axis_out_length,
 			output_data(coordinate_bounds_array_t'length - 1 downto 0)	=> axis_out_coord,
 			output_ready=> axis_out_ready,
-			output_valid=> axis_out_valid
+			output_valid=> axis_out_valid,
+			output_last => axis_out_last
 		);
 
 end Behavioral;

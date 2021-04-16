@@ -30,9 +30,7 @@ entity accumulator is
 	Port ( 
 		clk, rst				: in std_logic;
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
-		cfg_axis_in_iacc_d		: in std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-		cfg_axis_in_iacc_valid	: in std_logic;
-		cfg_axis_in_iacc_ready	: out std_logic;
+		cfg_iacc				: in std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
 		axis_in_mqi				: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 		axis_in_coord			: in coordinate_bounds_array_t;
 		axis_in_counter			: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
@@ -47,10 +45,6 @@ entity accumulator is
 end accumulator;
 
 architecture Behavioral of accumulator is
-	--iacc queue
-	signal axis_iaccq_d: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-	signal axis_iaccq_valid, axis_iaccq_ready: std_logic;
-	
 	--condition for selection
 	signal axis_in_cond: std_logic;
 	
@@ -72,6 +66,7 @@ architecture Behavioral of accumulator is
 	signal axis_ars_na_valid, axis_ars_na_ready: std_logic;
 	signal axis_ars_na_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 	signal axis_ars_na_cnt: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal axis_ars_na_coord: coordinate_bounds_array_t;
 	signal axis_ars_t49_acc: std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
 	signal axis_ars_t49_valid, axis_ars_t49_ready: std_logic;
 	signal axis_ars_t49_mqi: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
@@ -95,22 +90,6 @@ architecture Behavioral of accumulator is
 	signal axis_cmpg_kgen_coord: coordinate_bounds_array_t;
 	
 begin
-
-	input_acc_queue: entity work.AXIS_FIFO
-		Generic map (
-			DATA_WIDTH => CONST_MAX_ACC_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
-		)
-		Port map ( 
-			clk	=> clk, rst => rst,
-			input_valid		=> cfg_axis_in_iacc_valid,
-			input_ready		=> cfg_axis_in_iacc_ready,
-			input_data		=> cfg_axis_in_iacc_d,
-			--out axi port
-			output_ready	=> axis_iaccq_ready,
-			output_data		=> axis_iaccq_d,
-			output_valid	=> axis_iaccq_valid
-		);
 		
 	saved_acc_data_latch: entity work.AXIS_DATA_LATCH 
 		Generic map (
@@ -155,9 +134,9 @@ begin
 			axis_in_cond_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS) => axis_in_coord,
 			axis_in_cond_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => axis_in_mqi,
 			axis_in_cond_user(CONST_MAX_COUNTER_BITS - 1 downto 0) => axis_in_counter,
-			axis_in_data_0_d   		=> axis_iaccq_d,
-			axis_in_data_0_valid	=> axis_iaccq_valid,
-			axis_in_data_0_ready	=> axis_iaccq_ready,
+			axis_in_data_0_d   		=> cfg_iacc,
+			axis_in_data_0_valid	=> '1',
+			axis_in_data_0_ready	=> open,
 			axis_in_data_1_d		=> axis_saccq_d,
 			axis_in_data_1_valid	=> axis_saccq_valid,
 			axis_in_data_1_ready	=> axis_saccq_ready,
@@ -187,7 +166,7 @@ begin
 			output_0_valid		=> axis_ars_na_valid,
 			output_0_data		=> axis_ars_na_acc,
 			output_0_ready		=> axis_ars_na_ready,
-			output_0_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS) => open,
+			output_0_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS) => axis_ars_na_coord,
 			output_0_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => axis_ars_na_mqi,
 			output_0_user(CONST_MAX_COUNTER_BITS - 1 downto 0)	=> axis_ars_na_cnt,
 			output_1_valid		=> axis_ars_t49_valid,

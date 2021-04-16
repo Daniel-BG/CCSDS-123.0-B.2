@@ -23,6 +23,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.ccsds_constants.all;
 use work.ccsds_data_structures.all;
+use work.ccsds_math_functions.all;
 use ieee.numeric_std.all;
 
 entity hybrid_encoder_code_gen_stage is
@@ -37,24 +38,27 @@ entity hybrid_encoder_code_gen_stage is
 		axis_in_mqi				: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 		axis_in_coord			: in coordinate_bounds_array_t;
 		axis_in_k				: in std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
-		axis_in_input_symbol	: in std_logic_vector(3 downto 0);
+		axis_in_input_symbol	: in std_logic_vector(CONST_INPUT_SYMBOL_BITS - 1 downto 0);
 		axis_in_code_quant		: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 		axis_in_is_tree			: in std_logic_vector(0 downto 0);
 		axis_in_cw_bits 		: in std_logic_vector(CONST_CODEWORD_BITS - 1 downto 0);
 		axis_in_cw_length		: in std_logic_vector(CONST_CODEWORD_LENGTH_BITS - 1 downto 0);
 		axis_in_ihe				: in std_logic;
 		axis_in_flush_bit		: in flush_bit_t;
-		axis_out_code			: out std_logic_vector(63 downto 0);
-		axis_out_length			: out std_logic_vector(6 downto 0);
+		axis_in_last			: in std_logic;
+		axis_out_code			: out std_logic_vector(CONST_OUTPUT_CODE_LENGTH-1 downto 0);
+		axis_out_length			: out std_logic_vector(CONST_OUTPUT_CODE_LENGTH_BITS-1 downto 0);
 		axis_out_coord			: out coordinate_bounds_array_t;
 		axis_out_valid			: out std_logic;
-		axis_out_ready			: in std_logic
+		axis_out_ready			: in std_logic;
+		axis_out_last			: out std_logic
 	);
 end hybrid_encoder_code_gen_stage;
 
 architecture Behavioral of hybrid_encoder_code_gen_stage is
-	constant CONST_CODE_LENGTH: integer := 86;
-	constant CONST_CODE_BITS: integer := 7;
+	--allow space for 1 extra bit from accumulator + maximum reverse golomb code + codeword (all could be output in a single cycle)
+	constant CONST_CODE_LENGTH: integer := 1 + CONST_MAX_CODE_LENGTH + CONST_CODEWORD_BITS; -- up to 1 + 64 + 21 = 86;
+	constant CONST_CODE_BITS: integer := bits(CONST_CODE_LENGTH);
 
 	--process on input stream
 	signal axis_in_code: std_logic_vector(CONST_CODE_LENGTH - 1 downto 0);
@@ -68,7 +72,7 @@ architecture Behavioral of hybrid_encoder_code_gen_stage is
 	
 	--first latch data
 	signal fs_code: std_logic_vector(CONST_CODE_LENGTH - 1 downto 0);
-	signal fs_ready, fs_valid: std_logic;
+	signal fs_ready, fs_valid, fs_last: std_logic;
 	signal fs_code_length: std_logic_vector(CONST_CODE_BITS - 1 downto 0);
 	signal fs_code_gol: std_logic;
 	signal fs_gol_param: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
@@ -84,7 +88,7 @@ architecture Behavioral of hybrid_encoder_code_gen_stage is
 	
 	--second stage
 	signal ss_code: std_logic_vector(CONST_CODE_LENGTH - 1 downto 0);
-	signal ss_ready, ss_valid: std_logic;
+	signal ss_ready, ss_valid, ss_last: std_logic;
 	signal ss_code_length: std_logic_vector(CONST_CODE_BITS - 1 downto 0);
 	signal ss_code_cw: std_logic;
 	signal ss_cw_bits: std_logic_vector(CONST_CODEWORD_BITS - 1 downto 0);
@@ -95,7 +99,7 @@ architecture Behavioral of hybrid_encoder_code_gen_stage is
 	
 	--big code latch
 	signal bc_code: std_logic_vector(CONST_CODE_LENGTH - 1 downto 0);
-	signal bc_ready, bc_valid: std_logic;
+	signal bc_ready, bc_valid, bc_last: std_logic;
 	signal bc_code_length: std_logic_vector(CONST_CODE_BITS - 1 downto 0);
 	signal bc_coord: coordinate_bounds_array_t;
 	
@@ -161,6 +165,7 @@ begin
 			input_user(CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS)  => axis_in_code_cw,
 			input_user(CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS - 1 downto CONST_CODEWORD_LENGTH_BITS)  => axis_in_cw_bits,
 			input_user(CONST_CODEWORD_LENGTH_BITS - 1 downto 0)  => axis_in_cw_length,
+			input_last => axis_in_last,
 			output_data	=> fs_code,
 			output_ready=> fs_ready,
 			output_valid=> fs_valid,
@@ -173,7 +178,8 @@ begin
 			output_user(CONST_MQI_BITS + 1 + CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS - 1 downto 1 + CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS)  => fs_gol_code,
 			output_user(CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS)  => fs_code_cw,
 			output_user(CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS - 1 downto CONST_CODEWORD_LENGTH_BITS)  => fs_cw_bits,
-			output_user(CONST_CODEWORD_LENGTH_BITS - 1 downto 0)  => fs_cw_length
+			output_user(CONST_CODEWORD_LENGTH_BITS - 1 downto 0)  => fs_cw_length,
+			output_last => fs_last
 		);
 
 	golomb_code: process(fs_code_length, fs_code, fs_code_gol, fs_gol_code, fs_gol_param, cfg_u_max, cfg_depth, fs_threshold_under_umax, fs_threshold)
@@ -222,6 +228,7 @@ begin
 			input_user(CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS)  => fs_code_cw,
 			input_user(CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS - 1 downto CONST_CODEWORD_LENGTH_BITS)  => fs_cw_bits,
 			input_user(CONST_CODEWORD_LENGTH_BITS - 1 downto 0)  => fs_cw_length,
+			input_last => fs_last,
 			output_data	=> ss_code,
 			output_ready=> ss_ready,
 			output_valid=> ss_valid,
@@ -229,7 +236,8 @@ begin
 			output_user(CONST_CODE_BITS + 1 + CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS - 1 downto 1 + CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS)  => ss_code_length,
 			output_user(CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS)  => ss_code_cw,
 			output_user(CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS - 1 downto CONST_CODEWORD_LENGTH_BITS)  => ss_cw_bits,
-			output_user(CONST_CODEWORD_LENGTH_BITS - 1 downto 0)  => ss_cw_length
+			output_user(CONST_CODEWORD_LENGTH_BITS - 1 downto 0)  => ss_cw_length,
+			output_last	=> ss_last
 		);
 		
 	add_final_cw: process(ss_code_length, ss_code, ss_cw_length, ss_cw_bits, ss_code_cw)
@@ -255,11 +263,13 @@ begin
 			input_valid => ss_valid,
 			input_user(CONST_CODE_BITS + coordinate_bounds_array_t'length - 1 downto coordinate_bounds_array_t'length) => ss_updated_code_length,
 			input_user(coordinate_bounds_array_t'length - 1 downto 0)  => ss_coord,
+			input_last	=> ss_last,
 			output_data	=> bc_code,
 			output_ready=> bc_ready,
 			output_valid=> bc_valid,
 			output_user(CONST_CODE_BITS + coordinate_bounds_array_t'length - 1 downto coordinate_bounds_array_t'length) => bc_code_length,
-			output_user(coordinate_bounds_array_t'length - 1 downto 0) => bc_coord
+			output_user(coordinate_bounds_array_t'length - 1 downto 0) => bc_coord,
+			output_last => bc_last
 		);
 		
 	seq: process(clk, rst)
@@ -271,29 +281,31 @@ begin
 		end if;
 	end process;
 	
-	comb: process(state_curr, bc_code, bc_code_length, bc_valid, axis_out_ready, bc_coord)
+	comb: process(state_curr, bc_code, bc_code_length, bc_valid, axis_out_ready, bc_coord, bc_last)
 	begin
 		state_next <= state_curr;
 		axis_out_coord <= bc_coord;
+		axis_out_last <= bc_last;
 		
 		if state_curr = BOTTOM_64 then
-			if unsigned(bc_code_length) <= 64 then
-				axis_out_code <= bc_code(63 downto 0);
+			if unsigned(bc_code_length) <= CONST_OUTPUT_CODE_LENGTH then
+				axis_out_code <= bc_code(CONST_OUTPUT_CODE_LENGTH-1 downto 0);
 				axis_out_length <= bc_code_length;
 				axis_out_valid <= bc_valid;
 				bc_ready <= axis_out_ready;
 			else
-				axis_out_code <= bc_code(63 downto 0);
-				axis_out_length <= std_logic_vector(to_unsigned(64, axis_out_length'length));
+				axis_out_code <= bc_code(CONST_OUTPUT_CODE_LENGTH-1 downto 0);
+				axis_out_length <= std_logic_vector(to_unsigned(CONST_OUTPUT_CODE_LENGTH, axis_out_length'length));
 				axis_out_valid <= bc_valid;
 				bc_ready <= '0'; --dont want to make this guy think it's over
+				axis_out_last <= '0';
 				if bc_valid = '1' and axis_out_ready = '1' then
 					state_next <= TOP_64;
 				end if;
 			end if;
 		elsif state_curr = TOP_64 then
-			axis_out_code <= std_logic_vector(resize(shift_right(unsigned(bc_code), 64), 64));
-			axis_out_length <= std_logic_vector(unsigned(bc_code_length) - 64);
+			axis_out_code <= std_logic_vector(resize(shift_right(unsigned(bc_code), CONST_OUTPUT_CODE_LENGTH), CONST_OUTPUT_CODE_LENGTH));
+			axis_out_length <= std_logic_vector(unsigned(bc_code_length) - CONST_OUTPUT_CODE_LENGTH);
 			axis_out_valid <= bc_valid;
 			bc_ready <= axis_out_ready;
 			if bc_valid = '1' and axis_out_ready = '1' then

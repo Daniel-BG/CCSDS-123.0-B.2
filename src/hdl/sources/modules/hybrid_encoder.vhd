@@ -29,20 +29,19 @@ entity hybrid_encoder is
 		clk, rst				: in std_logic;
 		cfg_initial_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
-		cfg_axis_in_ihra_d		: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
-		cfg_axis_in_ihra_valid	: in std_logic;
-		cfg_axis_in_ihra_ready	: out std_logic;
+		cfg_ihra				: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 		cfg_u_max				: in std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
 		cfg_depth				: in std_logic_vector(CONST_MAX_DATA_WIDTH_BITS - 1 downto 0);
 		axis_in_mqi_d			: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 		axis_in_mqi_ready		: out std_logic;
 		axis_in_mqi_valid		: in std_logic;
 		axis_in_mqi_coord		: in coordinate_bounds_array_t;
-		axis_out_code			: out std_logic_vector(63 downto 0);
-		axis_out_length			: out std_logic_vector(6 downto 0);
+		axis_out_code			: out std_logic_vector(CONST_OUTPUT_CODE_LENGTH - 1 downto 0);
+		axis_out_length			: out std_logic_vector(CONST_OUTPUT_CODE_LENGTH_BITS - 1 downto 0);
 		axis_out_coord			: out coordinate_bounds_array_t;
 		axis_out_valid			: out std_logic;
-		axis_out_ready			: in std_logic
+		axis_out_ready			: in std_logic;
+		axis_out_last 			: out std_logic
 	);
 end hybrid_encoder;
 
@@ -63,13 +62,14 @@ architecture Behavioral of hybrid_encoder is
 	signal axis_tu_cg_mqi			: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 	signal axis_tu_cg_coord			: coordinate_bounds_array_t;
 	signal axis_tu_cg_k				: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
-	signal axis_tu_cg_input_symbol	: std_logic_vector(3 downto 0);
+	signal axis_tu_cg_input_symbol	: std_logic_vector(CONST_INPUT_SYMBOL_BITS - 1 downto 0);
 	signal axis_tu_cg_code_quant	: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 	signal axis_tu_cg_is_tree		: std_logic_vector(0 downto 0);
 	signal axis_tu_cg_cw_bits 		: std_logic_vector(CONST_CODEWORD_BITS - 1 downto 0);
 	signal axis_tu_cg_cw_length		: std_logic_vector(CONST_CODEWORD_LENGTH_BITS - 1 downto 0);
 	signal axis_tu_cg_ihe			: std_logic;
 	signal axis_tu_cg_flush_bit		: flush_bit_t;
+	signal axis_tu_cg_last			: std_logic;
 begin
 
 
@@ -78,9 +78,7 @@ begin
 			clk => clk, rst	=> rst,
 			cfg_initial_counter		=> cfg_initial_counter,
 			cfg_final_counter		=> cfg_final_counter,
-			cfg_axis_in_ihra_d		=> cfg_axis_in_ihra_d,
-			cfg_axis_in_ihra_valid	=> cfg_axis_in_ihra_valid,
-			cfg_axis_in_ihra_ready	=> cfg_axis_in_ihra_ready,
+			cfg_ihra				=> cfg_ihra,
 			axis_in_mqi_d			=> axis_in_mqi_d,
 			axis_in_mqi_ready		=> axis_in_mqi_ready,
 			axis_in_mqi_valid		=> axis_in_mqi_valid,
@@ -117,7 +115,8 @@ begin
 			axis_out_cw_bits 		=> axis_tu_cg_cw_bits,
 			axis_out_cw_length		=> axis_tu_cg_cw_length,
 			axis_out_ihe			=> axis_tu_cg_ihe,
-			axis_out_flush_bit		=> axis_tu_cg_flush_bit
+			axis_out_flush_bit		=> axis_tu_cg_flush_bit,
+			axis_out_last			=> axis_tu_cg_last
 		);
 
 	code_gen_stage: entity work.hybrid_encoder_code_gen_stage 
@@ -139,10 +138,12 @@ begin
 			axis_in_cw_length		=> axis_tu_cg_cw_length,
 			axis_in_ihe				=> axis_tu_cg_ihe,
 			axis_in_flush_bit		=> axis_tu_cg_flush_bit,
+			axis_in_last			=> axis_tu_cg_last,
 			axis_out_code			=> axis_out_code,
 			axis_out_length			=> axis_out_length,
 			axis_out_coord			=> axis_out_coord,
 			axis_out_valid			=> axis_out_valid,
-			axis_out_ready			=> axis_out_ready
+			axis_out_ready			=> axis_out_ready,
+			axis_out_last 			=> axis_out_last
 		);
 end Behavioral;

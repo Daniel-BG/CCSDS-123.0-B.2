@@ -27,8 +27,8 @@ use work.ccsds_constants.all;
 entity code_table_rom is
 	Port ( 
 --		clk, enable: in std_logic;
-		addr: in std_logic_vector(9 downto 0);
-		data: out std_logic_vector(15*32-1 downto 0)
+		addr: in std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS-1 downto 0);
+		data: out std_logic_vector(CONST_INPUT_SYMBOL_AMOUNT*CONST_LOW_ENTROPY_TABLE_ENTRY_BITS-1 downto 0)
 	);
 end code_table_rom;
 

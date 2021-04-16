@@ -56,16 +56,12 @@ entity ccsds_123b2_core is
 		cfg_min_preload_value 	: in std_logic_vector(CONST_MAX_Z_VALUE_BITS*2 - 1 downto 0);
 		cfg_max_preload_value 	: in std_logic_vector(CONST_MAX_Z_VALUE_BITS*2 - 1 downto 0);
 		--axis for starting weights (cfg)
-		cfg_axis_weight_d		: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
-		cfg_axis_weight_valid	: in std_logic;
-		cfg_axis_weight_ready	: out std_logic;
+		cfg_weight_vec			: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 		--encoder things
 		cfg_initial_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_u_max				: in std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
-		cfg_iacc_d				: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
-		cfg_iacc_valid			: in std_logic;
-		cfg_iacc_ready			: out std_logic;
+		cfg_iacc				: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 		--input port
 		axis_in_s_d				: in std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		axis_in_s_valid			: in std_logic;
@@ -85,7 +81,6 @@ architecture Behavioral of ccsds_123b2_core is
 			
 	signal axis_enc_alg_code: std_logic_vector(CONST_OUTPUT_CODE_LENGTH - 1 downto 0);
 	signal axis_enc_alg_length: std_logic_vector(CONST_OUTPUT_CODE_LENGTH_BITS - 1 downto 0);
-	signal axis_enc_alg_coord: coordinate_bounds_array_t;
 	signal axis_enc_alg_valid, axis_enc_alg_ready, axis_enc_alg_last: std_logic;
 begin
 
@@ -118,9 +113,7 @@ begin
 			cfg_min_preload_value 	=> cfg_min_preload_value,
 			cfg_max_preload_value 	=> cfg_max_preload_value,
 			--axis for starting weights (cfg)
-			cfg_axis_weight_d		=> cfg_axis_weight_d,
-			cfg_axis_weight_valid	=> cfg_axis_weight_valid,
-			cfg_axis_weight_ready	=> cfg_axis_weight_ready,
+			cfg_weight_vec			=> cfg_weight_vec,
 			--input itself
 			axis_in_s_d				=> axis_in_s_d,
 			axis_in_s_valid			=> axis_in_s_valid,
@@ -142,21 +135,18 @@ begin
 			cfg_final_counter		=> cfg_final_counter,
 			cfg_u_max				=> cfg_u_max,
 			cfg_depth 				=> cfg_depth,
-			cfg_iacc_d				=> cfg_iacc_d,
-			cfg_iacc_valid			=> cfg_iacc_valid,
-			cfg_iacc_ready			=> cfg_iacc_ready,
+			cfg_iacc				=> cfg_iacc,
 			axis_in_mqi_d			=> axis_pred_enc_mqi,
 			axis_in_mqi_ready		=> axis_pred_enc_ready,
 			axis_in_mqi_valid		=> axis_pred_enc_valid,
 			axis_in_mqi_coord		=> axis_pred_enc_coord,
 			axis_out_code			=> axis_enc_alg_code,
 			axis_out_length			=> axis_enc_alg_length,
-			axis_out_coord			=> axis_enc_alg_coord,
+			axis_out_coord			=> open,
 			axis_out_valid			=> axis_enc_alg_valid,
-			axis_out_ready			=> axis_enc_alg_ready
+			axis_out_ready			=> axis_enc_alg_ready,
+			axis_out_last 			=> axis_enc_alg_last
 		);
-		
-	axis_enc_alg_last <= '1' when STDLV2CB(axis_enc_alg_coord).last_x = '1' and STDLV2CB(axis_enc_alg_coord).last_y = '1' and STDLV2CB(axis_enc_alg_coord).last_z = '1' else '0';
 	
 	assert axis_enc_alg_code'length <= 64 report "The aligner does not support codes bigger than 64, change it" severity failure;
 	

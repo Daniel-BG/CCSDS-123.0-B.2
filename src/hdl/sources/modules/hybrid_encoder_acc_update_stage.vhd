@@ -30,9 +30,7 @@ entity hybrid_encoder_acc_update_stage is
 		clk, rst				: in std_logic;
 		cfg_initial_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
-		cfg_axis_in_ihra_d		: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
-		cfg_axis_in_ihra_valid	: in std_logic;
-		cfg_axis_in_ihra_ready	: out std_logic;
+		cfg_ihra				: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 		axis_in_mqi_d			: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 		axis_in_mqi_ready		: out std_logic;
 		axis_in_mqi_valid		: in std_logic;
@@ -56,9 +54,6 @@ architecture Behavioral of hybrid_encoder_acc_update_stage is
 	signal axis_cnt_hraret_coord		: coordinate_bounds_array_t;
 	signal axis_cnt_hraret_counter		: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 	
-	--ihra queue
-	signal axis_ihraq_d: std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
-	signal axis_ihraq_valid, axis_ihraq_ready: std_logic;
 	--shra queue
 	signal axis_shraq_d: std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 	signal axis_shraq_valid, axis_shraq_ready: std_logic;
@@ -117,22 +112,6 @@ begin
 			axis_out_valid			=> axis_cnt_hraret_valid
 		);
 		
-	input_hra_queue: entity work.AXIS_FIFO
-		Generic map (
-			DATA_WIDTH => CONST_MAX_HR_ACC_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
-		)
-		Port map ( 
-			clk	=> clk, rst => rst,
-			input_valid		=> cfg_axis_in_ihra_valid,
-			input_ready		=> cfg_axis_in_ihra_ready,
-			input_data		=> cfg_axis_in_ihra_d,
-			--out axi port
-			output_ready	=> axis_ihraq_ready,
-			output_data		=> axis_ihraq_d,
-			output_valid	=> axis_ihraq_valid
-		);
-		
 	saved_hra_fifo: entity work.AXIS_FIFO
 		Generic map (
 			DATA_WIDTH => CONST_MAX_HR_ACC_BITS,
@@ -162,9 +141,9 @@ begin
 			axis_in_cond_user(coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MQI_BITS + CONST_MAX_COUNTER_BITS) => axis_cnt_hraret_coord,
 			axis_in_cond_user(CONST_MQI_BITS + CONST_MAX_COUNTER_BITS - 1 downto CONST_MAX_COUNTER_BITS) => axis_cnt_hraret_mqi,
 			axis_in_cond_user(CONST_MAX_COUNTER_BITS - 1 downto 0) => axis_cnt_hraret_counter,
-			axis_in_data_0_d   		=> axis_ihraq_d,
-			axis_in_data_0_valid	=> axis_ihraq_valid,
-			axis_in_data_0_ready	=> axis_ihraq_ready,
+			axis_in_data_0_d   		=> cfg_ihra,
+			axis_in_data_0_valid	=> '1',
+			axis_in_data_0_ready	=> open,
 			axis_in_data_1_d		=> axis_shraq_d,
 			axis_in_data_1_valid	=> axis_shraq_valid,
 			axis_in_data_1_ready	=> axis_shraq_ready,

@@ -32,9 +32,7 @@ entity encoder is
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_u_max				: in std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
 		cfg_depth				: in std_logic_vector(CONST_MAX_DATA_WIDTH_BITS - 1 downto 0);
-		cfg_iacc_d				: in std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
-		cfg_iacc_valid			: in std_logic;
-		cfg_iacc_ready			: out std_logic;
+		cfg_iacc				: in std_logic_vector(CONST_MAX_ACC_BITS - 1 downto 0);
 		axis_in_mqi_d			: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 		axis_in_mqi_ready		: out std_logic;
 		axis_in_mqi_valid		: in std_logic;
@@ -43,7 +41,8 @@ entity encoder is
 		axis_out_length			: out std_logic_vector(CONST_OUTPUT_CODE_LENGTH_BITS - 1 downto 0);
 		axis_out_coord			: out coordinate_bounds_array_t;
 		axis_out_valid			: out std_logic;
-		axis_out_ready			: in std_logic
+		axis_out_ready			: in std_logic;
+		axis_out_last			: out std_logic
 	);
 end encoder;
 
@@ -66,6 +65,8 @@ architecture Behavioral of encoder is
 	
 	signal axis_out_code_raw: std_logic_vector(CONST_MAX_CODE_LENGTH - 1 downto 0);
 	signal axis_out_length_raw: std_logic_vector(CONST_MAX_CODE_LENGTH_BITS - 1 downto 0);
+	signal axis_out_coord_raw: coordinate_bounds_array_t;
+	
 begin
 
 	counter: entity work.counter
@@ -88,9 +89,7 @@ begin
 		Port map ( 
 			clk => clk, rst => rst,
 			cfg_final_counter		=> cfg_final_counter,
-			cfg_axis_in_iacc_d		=> cfg_iacc_d, 
-			cfg_axis_in_iacc_valid	=> cfg_iacc_valid,
-			cfg_axis_in_iacc_ready	=> cfg_iacc_ready,
+			cfg_iacc				=> cfg_iacc, 
 			axis_in_mqi				=> axis_cnt_acc_mqi,
 			axis_in_coord			=> axis_cnt_acc_coord,
 			axis_in_counter			=> axis_cnt_acc_counter,
@@ -133,12 +132,17 @@ begin
 			axis_in_coord			=> axis_acc_cg_l_coord,
 			axis_out_code			=> axis_out_code_raw,
 			axis_out_length			=> axis_out_length_raw,
-			axis_out_coord			=> axis_out_coord,
+			axis_out_coord			=> axis_out_coord_raw,
 			axis_out_valid			=> axis_out_valid,
 			axis_out_ready			=> axis_out_ready
 		);
 		
-	axis_out_code <= std_logic_vector(resize(unsigned(axis_out_code_raw), axis_out_code'length));
+	axis_out_code 	<= std_logic_vector(resize(unsigned(axis_out_code_raw), axis_out_code'length));
 	axis_out_length <= std_logic_vector(resize(unsigned(axis_out_length_raw), axis_out_length'length));
+	axis_out_coord  <= axis_out_coord_raw;
+	axis_out_last	<= '1' when STDLV2CB(axis_out_coord_raw).last_x = '1' 
+								and STDLV2CB(axis_out_coord_raw).last_y = '1'
+								and STDLV2CB(axis_out_coord_raw).last_z = '1'
+						else '0';  
 
 end Behavioral;

@@ -35,9 +35,7 @@ entity weight_module is
 		cfg_omega				: in std_logic_vector(CONST_MAX_OMEGA_WIDTH_BITS - 1 downto 0);
 		cfg_weo					: in std_logic_vector(CONST_WEO_BITS - 1 downto 0);
 		--axis for starting weights (cfg)
-		cfg_axis_weight_d		: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
-		cfg_axis_weight_valid	: in std_logic;
-		cfg_axis_weight_ready	: out std_logic;
+		cfg_weight_vec			: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 		--axis for coordinate 
 		axis_in_coord_d			: in coordinate_bounds_array_t;
 		axis_in_coord_valid		: in std_logic;
@@ -64,8 +62,6 @@ end weight_module;
 
 architecture Behavioral of weight_module is
 	--signal for queues
-	signal axis_iwq_wret_ready, axis_iwq_wret_valid: std_logic;
-	signal axis_iwq_wret_d: std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 	signal axis_swq_wret_ready, axis_swq_wret_valid: std_logic;
 	signal axis_swq_wret_d: std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 	signal axis_wqp_swq_ready, axis_wqp_swq_valid: std_logic;
@@ -96,21 +92,6 @@ architecture Behavioral of weight_module is
 	signal axis_in_coord_cond: std_logic;
 begin
 
-	input_weight_queue: entity work.AXIS_FIFO 
-		Generic map (
-			DATA_WIDTH => CONST_WEIGHTVEC_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
-		)
-		Port map ( 
-			clk => clk, rst => rst,
-			input_valid	=> cfg_axis_weight_valid,
-			input_ready => cfg_axis_weight_ready,
-			input_data	=> cfg_axis_weight_d,
-			output_ready=> axis_iwq_wret_ready,
-			output_data	=> axis_iwq_wret_d,
-			output_valid=> axis_iwq_wret_valid,
-			flag_almost_full => open, flag_almost_empty => open
-		);
 		
 	saved_weight_queue: entity work.AXIS_FIFO 
 		Generic map (
@@ -138,9 +119,9 @@ begin
 			axis_in_cond			=> axis_in_coord_cond,
 			axis_in_cond_valid		=> axis_in_coord_valid,
 			axis_in_cond_ready		=> axis_in_coord_ready,
-			axis_in_data_0_d		=> axis_iwq_wret_d,
-			axis_in_data_0_valid	=> axis_iwq_wret_valid,
-			axis_in_data_0_ready	=> axis_iwq_wret_ready,
+			axis_in_data_0_d		=> cfg_weight_vec,
+			axis_in_data_0_valid	=> '1',
+			axis_in_data_0_ready	=> open,
 			axis_in_data_1_d		=> axis_swq_wret_d,
 			axis_in_data_1_valid	=> axis_swq_wret_valid,
 			axis_in_data_1_ready	=> axis_swq_wret_ready,

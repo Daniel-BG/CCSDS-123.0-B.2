@@ -27,16 +27,16 @@ use ieee.numeric_std.all;
 entity hybrid_encoder_active_table_address_table is
 	Port ( 
 		clk, rst: in std_logic;
-		read_index: in std_logic_vector(3 downto 0);
+		read_index: in std_logic_vector(CONST_CODE_INDEX_BITS-1 downto 0);
 		read_addr: out std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0);
 		write_enable: in std_logic;
-		write_index: in std_logic_vector(3 downto 0);
+		write_index: in std_logic_vector(CONST_CODE_INDEX_BITS-1 downto 0);
 		write_addr: in std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0)
 	);
 end hybrid_encoder_active_table_address_table;
 
 architecture Behavioral of hybrid_encoder_active_table_address_table is
-	type active_address_register_file_t is array(0 to 15) of std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0);
+	type active_address_register_file_t is array(0 to CONST_LE_TABLE_COUNT-1) of std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0);
 	
 	signal active_addresses: active_address_register_file_t;
 begin
@@ -53,7 +53,7 @@ begin
 	seq: process(clk, rst)
 	begin
 		if rst = '1' then
-			for i in 0 to 15 loop
+			for i in 0 to CONST_LE_TABLE_COUNT-1 loop
 				active_addresses(i) <= std_logic_vector(to_unsigned(i, CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS));
 			end loop;
 		elsif (rising_edge(clk)) then

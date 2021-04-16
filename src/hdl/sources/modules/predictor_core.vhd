@@ -45,9 +45,7 @@ entity predictor_core is
 		cfg_damping				: in std_logic_vector(CONST_DAMPING_BITS - 1 downto 0);
 		cfg_offset				: in std_logic_vector(CONST_OFFSET_BITS - 1 downto 0);
 		--axis for starting weights (cfg)
-		cfg_axis_weight_d		: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
-		cfg_axis_weight_valid	: in std_logic;
-		cfg_axis_weight_ready	: out std_logic;
+		cfg_weight_vec			: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 		--input itself
 		axis_in_s_d				: in std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0); --make sure we got enough space
 		axis_in_s_full_coord	: in coordinate_array_t; --stdlv
@@ -717,9 +715,7 @@ begin
 			cfg_depth				=> cfg_depth,
 			cfg_omega				=> cfg_omega,
 			cfg_weo					=> cfg_weo,
-			cfg_axis_weight_d		=> cfg_axis_weight_d,
-			cfg_axis_weight_valid	=> cfg_axis_weight_valid,
-			cfg_axis_weight_ready	=> cfg_axis_weight_ready,
+			cfg_weight_vec			=> cfg_weight_vec,
 			--axis for coordinate 
 			axis_in_coord_d			=> axis_cqwq_wu_coord,
 			axis_in_coord_valid		=> axis_cqwq_wu_valid,
