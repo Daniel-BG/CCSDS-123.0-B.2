@@ -34,19 +34,8 @@ end code_table_rom;
 
 architecture Behavioral of code_table_rom is
 	signal table_data: table_rom_t := CONST_LOW_ENTROPY_CODING_TABLE;
---	attribute ram_style : string;
---	attribute ram_style of table_data : signal is "block";
 begin
 
 data <= table_data(to_integer(unsigned(addr)));
-
---	seq: process(clk, enable)
---	begin
---		if rising_edge(clk) then
---			if enable = '1' then
---				data <= table_data(to_integer(unsigned(addr)));
---			end if;
---		end if;
---	end process;
 
 end Behavioral;

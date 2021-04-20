@@ -262,12 +262,14 @@ begin
 	--FSM to control the flushing of tables
 	table_flushing_fsm_seq: process(clk, rst)
 	begin
-		if rst = '1' then
-			tf_state_curr <= WORKING;
-			tf_flush_index <= (others => '0');
-		elsif rising_edge(clk) then
-			tf_state_curr <= tf_state_next;
-			tf_flush_index <= tf_flush_index_next;
+		if rising_edge(clk) then
+			if rst = '1' then
+				tf_state_curr <= WORKING;
+				tf_flush_index <= (others => '0');
+			else
+				tf_state_curr <= tf_state_next;
+				tf_flush_index <= tf_flush_index_next;
+			end if;
 		end if;
 	end process;
 	

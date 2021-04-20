@@ -41,10 +41,12 @@ begin
 
 	seq: process(clk, rst)
 	begin
-		if rst = '1' then
-			flush_ram <= DEFAULT_FLUSH_RAM;
-		elsif rising_edge(clk) and in_enable = '1' then
-			flush_ram(to_integer(unsigned(in_code_index))) <= in_code;
+		if rising_edge(clk) then
+			if rst = '1' then
+				flush_ram <= DEFAULT_FLUSH_RAM;
+			elsif in_enable = '1' then
+				flush_ram(to_integer(unsigned(in_code_index))) <= in_code;
+			end if;
 		end if;
 	end process;
 	

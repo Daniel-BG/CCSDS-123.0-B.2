@@ -101,11 +101,13 @@ begin
 		
 	bypass_seq: process(clk, rst)
 	begin
-		if rst = '1' then
-			state_curr <= FIRST_PIXEL;
-		elsif rising_edge(clk) then
-			state_curr <= state_next;
-		end if; 
+		if rising_edge(clk) then
+			if rst = '1' then
+				state_curr <= FIRST_PIXEL;
+			else
+				state_curr <= state_next;
+			end if; 
+		end if;
 	end process;
 		
 	bypass_logic: process(latched_mqi_coord, latched_mqi_d, latched_mqi_valid,

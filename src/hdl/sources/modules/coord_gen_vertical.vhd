@@ -53,16 +53,18 @@ begin
 
 	seq: process(clk, rst)
 	begin
-		if rst = '1' then
-			state_curr <= ST_WORKING;
-			z_curr <= (others => '0');
-			tz_curr <= (others => '0');
-			t_curr <= (others => '0');
-		elsif rising_edge(clk) then
-			state_curr <= state_next;
-			z_curr <= z_next;
-			tz_curr <= tz_next;
-			t_curr <= t_next;
+		if rising_edge(clk) then
+			if rst = '1' then
+				state_curr <= ST_WORKING;
+				z_curr <= (others => '0');
+				tz_curr <= (others => '0');
+				t_curr <= (others => '0');
+			else
+				state_curr <= state_next;
+				z_curr <= z_next;
+				tz_curr <= tz_next;
+				t_curr <= t_next;
+			end if;
 		end if;
 	end process; 
 	

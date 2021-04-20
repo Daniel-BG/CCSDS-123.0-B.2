@@ -58,14 +58,16 @@ begin
 
 	seq: process(clk, rst)
 	begin
-		if rst = '1' then
-			state_curr <= IDLE;
-			buffered_coord_bounds <= (others => '0');
-			buffered_hrpsv <= (others => '0');
-		elsif rising_edge(clk) then
-			state_curr <= state_next;
-			buffered_coord_bounds <= buffered_coord_bounds_next;
-			buffered_hrpsv <= buffered_hrpsv_next;
+		if rising_edge(clk) then
+			if rst = '1' then
+				state_curr <= IDLE;
+				buffered_coord_bounds <= (others => '0');
+				buffered_hrpsv <= (others => '0');
+			else
+				state_curr <= state_next;
+				buffered_coord_bounds <= buffered_coord_bounds_next;
+				buffered_hrpsv <= buffered_hrpsv_next;
+			end if;
 		end if;
 		
 	end process;

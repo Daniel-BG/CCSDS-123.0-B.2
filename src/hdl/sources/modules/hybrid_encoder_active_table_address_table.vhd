@@ -52,13 +52,15 @@ begin
 	
 	seq: process(clk, rst)
 	begin
-		if rst = '1' then
-			for i in 0 to CONST_LE_TABLE_COUNT-1 loop
-				active_addresses(i) <= std_logic_vector(to_unsigned(i, CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS));
-			end loop;
-		elsif (rising_edge(clk)) then
-			if write_enable = '1' then
-				active_addresses(to_integer(unsigned(write_index))) <= write_addr;
+		if (rising_edge(clk)) then
+			if rst = '1' then
+				for i in 0 to CONST_LE_TABLE_COUNT-1 loop
+					active_addresses(i) <= std_logic_vector(to_unsigned(i, CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS));
+				end loop;
+			else
+				if write_enable = '1' then
+					active_addresses(to_integer(unsigned(write_index))) <= write_addr;
+				end if;
 			end if;
 		end if;
 	end process;

@@ -80,14 +80,16 @@ begin
 
 	seq: process(clk, rst)
 	begin
-		if rst = '1' then
-			state_curr <= WORKING;
-			buffered_free <= std_logic_vector(to_unsigned(64, buffered_free'length));
-			buffered_code <= (others => '0');
-		elsif rising_edge(clk) then
-			state_curr <= state_next;
-			buffered_free <= buffered_free_next;
-			buffered_code <= buffered_code_next;
+		if rising_edge(clk) then
+			if rst = '1' then
+				state_curr <= WORKING;
+				buffered_free <= std_logic_vector(to_unsigned(64, buffered_free'length));
+				buffered_code <= (others => '0');
+			else
+				state_curr <= state_next;
+				buffered_free <= buffered_free_next;
+				buffered_code <= buffered_code_next;
+			end if;
 		end if;
 	end process;
 

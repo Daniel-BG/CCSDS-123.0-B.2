@@ -274,10 +274,12 @@ begin
 		
 	seq: process(clk, rst)
 	begin
-		if rst = '1' then
-			state_curr <= BOTTOM_64;
-		elsif rising_edge(clk) then
-			state_curr <= state_next;
+		if rising_edge(clk) then
+			if rst = '1' then
+				state_curr <= BOTTOM_64;
+			else
+				state_curr <= state_next;
+			end if;
 		end if;
 	end process;
 	
@@ -315,52 +317,3 @@ begin
 	end process;
 
 end Behavioral;
-
-
---	generate_output_code: process(axis_in_flush_bit, axis_in_ihe, axis_in_mqi, axis_in_k, 
---			cfg_u_max, cfg_depth, 
---			axis_in_input_symbol, axis_in_code_quant, axis_in_is_tree, axis_in_cw_length, axis_in_cw_bits)
---		variable bits: unsigned(6 downto 0); --0 to 86 (up to 127 OK)
---		variable code: unsigned(85 downto 0);
---		variable temp: unsigned(31 downto 0);
---	begin
---		if (axis_in_flush_bit(1) = '1') then
---			bits := (0 => '1', others => '0');
---			code := (0 => axis_in_flush_bit(0), others => '0');
---		else
---			bits := (others => '0');
---			code := (others => '0');
---		end if;	
---		if (axis_in_ihe = '1') then
---			if shift_right(unsigned(axis_in_mqi), to_integer(unsigned(axis_in_k))) < unsigned(cfg_u_max) then
---				bits := bits + 1 + to_integer(unsigned(axis_in_k)) + to_integer(resize(shift_right(unsigned(axis_in_mqi), to_integer(unsigned(axis_in_k))), 5));
---				code := shift_left(code, to_integer(unsigned(axis_in_k) + 1));
---				temp := (others => '1');
---				temp := not shift_left(temp, to_integer(unsigned(axis_in_k) + 1));
---				temp := temp and resize((unsigned(axis_in_mqi) & "1"), temp'length);
---				code := code or resize(temp, code'length);
---				code := shift_left(code, to_integer(resize(shift_right(unsigned(axis_in_mqi), to_integer(unsigned(axis_in_k))), 5)));
---			else
---				bits := bits + to_integer(unsigned(cfg_u_max)) + to_integer(unsigned(cfg_depth));
---				code := shift_left(shift_left(code, to_integer(unsigned(cfg_depth))) or resize(unsigned(axis_in_mqi), code'length), to_integer(unsigned(cfg_u_max)));
---			end if;
---		else
---			if (axis_in_input_symbol = CONST_INPUT_SYMBOL_X) then
---				--same as above but k = 0
---				if unsigned(axis_in_code_quant) < unsigned(cfg_u_max) then
---					bits := bits + 1 + to_integer(unsigned(axis_in_code_quant(CONST_U_MAX_BITS - 1 downto 0)));
---					code := code(code'high - 1 downto 0) & "1";
---					code := shift_left(code, to_integer(unsigned(axis_in_code_quant(4 downto 0))));
---				else
---					bits := bits + to_integer(unsigned(cfg_u_max)) + to_integer(unsigned(cfg_depth));
---					code := shift_left(shift_left(code, to_integer(unsigned(cfg_depth))) or resize(unsigned(axis_in_code_quant), code'length), to_integer(unsigned(cfg_u_max)));
---				end if;
---			end if;
---			if axis_in_is_tree(0) = '0' then
---				bits := bits + to_integer(unsigned(axis_in_cw_length));
---				code := shift_left(code, to_integer(unsigned(axis_in_cw_length))) or resize(unsigned(axis_in_cw_bits), code'length);
---			end if;
---		end if;
---		axis_in_bits <= std_logic_vector(bits);
---		axis_in_code <= std_logic_vector(code);
---	end process;

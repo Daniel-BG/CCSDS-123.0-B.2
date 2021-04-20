@@ -114,10 +114,12 @@ begin
 	
 	seq: process(clk, rst)
 	begin
-		if rst = '1' then
-			state_curr <= ST_WORKING;
-		elsif rising_edge(clk) then
-			state_curr <= state_next;
+		if rising_edge(clk) then
+			if rst = '1' then
+				state_curr <= ST_WORKING;
+			else
+				state_curr <= state_next;
+			end if;
 		end if;
 	end process;
 	

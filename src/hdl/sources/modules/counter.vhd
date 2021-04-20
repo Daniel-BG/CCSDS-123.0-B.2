@@ -60,14 +60,16 @@ begin
 	
 	seq: process(clk, rst, cfg_initial_counter)
 	begin
-		if rst = '1' then
-			counter <= cfg_initial_counter;
-		elsif rising_edge(clk) then
-			if axis_out_ready = '1' and axis_in_mqi_valid = '1' then --transaction done, update counter
-				if unsigned(counter) < unsigned(cfg_final_counter) then
-					counter <= std_logic_vector(unsigned(counter) + 1);
-				else
-					counter <= std_logic_vector((unsigned(counter) + 1) / 2);
+		if rising_edge(clk) then
+			if rst = '1' then
+				counter <= cfg_initial_counter;
+			else
+				if axis_out_ready = '1' and axis_in_mqi_valid = '1' then --transaction done, update counter
+					if unsigned(counter) < unsigned(cfg_final_counter) then
+						counter <= std_logic_vector(unsigned(counter) + 1);
+					else
+						counter <= std_logic_vector((unsigned(counter) + 1) / 2);
+					end if;
 				end if;
 			end if;
 		end if;

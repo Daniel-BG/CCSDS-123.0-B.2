@@ -71,18 +71,20 @@ begin
 
 	seq: process(clk, rst, state_next) 
 	begin
-		if rst = '1' then
-			state_curr <= ST_IDLE;
-			z_curr <= (others => '0');
-			t_curr <= (others => '0');
-			tz_curr<= (others => '0');
-			cfg_max_z_m1 <= (others => '0');
-		elsif rising_edge(clk) then
-			state_curr <= state_next;
-			z_curr <= z_next;
-			t_curr <= t_next;
-			tz_curr<= tz_next;
-			cfg_max_z_m1 <= cfg_max_z_m1_next;
+		if rising_edge(clk) then
+			if rst = '1' then
+				state_curr <= ST_IDLE;
+				z_curr <= (others => '0');
+				t_curr <= (others => '0');
+				tz_curr<= (others => '0');
+				cfg_max_z_m1 <= (others => '0');
+			else
+				state_curr <= state_next;
+				z_curr <= z_next;
+				t_curr <= t_next;
+				tz_curr<= tz_next;
+				cfg_max_z_m1 <= cfg_max_z_m1_next;
+			end if;
 		end if;
 	end process;
 	

@@ -97,20 +97,22 @@ begin
 	--STATE AND OTHER UPDATES
 	seq: process(clk, rst, state_main_next) 
 	begin
-		if rst = '1' then
-			--main process
-			state_main_curr	   	<= ST_M_WORKING;
-			loaded_samples     	<= (others => '0');
-			--write/read process
-			state_write_curr  	<= ST_W_LOADING;
-			state_read_curr 	<= ST_R_LOADING;
-		elsif rising_edge(clk) then
-			--main process
-			state_main_curr 	<= state_main_next;
-			loaded_samples     	<= loaded_samples_next;
-			--write/read process
-			state_write_curr  	<= state_write_next;
-			state_read_curr		<= state_read_next;
+		if rising_edge(clk) then
+			if rst = '1' then
+				--main process
+				state_main_curr	   	<= ST_M_WORKING;
+				loaded_samples     	<= (others => '0');
+				--write/read process
+				state_write_curr  	<= ST_W_LOADING;
+				state_read_curr 	<= ST_R_LOADING;
+			else
+				--main process
+				state_main_curr 	<= state_main_next;
+				loaded_samples     	<= loaded_samples_next;
+				--write/read process
+				state_write_curr  	<= state_write_next;
+				state_read_curr		<= state_read_next;
+			end if;
 		end if;
 	end process;
 	
