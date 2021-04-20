@@ -1,0 +1,88 @@
+`ifndef CCSDS_TEST_SHARED_SVH
+	`define CCSDS_TEST_SHARED_SVH
+	
+	`define GOLDEN_ROOT_DIR "C:/Users/Daniel/Basurero/out/"
+	`define GOLDEN_EXT ".smp"
+	//PREDICTOR
+	`define CONST_GOLDEN_S 	    {`GOLDEN_ROOT_DIR, "c_s",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_DRPSV  {`GOLDEN_ROOT_DIR, "c_drpsv",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_PSV 	{`GOLDEN_ROOT_DIR, "c_psv",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_PR 	{`GOLDEN_ROOT_DIR, "c_pr",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_W		{`GOLDEN_ROOT_DIR, "c_w",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_WUSE   {`GOLDEN_ROOT_DIR, "c_wuse",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_DRPE   {`GOLDEN_ROOT_DIR, "c_drpe",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_DRSR   {`GOLDEN_ROOT_DIR, "c_drsr",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_CQBC   {`GOLDEN_ROOT_DIR, "c_cqbc",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_MEV 	{`GOLDEN_ROOT_DIR, "c_mev",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_HRPS   {`GOLDEN_ROOT_DIR, "c_hrps",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_PCD 	{`GOLDEN_ROOT_DIR, "c_pcd",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_CLD 	{`GOLDEN_ROOT_DIR, "c_cld",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_NWD 	{`GOLDEN_ROOT_DIR, "c_nwd",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_WD 	{`GOLDEN_ROOT_DIR, "c_wd",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_ND 	{`GOLDEN_ROOT_DIR, "c_nd",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_LS 	{`GOLDEN_ROOT_DIR, "c_ls",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_QI 	{`GOLDEN_ROOT_DIR, "c_qi",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_SR 	{`GOLDEN_ROOT_DIR, "c_sr",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_TS 	{`GOLDEN_ROOT_DIR, "c_ts",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_MQI 	{`GOLDEN_ROOT_DIR, "c_mqi",					`GOLDEN_EXT}
+	//ENCODER
+	`define CONST_GOLDEN_ACC 	{`GOLDEN_ROOT_DIR, "c_acc",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_CNT 	{`GOLDEN_ROOT_DIR, "c_cnt",					`GOLDEN_EXT}
+	
+	
+	
+	`define CONST_GOLDEN_NUM_S 	    0
+	`define CONST_GOLDEN_NUM_DRPSV  1
+	`define CONST_GOLDEN_NUM_PSV 	2
+	`define CONST_GOLDEN_NUM_PR 	3
+	`define CONST_GOLDEN_NUM_W		4
+	`define CONST_GOLDEN_NUM_WUSE   5
+	`define CONST_GOLDEN_NUM_DRPE   6
+	`define CONST_GOLDEN_NUM_DRSR   7
+	`define CONST_GOLDEN_NUM_CQBC   8
+	`define CONST_GOLDEN_NUM_MEV 	9
+	`define CONST_GOLDEN_NUM_HRPS   10
+	`define CONST_GOLDEN_NUM_PCD 	11
+	`define CONST_GOLDEN_NUM_CLD 	12
+	`define CONST_GOLDEN_NUM_NWD 	13
+	`define CONST_GOLDEN_NUM_WD 	14
+	`define CONST_GOLDEN_NUM_ND 	15
+	`define CONST_GOLDEN_NUM_LS 	16
+	`define CONST_GOLDEN_NUM_QI 	17
+	`define CONST_GOLDEN_NUM_SR 	18
+	`define CONST_GOLDEN_NUM_TS 	19
+	`define CONST_GOLDEN_NUM_MQI 	20
+	//ENCODER
+	`define CONST_GOLDEN_NUM_ACC 	21
+	`define CONST_GOLDEN_NUM_CNT 	22
+	
+	function string getFileNameFromNum (input int x);
+		case (x)
+			`CONST_GOLDEN_NUM_S 	    : return `CONST_GOLDEN_S; 	    
+			`CONST_GOLDEN_NUM_DRPSV  	: return `CONST_GOLDEN_DRPSV;  
+			`CONST_GOLDEN_NUM_PSV 		: return `CONST_GOLDEN_PSV; 	
+			`CONST_GOLDEN_NUM_PR 		: return `CONST_GOLDEN_PR; 	
+			`CONST_GOLDEN_NUM_W			: return `CONST_GOLDEN_W;		
+			`CONST_GOLDEN_NUM_WUSE   	: return `CONST_GOLDEN_WUSE;   
+			`CONST_GOLDEN_NUM_DRPE   	: return `CONST_GOLDEN_DRPE;   
+			`CONST_GOLDEN_NUM_DRSR   	: return `CONST_GOLDEN_DRSR;   
+			`CONST_GOLDEN_NUM_CQBC   	: return `CONST_GOLDEN_CQBC;   
+			`CONST_GOLDEN_NUM_MEV 		: return `CONST_GOLDEN_MEV; 	
+			`CONST_GOLDEN_NUM_HRPS   	: return `CONST_GOLDEN_HRPS;   
+			`CONST_GOLDEN_NUM_PCD 		: return `CONST_GOLDEN_PCD; 	
+			`CONST_GOLDEN_NUM_CLD 		: return `CONST_GOLDEN_CLD; 	
+			`CONST_GOLDEN_NUM_NWD 		: return `CONST_GOLDEN_NWD; 	
+			`CONST_GOLDEN_NUM_WD 		: return `CONST_GOLDEN_WD; 	
+			`CONST_GOLDEN_NUM_ND 		: return `CONST_GOLDEN_ND; 	
+			`CONST_GOLDEN_NUM_LS 		: return `CONST_GOLDEN_LS; 	
+			`CONST_GOLDEN_NUM_QI 		: return `CONST_GOLDEN_QI; 	
+			`CONST_GOLDEN_NUM_SR 		: return `CONST_GOLDEN_SR; 	
+			`CONST_GOLDEN_NUM_TS 		: return `CONST_GOLDEN_TS; 	
+			`CONST_GOLDEN_NUM_MQI 		: return `CONST_GOLDEN_MQI; 	
+			`CONST_GOLDEN_NUM_ACC 		: return `CONST_GOLDEN_ACC; 	
+			`CONST_GOLDEN_NUM_CNT 		: return `CONST_GOLDEN_CNT; 	
+			default						: return "FUNCTION INCOMPLETE @test_shared.svh";
+		endcase // x
+	endfunction
+
+`endif

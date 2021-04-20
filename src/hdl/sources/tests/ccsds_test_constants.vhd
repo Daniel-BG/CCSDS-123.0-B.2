@@ -23,36 +23,28 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 package ccsds_test_constants is
-	constant CONST_CHECK_RESULTS: boolean := true;
-	constant CONST_BASE_GOLDEN_DIRECTORY: string := "C:\\Users\\Daniel\\Basurero\\out\\";
-	
-	--PREDICTOR
-	constant CONST_GOLDEN_S 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_s.smp";
-	constant CONST_GOLDEN_DRPSV : string := CONST_BASE_GOLDEN_DIRECTORY & "c_drpsv.smp";
-	constant CONST_GOLDEN_PSV 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_psv.smp";
-	constant CONST_GOLDEN_PR 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_pr.smp";
-	constant CONST_GOLDEN_W		: string := CONST_BASE_GOLDEN_DIRECTORY & "c_w.smp";
-	constant CONST_GOLDEN_WUSE 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_wuse.smp";
-	constant CONST_GOLDEN_DRPE 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_drpe.smp";
-	constant CONST_GOLDEN_DRSR 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_drsr.smp";
-	constant CONST_GOLDEN_CQBC 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_cqbc.smp";
-	constant CONST_GOLDEN_MEV 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_mev.smp";
-	constant CONST_GOLDEN_HRPSV : string := CONST_BASE_GOLDEN_DIRECTORY & "c_hrpsv.smp";
-	constant CONST_GOLDEN_PCD 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_pcd.smp";
-	constant CONST_GOLDEN_CLD 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_cld.smp";
-	constant CONST_GOLDEN_NWD 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_nwd.smp";
-	constant CONST_GOLDEN_WD 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_wd.smp";
-	constant CONST_GOLDEN_ND 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_nd.smp";
-	constant CONST_GOLDEN_LS 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_ls.smp";
-	constant CONST_GOLDEN_QI 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_qi.smp";
-	constant CONST_GOLDEN_SR 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_sr.smp";
-	constant CONST_GOLDEN_TS 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_ts.smp";
-	constant CONST_GOLDEN_MQI 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_mqi.smp";
-	--ENCODER
-	constant CONST_GOLDEN_ACC 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_acc.smp";
-	constant CONST_GOLDEN_CNT 	: string := CONST_BASE_GOLDEN_DIRECTORY & "c_cnt.smp";
-	
-	
+	CONSTANT CONST_GOLDEN_NUM_S 	   	: integer := 0;
+	CONSTANT CONST_GOLDEN_NUM_DRPSV 	: integer := 1;
+	CONSTANT CONST_GOLDEN_NUM_PSV 		: integer := 2;
+	CONSTANT CONST_GOLDEN_NUM_PR 		: integer := 3;
+	CONSTANT CONST_GOLDEN_NUM_W			: integer := 4;
+	CONSTANT CONST_GOLDEN_NUM_WUSE  	: integer := 5;
+	CONSTANT CONST_GOLDEN_NUM_DRPE  	: integer := 6;
+	CONSTANT CONST_GOLDEN_NUM_DRSR  	: integer := 7;
+	CONSTANT CONST_GOLDEN_NUM_CQBC  	: integer := 8;
+	CONSTANT CONST_GOLDEN_NUM_MEV 		: integer := 9;
+	CONSTANT CONST_GOLDEN_NUM_HRPS   	: integer := 10;
+	CONSTANT CONST_GOLDEN_NUM_PCD 		: integer := 11;
+	CONSTANT CONST_GOLDEN_NUM_CLD 		: integer := 12;
+	CONSTANT CONST_GOLDEN_NUM_NWD 		: integer := 13;
+	CONSTANT CONST_GOLDEN_NUM_WD 		: integer := 14;
+	CONSTANT CONST_GOLDEN_NUM_ND 		: integer := 15;
+	CONSTANT CONST_GOLDEN_NUM_LS 		: integer := 16;
+	CONSTANT CONST_GOLDEN_NUM_QI 		: integer := 17;
+	CONSTANT CONST_GOLDEN_NUM_SR 		: integer := 18;
+	CONSTANT CONST_GOLDEN_NUM_TS 		: integer := 19;
+	CONSTANT CONST_GOLDEN_NUM_MQI 		: integer := 20;
+	CONSTANT CONST_GOLDEN_NUM_ACC 		: integer := 21;
 end ccsds_test_constants;
 
 package body ccsds_test_constants is

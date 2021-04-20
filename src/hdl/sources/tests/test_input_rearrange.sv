@@ -21,20 +21,20 @@
 
 
 module test_input_rearrange;
-	parameter MAX_X_WIDTH = 10;
-	parameter MAX_Y_WIDTH = 8;
-	parameter MAX_Z_WIDTH = 9;
-	parameter MAX_T_WIDTH = 18;
+	parameter MAX_X_WIDTH = 9;
+	parameter MAX_Y_WIDTH = 10;
+	parameter MAX_Z_WIDTH = 8;
+	parameter MAX_T_WIDTH = 19;
 	parameter DATA_WIDTH = 16;
 
 	parameter PERIOD = 10;
 
 	reg clk, rst;
 	wire finished;
-	wire [MAX_X_WIDTH-1:0] cfg_max_x = 5;
+	wire [MAX_X_WIDTH-1:0] cfg_max_x = 7;
 	wire [MAX_Y_WIDTH-1:0] cfg_max_y = 7;
-	wire [MAX_Z_WIDTH-1:0] cfg_max_z = 2;	
-	wire [MAX_T_WIDTH-1:0] cfg_max_t = 47;
+	wire [MAX_Z_WIDTH-1:0] cfg_max_z = 7;	
+	wire [MAX_T_WIDTH-1:0] cfg_max_t = 63;
 	wire [MAX_Z_WIDTH*2-1:0] cfg_min_preload_value = ((cfg_max_z)*(cfg_max_z-1))/2 + 2;
 	wire [MAX_Z_WIDTH*2-1:0] cfg_max_preload_value = ((cfg_max_z)*(cfg_max_z-1))/2 + 6;
 	
@@ -132,13 +132,7 @@ module test_input_rearrange;
 		$stop;
 	end
 	
-	input_rearrange #(
-		.MAX_X_WIDTH(MAX_X_WIDTH),
-		.MAX_Y_WIDTH(MAX_Y_WIDTH),
-		.MAX_Z_WIDTH(MAX_Z_WIDTH),
-		.MAX_T_WIDTH(MAX_T_WIDTH),
-		.DATA_WIDTH(DATA_WIDTH)
-	) rearrange_instance (
+	sample_rearrange rearrange_instance (
 		.clk(clk), .rst(rst),
 		.finished(finished),
 		.cfg_max_x(cfg_max_x),
@@ -151,7 +145,7 @@ module test_input_rearrange;
 		.axis_input_ready(axis_input_ready),
 		.axis_input_valid(axis_input_valid),
 		.axis_output_d(axis_output_d),
-		.axis_output_flags(axis_output_flags),
+		.axis_output_coord(axis_output_flags),
 		.axis_output_last(axis_output_last),
 		.axis_output_valid(axis_output_valid),
 		.axis_output_ready(axis_output_ready)

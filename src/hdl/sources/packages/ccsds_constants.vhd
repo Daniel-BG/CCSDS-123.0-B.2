@@ -142,22 +142,22 @@ package ccsds_constants is
     type threshold_table_t is array (0 to CONST_LE_TABLE_COUNT - 1) of threshold_value_t;
 
     constant CONST_THRESHOLD_TABLE : threshold_table_t := (
-		x"4A0E8",
-		x"3707C",
-		x"28C43",
-		x"1F6A0",
-		x"1756D",
-		x"11026",
-		x"0C5F6",
-		x"08852",
-		x"05B23",
-		x"03A57",
-		x"02442",
-		x"01586",
-		x"00C7B",
-		x"00788",
-		x"00458",
-		x"00198"
+		"100" & x"A0E8",
+		"011" & x"707C",
+		"010" & x"8C43",
+		"001" & x"F6A0",
+		"001" & x"756D",
+		"001" & x"1026",
+		"000" & x"C5F6",
+		"000" & x"8852",
+		"000" & x"5B23",
+		"000" & x"3A57",
+		"000" & x"2442",
+		"000" & x"1586",
+		"000" & x"0C7B",
+		"000" & x"0788",
+		"000" & x"0458",
+		"000" & x"0198"
 	);
 	
 	constant CONST_INPUT_SYMBOL_AMOUNT: integer := 15;

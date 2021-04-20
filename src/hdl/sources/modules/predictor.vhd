@@ -75,11 +75,8 @@ architecture Behavioral of predictor is
 	
 	signal axis_out_mqi_full_coord: coordinate_array_t;
 begin
-
+	
 	v2d: entity work.sample_rearrange
-		generic map (
-			RELOCATION_MODE => VERTICAL_TO_DIAGONAL
-		)
 		port map ( 
 			clk => clk, rst => rst,
 			finished => open,
@@ -134,9 +131,6 @@ begin
 		
 		
 	d2v: entity work.sample_rearrange
-		generic map (
-			RELOCATION_MODE => DIAGONAL_TO_VERTICAL
-		)
 		port map ( 
 			clk => clk, rst => rst,
 			finished => open,
@@ -158,5 +152,19 @@ begin
 	axis_out_mqi_coord <= CB2STDLV(STDLV2C(axis_out_mqi_full_coord).bounds);
 	
 	
-
+	--test stuff
+	--pragma synthesis_off
+	TEST_CHECK_INPUT_SAMPLES: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => 0
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_v2d_core_valid,
+			ready => axis_v2d_core_ready,
+			data  => axis_v2d_core_d
+		);
+	--pragma synthesis_on
 end Behavioral;

@@ -25,6 +25,7 @@ use ieee.numeric_std.all;
 use std.textio.all;
 use ieee.std_logic_textio.all;
 use work.ccsds_constants.all;
+use work.ccsds_test_constants.all;
 
 -----------------------------------------------------------
 
@@ -35,6 +36,8 @@ end entity test_ccsds_123b2_core;
 -----------------------------------------------------------
 
 architecture testbench of test_ccsds_123b2_core is
+	--control signals for testbench
+	signal input_enable: std_logic;
 
 	-- Testbench DUT generics
 	constant USE_HYBRID_CODER : boolean := true;
@@ -93,8 +96,12 @@ begin
 
 	RESET_GEN : process
 	begin
-		rst <= '1',
-		         '0' after 20.0*C_CLK_PERIOD * (1 SEC);
+		rst <= '1';
+		input_enable <= '0';
+		wait for 20.0*C_CLK_PERIOD * (1 SEC);
+		rst <= '0';
+		wait for 2.0*C_CLK_PERIOD * (1 SEC);
+		input_enable <= '1';
 		wait;
 	end process RESET_GEN;
 
@@ -109,7 +116,7 @@ begin
 		cfg_samples 		<= std_logic_vector(to_unsigned(8, CONST_MAX_SAMPLES_BITS));
 		cfg_tinc 			<= std_logic_vector(to_unsigned(6, CONST_TINC_BITS));
 		cfg_vmax			<= std_logic_vector(to_unsigned(3, CONST_VMINMAX_BITS));
-		cfg_vmin			<= std_logic_vector(to_unsigned(-1, CONST_VMINMAX_BITS));
+		cfg_vmin			<= std_logic_vector(to_signed(-1, CONST_VMINMAX_BITS));
 		cfg_depth 			<= std_logic_vector(to_unsigned(16, CONST_MAX_DATA_WIDTH_BITS));
 		cfg_omega 			<= std_logic_vector(to_unsigned(19, CONST_MAX_OMEGA_WIDTH_BITS));
 		cfg_weo 			<= std_logic_vector(to_unsigned(0, CONST_WEO_BITS));
@@ -129,10 +136,10 @@ begin
 		cfg_final_counter 	<= std_logic_vector(to_unsigned(2**6-1, CONST_MAX_COUNTER_BITS));
 		cfg_u_max 			<= std_logic_vector(to_unsigned(18, CONST_U_MAX_BITS));
 		for i in CONST_MAX_C - 1 downto CONST_MAX_P loop
-			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) downto CONST_MAX_WEIGHT_BITS*i) <= (others => '0'); 
+			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= (others => '0'); 
 		end loop;
 		for i in CONST_MAX_P - 1 downto 0 loop
-			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) downto CONST_MAX_WEIGHT_BITS*i) <= std_logic_vector(to_unsigned(7*(2**19) / (2**(3*(i-CONST_MAX_P - 1))) , CONST_MAX_WEIGHT_BITS));
+			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= std_logic_vector(to_unsigned(7*(2**19) / (2**(3*(CONST_MAX_P - i))) , CONST_MAX_WEIGHT_BITS));
 		end loop;
 		cfg_iacc 			<= std_logic_vector(to_unsigned(4*(2**1)*5,  CONST_MAX_HR_ACC_BITS)); --4*(1 << this.gammaZero)*meanMQIestimate (5)
 		--architecture constants
@@ -144,6 +151,22 @@ begin
 	-----------------------------------------------------------
 	-- Entity Under Test
 	-----------------------------------------------------------
+	
+	INPUTTER: entity work.reader_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => CONST_GOLDEN_NUM_S
+		)
+		port map (
+			clk => clk, rst => rst, 
+			enable => input_enable,
+			output_valid => axis_in_s_valid,
+			output_ready => axis_in_s_ready,
+			output_data  => axis_in_s_d
+		);
+	
+	
 	DUT : entity work.ccsds_123b2_core
 		generic map (
 			USE_HYBRID_CODER => USE_HYBRID_CODER
@@ -187,5 +210,11 @@ begin
 			axis_out_last         => axis_out_last,
 			axis_out_ready        => axis_out_ready
 		);
+		
+	OUTPUT_CTRL : process
+	begin
+		axis_out_ready <= '1';
+		wait;
+	end process OUTPUT_CTRL;
 
 end architecture testbench;
