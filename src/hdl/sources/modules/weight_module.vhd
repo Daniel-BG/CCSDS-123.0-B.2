@@ -232,4 +232,20 @@ begin
 			axis_out_ready	=> axis_wqp_swq_ready
 		);
 
+	--pragma synthesis_off
+	TEST_CHECK_WU: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_WUSE_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 26
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_wuse_wu_valid,
+			ready => axis_wuse_wu_ready,
+			data  => axis_wuse_wu_d
+		);
+	--pragma synthesis_on
 end Behavioral;
+
+	--`define CONST_GOLDEN_NUM_DIAG_W			25

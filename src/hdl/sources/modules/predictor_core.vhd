@@ -1317,4 +1317,246 @@ begin
 		axis_out_mqi_ready	=> axis_out_mqi_ready,
 		axis_out_mqi_valid	=> axis_out_mqi_valid
 	);
+	
+	--test stuff
+	--pragma synthesis_off
+	TEST_CHECK_NORTH_DIFF: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_LDIF_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 36
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_dd_dqsy_valid,
+			ready => axis_dd_dqsy_ready,
+			data  => axis_dd_dqsy_nd
+		);
+		
+	TEST_CHECK_WEST_DIFF: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_LDIF_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 35
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_dd_dqsy_valid,
+			ready => axis_dd_dqsy_ready,
+			data  => axis_dd_dqsy_wd
+		);
+		
+	TEST_CHECK_NORTHWEST_DIFF: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_LDIF_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 34
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_dd_dqsy_valid,
+			ready => axis_dd_dqsy_ready,
+			data  => axis_dd_dqsy_nwd
+		);
+		
+	TEST_CHECK_DRPSV: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_DRPSV_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 22
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_drpsv_drpsvs_valid,
+			ready => axis_drpsv_drpsvs_ready,
+			data  => axis_drpsv_drpsvs_d
+		);
+		
+	TEST_CHECK_PSV: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => 23
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_psv_psvs_valid,
+			ready => axis_psv_psvs_ready,
+			data  => axis_psv_psvs_d
+		);
+		
+	TEST_CHECK_PR: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_PR_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 24
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_pr_prq_valid,
+			ready => axis_pr_prq_ready,
+			data  => axis_pr_prq_d
+		);
+		
+	TEST_CHECK_DRPE: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_DRPE_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 27
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_drpe_wu_valid,
+			ready => axis_drpe_wu_ready,
+			data  => axis_drpe_wu_d
+		);
+		
+	TEST_CHECK_DRSR: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_DRSR_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 28
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_drsr_cr_valid,
+			ready => axis_drsr_cr_ready,
+			data  => axis_drsr_cr_d
+		);
+		
+	TEST_CHECK_CQBC: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_CQBC_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 29
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_cqbc_cqbcs_valid,
+			ready => axis_cqbc_cqbcs_ready,
+			data  => axis_cqbc_cqbcs_d
+		);
+		
+	TEST_CHECK_MEV: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MEV_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 30
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_mev_mevs_valid,
+			ready => axis_mev_mevs_ready,
+			data  => axis_mev_mevs_d
+		);
+		
+	TEST_CHECK_HRPSV: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_HRPSV_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 31
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_hrpsv_hrpsvs_valid,
+			ready => axis_hrpsv_hrpsvs_ready,
+			data  => axis_hrpsv_hrpsvs_d
+		);
+		
+	TEST_CHECK_PCLD: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_PCLD_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 32
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_pcld_hrpsv_valid,
+			ready => axis_pcld_hrpsv_ready,
+			data  => axis_pcld_hrpsv_d
+		);
+		
+	TEST_CHECK_CD: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_LDIF_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 33
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_cd_dqsy_valid,
+			ready => axis_cd_dqsy_ready,
+			data  => axis_cd_dqsy_d
+		);
+		
+	TEST_CHECK_LSUM: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_LSUM_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 37
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_ls_lss_valid,
+			ready => axis_ls_lss_ready,
+			data  => axis_ls_lss_ls
+		);
+		
+	TEST_CHECK_QI: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_QI_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 38
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_qi_qis_valid,
+			ready => axis_qi_qis_ready,
+			data  => axis_qi_qis_d
+		);
+		
+	TEST_CHECK_SR: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => 39
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_cr_crs_valid,
+			ready => axis_cr_crs_ready,
+			data  => axis_cr_crs_d
+		);
+		
+	TEST_CHECK_THETA: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_THETA_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 40
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_t_tq_valid,
+			ready => axis_t_tq_ready,
+			data  => axis_t_tq_d
+		);
+		
+	TEST_CHECK_MQI: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MQI_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 41
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_out_mqi_valid,
+			ready => axis_out_mqi_ready,
+			data  => axis_out_mqi_d
+		);
+	--pragma synthesis_on
 end Behavioral;
+
+
+
+
+	
