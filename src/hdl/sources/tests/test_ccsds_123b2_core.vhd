@@ -99,6 +99,7 @@ begin
 		rst <= '1';
 		input_enable <= '0';
 		wait for 20.0*C_CLK_PERIOD * (1 SEC);
+		wait for 0.5*C_CLK_PERIOD * (1 SEC);
 		rst <= '0';
 		wait for 2.0*C_CLK_PERIOD * (1 SEC);
 		input_enable <= '1';

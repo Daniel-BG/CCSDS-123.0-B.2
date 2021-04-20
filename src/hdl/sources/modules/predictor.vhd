@@ -158,7 +158,7 @@ begin
 		generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
 			SKIP => 0,
-			FILE_NUMBER => 0
+			FILE_NUMBER => 21
 		)
 		port map (
 			clk => clk, rst => rst, 
