@@ -76,7 +76,9 @@ begin
 			output_user	  => joint_coord
 		);
 
-	deleting <= STDLV2CB(joint_coord).last_z = '1';
+	update_deleting: process(joint_coord) begin
+		deleting <= STDLV2CB(joint_coord).last_z = '1';
+	end process;
 	
 	gen_output: for i in 0 to CONST_MAX_P - 2 generate
 		axis_out_diffs_d(CONST_LDIF_BITS*(i+1)-1 downto CONST_LDIF_BITS*i) <= joint_diffvec(CONST_LDIF_BITS*(i+2)-1 downto CONST_LDIF_BITS*(i+1));

@@ -440,7 +440,9 @@ begin
 			output_2_ready	=> axis_cqs_cqwuseq_ready
 		);
 		
-	axis_cqs_cqdq_coord <= CB2STDLV(STDLV2C(axis_cqs_cqdq_full_coord).bounds);
+	update_axis_cqs_cqdq: process(axis_cqs_cqdq_full_coord) begin
+		axis_cqs_cqdq_coord <= CB2STDLV(STDLV2C(axis_cqs_cqdq_full_coord).bounds);
+	end process;
 	coord_queue_diff_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => coordinate_bounds_array_t'length,
@@ -457,7 +459,9 @@ begin
 			flag_almost_full => open, flag_almost_empty => open
 		);
 			
-	axis_is_fpp_coord <= CB2STDLV(STDLV2C(axis_is_fpp_full_coord).bounds);
+	update_axis_is_fpp: process(axis_is_fpp_full_coord) begin
+		axis_is_fpp_coord <= CB2STDLV(STDLV2C(axis_is_fpp_full_coord).bounds);
+	end process;
 	first_pixel_queue_filler: entity work.first_pixel_queue_filler
 		Port map (
 			clk => clk, rst	=> rst, 
@@ -485,7 +489,9 @@ begin
 			output_data => axis_fpq_drpsv_d
 		);
 
-	axis_is_nrcs_coord <= CB2STDLV(STDLV2C(axis_is_nrcs_full_coord).bounds);
+	update_axis_is_nrcs: process(axis_is_nrcs_full_coord) begin
+		axis_is_nrcs_coord <= CB2STDLV(STDLV2C(axis_is_nrcs_full_coord).bounds);
+	end process;
 	sample_rep_queue_system: entity work.sample_rep_queue_system
 		Port map (
 			clk => clk, rst	=> rst,
@@ -671,7 +677,9 @@ begin
 			flag_almost_full => open, flag_almost_empty => open
 		);
 		
-	axis_cqs_cqwq_coord <= CB2STDLV(STDLV2C(axis_cqs_cqwq_full_coord).bounds);
+	update_axis_cqs_cqwq: process(axis_cqs_cqwq_full_coord) begin
+		axis_cqs_cqwq_coord <= CB2STDLV(STDLV2C(axis_cqs_cqwq_full_coord).bounds);
+	end process;
 	coord_queue_wret_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => coordinate_bounds_array_t'length,
@@ -687,8 +695,10 @@ begin
 			output_valid=> axis_cqwq_wu_valid,
 			flag_almost_full => open, flag_almost_empty => open
 		);
-		
-	axis_cqs_cqwuseq_t <= STDLV2C(axis_cqs_cqwq_full_coord).position.t;
+
+	update_axis_cqs_cqwuseq_t: process(axis_cqs_cqwuseq_full_coord) begin
+		axis_cqs_cqwuseq_t <= STDLV2C(axis_cqs_cqwuseq_full_coord).position.t;
+	end process;
 	coord_queue_wuse_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_T_VALUE_BITS,
@@ -1553,10 +1563,59 @@ begin
 			ready => axis_out_mqi_ready,
 			data  => axis_out_mqi_d
 		);
+		
+	TEST_CHECK_NR: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => 45
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_nr_ls_valid,
+			ready => axis_nr_ls_ready,
+			data  => axis_nr_ls_n
+		);
+
+	TEST_CHECK_NWR: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => 43
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_nr_ls_valid,
+			ready => axis_nr_ls_ready,
+			data  => axis_nr_ls_nw
+		);
+
+	TEST_CHECK_NER: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => 44
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_nr_ls_valid,
+			ready => axis_nr_ls_ready,
+			data  => axis_nr_ls_ne
+		);
+
+	TEST_CHECK_WR: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => 42
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_nr_ls_valid,
+			ready => axis_nr_ls_ready,
+			data  => axis_nr_ls_w
+		);
 	--pragma synthesis_on
 end Behavioral;
-
-
-
 
 	

@@ -120,7 +120,9 @@ begin
 			output_valid	=> axis_saccq_valid
 		);
 
-	axis_in_cond <= '0' when STDLV2CB(axis_in_coord).first_x = '1' and STDLV2CB(axis_in_coord).first_y = '1' else '1';
+	update_axis_in_cond: process(axis_in_coord) begin
+		axis_in_cond <= '0' when STDLV2CB(axis_in_coord).first_x = '1' and STDLV2CB(axis_in_coord).first_y = '1' else '1';
+	end process;
 	acc_retrieval: entity work.axis_conditioned_selector
 		generic map (
 			DATA_WIDTH 	=> CONST_MAX_ACC_BITS,

@@ -31,6 +31,7 @@ module checker_wrapper (
 	parameter DATA_WIDTH=10;
 	parameter FILE_NUMBER = 0;
 	parameter SKIP = 0;
+	parameter SHOW_ALL = 0;
 	
 	input					clk, rst;
 	output 					valid;
@@ -42,7 +43,8 @@ module checker_wrapper (
 	inline_axis_checker #(
 		.DATA_WIDTH(DATA_WIDTH),
 		.SKIP(SKIP),
-		.FILE_NAME(FILE_NAME)
+		.FILE_NAME(FILE_NAME),
+		.SHOW_ALL(SHOW_ALL)
 	) checker_instance (
 		.clk(clk), .rst(rst),
 		.valid(valid), .data(data), .ready(ready)

@@ -23,6 +23,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.ccsds_constants.all;
 use work.ccsds_data_structures.all;
+use ieee.numeric_std.all;
 
 entity psv_calc is
 	Port (
@@ -40,9 +41,9 @@ end psv_calc;
 architecture Behavioral of psv_calc is
 begin
 	
-	axis_in_drpsv_ready <= axis_out_psv_ready;
-	axis_out_psv_valid <= axis_in_drpsv_valid;
-	axis_out_psv_d <= axis_in_drpsv_d(axis_out_psv_d'high downto 0);
-	axis_out_psv_coord <= axis_in_drpsv_coord;
+	axis_in_drpsv_ready	<= axis_out_psv_ready;
+	axis_out_psv_valid 	<= axis_in_drpsv_valid;
+	axis_out_psv_d 		<= std_logic_vector(resize(shift_right(unsigned(axis_in_drpsv_d), 1), axis_out_psv_d'length));
+	axis_out_psv_coord 	<= axis_in_drpsv_coord;
 
 end Behavioral;

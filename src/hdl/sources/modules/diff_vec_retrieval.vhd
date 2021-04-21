@@ -44,7 +44,9 @@ architecture Behavioral of diff_vec_retrieval is
 
 begin
 
-	condition <= '0' when STDLV2CB(axis_in_coord_d).first_z = '1' else '1';
+	update_condition: process(axis_in_coord_d) begin
+		condition <= '0' when STDLV2CB(axis_in_coord_d).first_z = '1' else '1';
+	end process;
 
 	queue_retrieval: entity work.axis_conditioned_retrieval
 		generic map ( 
