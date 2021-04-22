@@ -149,7 +149,9 @@ begin
 			axis_output_valid		=> axis_out_mqi_valid,
 			axis_output_ready		=> axis_out_mqi_ready
 		);
-	axis_out_mqi_coord <= CB2STDLV(STDLV2C(axis_out_mqi_full_coord).bounds);
+	update_axis_out_mqi_coord: process(axis_out_mqi_full_coord) begin
+		axis_out_mqi_coord <= F_CB2STDLV(F_STDLV2C(axis_out_mqi_full_coord).bounds);
+	end process;
 	
 	
 	--test stuff

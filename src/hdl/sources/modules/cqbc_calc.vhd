@@ -118,9 +118,9 @@ begin
 	joint_ready <= axis_out_cqbc_ready;
 	axis_out_cqbc_valid <= joint_valid;
 	axis_out_cqbc_d <= 
-				(others => '0') when -signed(joint_psv) > signed(joint_mult)
-		else 	cfg_smax when signed(joint_psv) + signed(joint_mult) > signed("0" & unsigned(cfg_smax))
-		else    std_logic_vector(resize(signed(joint_psv) + signed(joint_mult), axis_out_cqbc_d'length));
+				(others => '0') when -signed("0" & unsigned(joint_psv)) > signed(joint_mult)
+		else 	cfg_smax when signed("0" & unsigned(joint_psv)) + signed(joint_mult) > signed("0" & unsigned(cfg_smax))
+		else    std_logic_vector(resize(signed("0" & unsigned(joint_psv)) + signed(joint_mult), axis_out_cqbc_d'length)); --this is always positive
 	
 
 end Behavioral;

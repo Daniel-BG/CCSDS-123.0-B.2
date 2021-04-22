@@ -140,9 +140,14 @@ begin
 	axis_out_code 	<= std_logic_vector(resize(unsigned(axis_out_code_raw), axis_out_code'length));
 	axis_out_length <= std_logic_vector(resize(unsigned(axis_out_length_raw), axis_out_length'length));
 	axis_out_coord  <= axis_out_coord_raw;
-	axis_out_last	<= '1' when STDLV2CB(axis_out_coord_raw).last_x = '1' 
-								and STDLV2CB(axis_out_coord_raw).last_y = '1'
-								and STDLV2CB(axis_out_coord_raw).last_z = '1'
-						else '0';  
+	update_axis_out_last: process(axis_out_coord_raw) begin
+		if 		F_STDLV2CB(axis_out_coord_raw).last_x = '1' 
+				and F_STDLV2CB(axis_out_coord_raw).last_y = '1'
+				and F_STDLV2CB(axis_out_coord_raw).last_z = '1' then
+			axis_out_last <= '1';
+		else
+			axis_out_last <= '0';
+		end if;  
+	end process;
 
 end Behavioral;

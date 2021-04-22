@@ -95,9 +95,13 @@ architecture Behavioral of wu_calc is
 	signal omega_min, omega_max: std_logic_vector(CONST_MAX_WEIGHT_BITS - 1 downto 0);
 	
 begin
-
-	axis_dv_d_filtered <= (others => '0') when STDLV2CB(axis_dv_coord).first_x = '1' and STDLV2CB(axis_dv_coord).first_y = '1' else
-							axis_dv_d;
+	update_axis_dv_d_filtered: process(axis_dv_coord, axis_dv_d) begin
+		if F_STDLV2CB(axis_dv_coord).first_x = '1' and F_STDLV2CB(axis_dv_coord).first_y = '1' then
+			axis_dv_d_filtered <= (others => '0');
+		else
+			axis_dv_d_filtered <= axis_dv_d;
+		end if;
+	end process;
 	sync_drpe_diff: entity work.AXIS_SYNCHRONIZER_2
 		Generic map (
 			DATA_WIDTH_0 => CONST_DRPE_BITS,

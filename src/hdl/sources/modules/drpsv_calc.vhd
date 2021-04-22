@@ -96,7 +96,7 @@ begin
 				buffered_hrpsv_next <= axis_in_hrpsv_d;
 			end if;
 		elsif state_curr = VALUE_READ then
-			if STDLV2CB(buffered_coord_bounds).first_x = '0' or STDLV2CB(buffered_coord_bounds).first_y = '0' then
+			if F_STDLV2CB(buffered_coord_bounds).first_x = '0' or F_STDLV2CB(buffered_coord_bounds).first_y = '0' then
 				--pipe buffered value
 				axis_out_drpsv_valid <= '1';
 				axis_out_drpsv_d <= std_logic_vector(resize(
@@ -114,7 +114,7 @@ begin
 						state_next <= IDLE;
 					end if;
 				end if;
-			elsif STDLV2CB(buffered_coord_bounds).first_z = '1' or cfg_pred_bands = (cfg_pred_bands'range => '0') then
+			elsif F_STDLV2CB(buffered_coord_bounds).first_z = '1' or cfg_pred_bands = (cfg_pred_bands'range => '0') then
 				--buffered value is trash, pipe mid sample
 				axis_out_drpsv_valid <= '1';
 				axis_out_drpsv_d <= std_logic_vector(shift_left(to_unsigned(1, axis_out_drpsv_d'length), to_integer(unsigned(cfg_in_data_width_log))));

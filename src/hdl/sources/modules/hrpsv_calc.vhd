@@ -47,6 +47,7 @@ entity hrpsv_calc is
 end hrpsv_calc;
 
 architecture Behavioral of hrpsv_calc is
+	constant CONST_INTERMEDIATE_REGISTER_WIDTH: integer := CONST_PCLD_BITS + 1; --PCLD is orders of magitude greater than the rest, this should leave enough room as an intermediate result
 	--joiner
 	signal axis_joint_valid, axis_joint_ready: std_logic;
 	signal axis_joint_lsum: std_logic_vector(CONST_LSUM_BITS - 1 downto 0);
@@ -54,14 +55,15 @@ architecture Behavioral of hrpsv_calc is
 	signal axis_joint_coord: coordinate_bounds_array_t;
 	
 	--latch after first ops
-	signal axis_hrpsv_u_d: std_logic_vector(CONST_HRPSV_BITS - 1 downto 0);
+	signal axis_hrpsv_u_d: std_logic_vector(CONST_INTERMEDIATE_REGISTER_WIDTH - 1 downto 0);
 	signal axis_hrpsv_u_ready, axis_hrpsv_u_valid: std_logic;
 	signal axis_hrpsv_u_coord: coordinate_bounds_array_t;
 	
 	--this ensures no overflow (maybe move somewhere else)
 	constant U_TWO: std_logic_vector(2 downto 0) := "010";
 	constant U_ONE: std_logic_vector(1 downto 0) := "01";
-	signal hrpsv_result, hrpsv_unclamped, hrpsv_clamped, hrpsv_low, hrpsv_high: std_logic_vector(CONST_HRPSV_BITS - 1 downto 0);
+	signal hrpsv_unclamped:  std_logic_vector(CONST_INTERMEDIATE_REGISTER_WIDTH - 1 downto 0);   
+	signal hrpsv_result, hrpsv_clamped, hrpsv_low, hrpsv_high: std_logic_vector(CONST_HRPSV_BITS - 1 downto 0);
 
 begin
 
@@ -91,10 +93,11 @@ begin
 			output_user   => axis_joint_coord
 		);
 
+		--both smid values cancel each other since we have allocated the appropriate amount of bits.
 		hrpsv_unclamped <= std_logic_vector(
 			resize(signed(axis_joint_pcd), hrpsv_unclamped'length) 
 			+
-			shift_left(resize(signed(axis_joint_lsum), hrpsv_unclamped'length) , to_integer(unsigned(cfg_in_weight_width_log))) 
+			shift_left(resize(signed("0" & unsigned(axis_joint_lsum)), hrpsv_unclamped'length) , to_integer(unsigned(cfg_in_weight_width_log))) 
 			+
 			shift_left(resize(signed(U_TWO), hrpsv_unclamped'length), to_integer(unsigned(cfg_in_weight_width_log)))
 		);
@@ -119,16 +122,16 @@ begin
 		hrpsv_low <= (others => '0');
 		hrpsv_high <= std_logic_vector(
 			shift_left(
-				shift_left(resize(signed(U_ONE), axis_hrpsv_u_d'length), to_integer(unsigned(cfg_in_data_width_log))) - 1,
+				shift_left(resize(signed(U_ONE), hrpsv_high'length), to_integer(unsigned(cfg_in_data_width_log))) - 1,
 				to_integer(unsigned(cfg_in_weight_width_log) + 2)
 			)
 			+
-			shift_left(resize(signed(U_TWO), axis_hrpsv_u_d'length), to_integer(unsigned(cfg_in_weight_width_log)))
+			shift_left(resize(signed(U_TWO), hrpsv_high'length), to_integer(unsigned(cfg_in_weight_width_log)))
 		);
 		
 		hrpsv_result <= hrpsv_low when axis_hrpsv_u_d(axis_hrpsv_u_d'high) = '1' --is negative
-			else hrpsv_high when signed(axis_hrpsv_u_d) > signed(hrpsv_high) 
-			else axis_hrpsv_u_d;
+			else hrpsv_high when signed(axis_hrpsv_u_d) > signed("0" & unsigned(hrpsv_high)) 
+			else std_logic_vector(resize(unsigned(axis_hrpsv_u_d), hrpsv_result'length));
 
 		output_latch: entity work.axis_latched_connection
 			Generic map (

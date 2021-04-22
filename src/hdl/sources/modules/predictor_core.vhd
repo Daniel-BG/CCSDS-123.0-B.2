@@ -441,7 +441,7 @@ begin
 		);
 		
 	update_axis_cqs_cqdq: process(axis_cqs_cqdq_full_coord) begin
-		axis_cqs_cqdq_coord <= CB2STDLV(STDLV2C(axis_cqs_cqdq_full_coord).bounds);
+		axis_cqs_cqdq_coord <= F_CB2STDLV(F_STDLV2C(axis_cqs_cqdq_full_coord).bounds);
 	end process;
 	coord_queue_diff_queue: entity work.AXIS_FIFO 
 		Generic map (
@@ -460,7 +460,7 @@ begin
 		);
 			
 	update_axis_is_fpp: process(axis_is_fpp_full_coord) begin
-		axis_is_fpp_coord <= CB2STDLV(STDLV2C(axis_is_fpp_full_coord).bounds);
+		axis_is_fpp_coord <= F_CB2STDLV(F_STDLV2C(axis_is_fpp_full_coord).bounds);
 	end process;
 	first_pixel_queue_filler: entity work.first_pixel_queue_filler
 		Port map (
@@ -490,7 +490,7 @@ begin
 		);
 
 	update_axis_is_nrcs: process(axis_is_nrcs_full_coord) begin
-		axis_is_nrcs_coord <= CB2STDLV(STDLV2C(axis_is_nrcs_full_coord).bounds);
+		axis_is_nrcs_coord <= F_CB2STDLV(F_STDLV2C(axis_is_nrcs_full_coord).bounds);
 	end process;
 	sample_rep_queue_system: entity work.sample_rep_queue_system
 		Port map (
@@ -595,8 +595,8 @@ begin
 	
 		
 	axis_lss_dd_w 	<= axis_lss_dd_d(CONST_LSUM_BITS+CONST_MAX_DATA_WIDTH*3 - 1 downto CONST_LSUM_BITS+CONST_MAX_DATA_WIDTH*2);
-	axis_lss_dd_nw 	<= axis_lss_dd_d(CONST_LSUM_BITS+CONST_MAX_DATA_WIDTH*2 - 1 downto CONST_LSUM_BITS+CONST_MAX_DATA_WIDTH);
-	axis_lss_dd_n 	<= axis_lss_dd_d(CONST_LSUM_BITS+CONST_MAX_DATA_WIDTH - 1 downto CONST_LSUM_BITS);
+	axis_lss_dd_n 	<= axis_lss_dd_d(CONST_LSUM_BITS+CONST_MAX_DATA_WIDTH*2 - 1 downto CONST_LSUM_BITS+CONST_MAX_DATA_WIDTH);
+	axis_lss_dd_nw 	<= axis_lss_dd_d(CONST_LSUM_BITS+CONST_MAX_DATA_WIDTH - 1 downto CONST_LSUM_BITS);
 	axis_lss_dd_ls	<= axis_lss_dd_d(CONST_LSUM_BITS - 1 downto 0);
 	local_difference: entity work.local_difference_calc
 		port map (
@@ -678,7 +678,7 @@ begin
 		);
 		
 	update_axis_cqs_cqwq: process(axis_cqs_cqwq_full_coord) begin
-		axis_cqs_cqwq_coord <= CB2STDLV(STDLV2C(axis_cqs_cqwq_full_coord).bounds);
+		axis_cqs_cqwq_coord <= F_CB2STDLV(F_STDLV2C(axis_cqs_cqwq_full_coord).bounds);
 	end process;
 	coord_queue_wret_queue: entity work.AXIS_FIFO 
 		Generic map (
@@ -697,7 +697,7 @@ begin
 		);
 
 	update_axis_cqs_cqwuseq_t: process(axis_cqs_cqwuseq_full_coord) begin
-		axis_cqs_cqwuseq_t <= STDLV2C(axis_cqs_cqwuseq_full_coord).position.t;
+		axis_cqs_cqwuseq_t <= F_STDLV2C(axis_cqs_cqwuseq_full_coord).position.t;
 	end process;
 	coord_queue_wuse_queue: entity work.AXIS_FIFO 
 		Generic map (

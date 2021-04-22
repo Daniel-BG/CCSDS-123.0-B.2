@@ -175,7 +175,10 @@ begin
 			output_data_1 => joint_qi_mev_mev
 		);
 	
-	mev_qi_signed <= joint_qi_mev_mev when joint_qi_mev_qi(joint_qi_mev_qi'high) = '0' else std_logic_vector(-signed(joint_qi_mev_mev));
+	--mev_qi_signed <= joint_qi_mev_mev when joint_qi_mev_qi(joint_qi_mev_qi'high) = '0' else std_logic_vector(-signed(joint_qi_mev_mev));
+	mev_qi_signed <= (others => '0') when joint_qi_mev_qi = (joint_qi_mev_qi'range => '0') else
+					joint_qi_mev_mev when joint_qi_mev_qi(joint_qi_mev_qi'high) = '0' else 
+					std_logic_vector(-signed(joint_qi_mev_mev));
 	mev_qi_shifted <= std_logic_vector(shift_left(resize(signed(mev_qi_signed), mev_qi_shifted'length), to_integer(unsigned(omega_minus_resolution))));
 	
 	second_stage: entity work.AXIS_SYNCHRONIZER_2

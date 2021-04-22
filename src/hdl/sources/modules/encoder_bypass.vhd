@@ -138,7 +138,7 @@ begin
 			coder_axis_out_ready    <= '0';
 			coder_axis_in_mqi_coord <= (others => '0');
 			
-			if STDLV2CB(latched_mqi_coord).first_x = '1' and STDLV2CB(latched_mqi_coord).first_y = '1' and STDLV2CB(latched_mqi_coord).last_z = '1' then
+			if F_STDLV2CB(latched_mqi_coord).first_x = '1' and F_STDLV2CB(latched_mqi_coord).first_y = '1' and F_STDLV2CB(latched_mqi_coord).last_z = '1' then
 				if latched_mqi_valid = '1' and olatch_in_ready = '1' then
 					state_next <= OTHER_PIXELS; --we found the end of the first pixel, now on to the encoder
 				end if;

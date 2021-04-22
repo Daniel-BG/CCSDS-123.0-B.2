@@ -49,14 +49,14 @@ package ccsds_data_structures is
 	
 	
 	subtype coordinate_bounds_array_t is std_logic_vector(5 downto 0);
-	function CB2STDLV(cb: coordinate_bounds_t) return coordinate_bounds_array_t;
-	function STDLV2CB(stdlv: coordinate_bounds_array_t) return coordinate_bounds_t;
+	function F_CB2STDLV(cb: coordinate_bounds_t) return coordinate_bounds_array_t;
+	function F_STDLV2CB(stdlv: coordinate_bounds_array_t) return coordinate_bounds_t;
 	subtype coordinate_position_array_t is std_logic_vector(BITS(CONST_MAX_X_VALUE)+ BITS(CONST_MAX_Y_VALUE) + BITS(CONST_MAX_Z_VALUE) + BITS(CONST_MAX_T_VALUE) - 1 downto 0);
-	function CP2STDLV(cp: coordinate_position_t) return coordinate_position_array_t;
-	function STDLV2CP(stdlv: coordinate_position_array_t) return coordinate_position_t;
+	function F_CP2STDLV(cp: coordinate_position_t) return coordinate_position_array_t;
+	function F_STDLV2CP(stdlv: coordinate_position_array_t) return coordinate_position_t;
 	subtype coordinate_array_t is std_logic_vector(BITS(CONST_MAX_X_VALUE)+ BITS(CONST_MAX_Y_VALUE) + BITS(CONST_MAX_Z_VALUE) + BITS(CONST_MAX_T_VALUE) + 6 - 1 downto 0);
-	function C2STDLV(ca: coordinate_t) return coordinate_array_t;
-	function STDLV2C(stdlv: coordinate_array_t) return coordinate_t;
+	function F_C2STDLV(ca: coordinate_t) return coordinate_array_t;
+	function F_STDLV2C(stdlv: coordinate_array_t) return coordinate_t;
 	
 	--first is if it flushes (1) second is the bit itself
 	subtype flush_bit_t is std_logic_vector (1 downto 0);  
@@ -66,14 +66,14 @@ end ccsds_data_structures;
 
 package body ccsds_data_structures is
 	--actual function bodies
-	function CB2STDLV(cb: coordinate_bounds_t) return coordinate_bounds_array_t is
+	function F_CB2STDLV(cb: coordinate_bounds_t) return coordinate_bounds_array_t is
 		variable stdlv: coordinate_bounds_array_t;
 	begin
 		stdlv := cb.first_x & cb.first_y & cb.first_z & cb.last_x & cb.last_y & cb.last_z;
 		return stdlv;
 	end function;
 	
-	function STDLV2CB(stdlv: coordinate_bounds_array_t) return coordinate_bounds_t is
+	function F_STDLV2CB(stdlv: coordinate_bounds_array_t) return coordinate_bounds_t is
 		variable cb: coordinate_bounds_t;
 	begin
 		cb.first_x := stdlv(5);
@@ -86,14 +86,14 @@ package body ccsds_data_structures is
 	end function;
 	
 	
-	function CP2STDLV(cp: coordinate_position_t) return coordinate_position_array_t is
+	function F_CP2STDLV(cp: coordinate_position_t) return coordinate_position_array_t is
 		variable stdlv: coordinate_position_array_t;
 	begin
 		stdlv := cp.x & cp.y & cp.z & cp.t;
 		return stdlv;
 	end function;
 	
-	function STDLV2CP(stdlv: coordinate_position_array_t) return coordinate_position_t is
+	function F_STDLV2CP(stdlv: coordinate_position_array_t) return coordinate_position_t is
 		variable cp: coordinate_position_t;
 	begin
 		cp.x := stdlv(stdlv'high downto stdlv'high + 1 - BITS(CONST_MAX_X_VALUE));
@@ -104,18 +104,18 @@ package body ccsds_data_structures is
 	end function;
 	
 	
-	function C2STDLV(ca: coordinate_t) return coordinate_array_t is
+	function F_C2STDLV(ca: coordinate_t) return coordinate_array_t is
 		variable stdlv: coordinate_array_t;
 	begin
-		stdlv := CP2STDLV(ca.position) & CB2STDLV(ca.bounds);
+		stdlv := F_CP2STDLV(ca.position) & F_CB2STDLV(ca.bounds);
 		return stdlv;
 	end function;
 	
-	function STDLV2C(stdlv: coordinate_array_t) return coordinate_t is
+	function F_STDLV2C(stdlv: coordinate_array_t) return coordinate_t is
 		variable c: coordinate_t;
 	begin
-		c.position := STDLV2CP(stdlv(stdlv'high downto coordinate_bounds_array_t'length));
-		c.bounds := STDLV2CB(stdlv(coordinate_bounds_array_t'length - 1 downto 0));
+		c.position := F_STDLV2CP(stdlv(stdlv'high downto coordinate_bounds_array_t'length));
+		c.bounds := F_STDLV2CB(stdlv(coordinate_bounds_array_t'length - 1 downto 0));
 		return c;
 	end function;
 

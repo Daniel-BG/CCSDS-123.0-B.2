@@ -109,7 +109,14 @@ begin
 			flag_almost_full => open, flag_almost_empty => open
 		);
 		
-	axis_in_coord_cond <= '0' when STDLV2CB(axis_in_coord_d).first_x = '1' and STDLV2CB(axis_in_coord_d).first_y = '1' else '1';
+	update_axis_in_coord_cond: process(axis_in_coord_d) begin
+		if F_STDLV2CB(axis_in_coord_d).first_x = '1' and F_STDLV2CB(axis_in_coord_d).first_y = '1' then
+			axis_in_coord_cond <= '0';
+		else 
+			axis_in_coord_cond <= '1';
+		end if;
+	end process;
+		
 	weight_retrieval: entity work.axis_conditioned_selector
 		generic map (
 			DATA_WIDTH => CONST_WEIGHTVEC_BITS

@@ -121,7 +121,11 @@ begin
 		);
 
 	update_axis_in_cond: process(axis_in_coord) begin
-		axis_in_cond <= '0' when STDLV2CB(axis_in_coord).first_x = '1' and STDLV2CB(axis_in_coord).first_y = '1' else '1';
+		if F_STDLV2CB(axis_in_coord).first_x = '1' and F_STDLV2CB(axis_in_coord).first_y = '1' then
+			axis_in_cond <= '0';
+		else
+			axis_in_cond <= '1';
+		end if;
 	end process;
 	acc_retrieval: entity work.axis_conditioned_selector
 		generic map (

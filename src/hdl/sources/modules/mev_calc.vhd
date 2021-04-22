@@ -89,7 +89,7 @@ begin
 			axis_out_mev_valid <= rel_err_valid;
 			rel_err_ready <= axis_out_mev_ready;
 			
-			if STDLV2CB(rel_err_coord).first_x = '1' and STDLV2CB(rel_err_coord).first_y = '1' then
+			if F_STDLV2CB(rel_err_coord).first_x = '1' and F_STDLV2CB(rel_err_coord).first_y = '1' then
 				axis_out_mev_d <= (others => '0');
 			elsif cfg_use_abs_err = '1' and cfg_use_rel_err = '1' then
 				--take minimum

@@ -77,7 +77,7 @@ begin
 		);
 
 	update_deleting: process(joint_coord) begin
-		deleting <= STDLV2CB(joint_coord).last_z = '1';
+		deleting <= F_STDLV2CB(joint_coord).last_z = '1';
 	end process;
 	
 	gen_output: for i in 0 to CONST_MAX_P - 2 generate

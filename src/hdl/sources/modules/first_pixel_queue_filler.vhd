@@ -71,12 +71,17 @@ begin
 		);
 		
 		axis_out_fpq_d <= axis_joint_sample;
-		is_fpq <= '1' when 
-				cfg_p /= (cfg_p'range => '0') and 
-				STDLV2CB(axis_joint_coord).first_x = '1' and 
-				STDLV2CB(axis_joint_coord).first_y = '1' and 
-				STDLV2CB(axis_joint_coord).last_z = '0' --do not push last sample
-			else '0';
+		update_is_fpq: process(axis_joint_coord, cfg_p) begin
+			if cfg_p /= (cfg_p'range => '0') and 
+				F_STDLV2CB(axis_joint_coord).first_x = '1' and 
+				F_STDLV2CB(axis_joint_coord).first_y = '1' and 
+				F_STDLV2CB(axis_joint_coord).last_z = '0' then --do not push last sample 
+				is_fpq <= '1';
+			else
+				is_fpq <= '0';	
+			end if;
+		end process;
+		
 		
 		axis_out_fpq_valid <= axis_joint_valid when is_fpq = '1' else '0';
 		axis_joint_ready <= axis_out_fpq_ready when is_fpq = '1' else '1';

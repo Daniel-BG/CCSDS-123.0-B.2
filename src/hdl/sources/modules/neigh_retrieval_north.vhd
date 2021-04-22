@@ -44,8 +44,14 @@ architecture Behavioral of neigh_retrieval_north is
 	signal condition: std_logic;
 
 begin
-
-	condition <= '0' when STDLV2CB(axis_in_coord_d).first_y = '1' else '1';
+	
+	update_condition: process(axis_in_coord_d) begin
+		if F_STDLV2CB(axis_in_coord_d).first_y = '1' then
+			condition <= '0';
+		else
+			condition <= '1';
+		end if;
+	end process;
 
 	queue_retrieval: entity work.axis_conditioned_retrieval
 		generic map ( 

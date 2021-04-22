@@ -41,9 +41,14 @@ architecture Behavioral of neigh_putter_north is
 	signal axis_in_flag: std_logic_vector(0 downto 0);
 begin
 
-	axis_in_flag(0) <= '0' when STDLV2CB(axis_in_coord).last_y = '0' or STDLV2CB(axis_in_coord).last_x = '1' or
-								STDLV2CB(axis_in_coord).first_y = '0' or STDLV2CB(axis_in_coord).last_x = '0'
-						 else '1';
+	update_flag: process(axis_in_coord) begin
+		if 		(F_STDLV2CB(axis_in_coord).last_y = '0' and F_STDLV2CB(axis_in_coord).last_x = '1') or
+				(F_STDLV2CB(axis_in_coord).first_y = '0' and F_STDLV2CB(axis_in_coord).last_x = '0') then
+			axis_in_flag(0) <= '0';
+		else
+			axis_in_flag(0) <= '1';
+		end if;
+	end process;
 	
 	filter: entity work.AXIS_FILTER 
 		Generic map (

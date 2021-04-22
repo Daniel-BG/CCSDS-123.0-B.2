@@ -60,23 +60,23 @@ begin
 	begin
 		--calculate output
 		if cfg_sum_type = WIDE_NEIGHBOR_ORIENTED then
-			if STDLV2CB(axis_in_coord).first_y = '0' and STDLV2CB(axis_in_coord).first_x = '0' and STDLV2CB(axis_in_coord).last_x = '0' then
+			if F_STDLV2CB(axis_in_coord).first_y = '0' and F_STDLV2CB(axis_in_coord).first_x = '0' and F_STDLV2CB(axis_in_coord).last_x = '0' then
 				axis_out_ls <= std_logic_vector(
 						resize(unsigned(axis_in_w),CONST_LSUM_BITS)  +
 						resize(unsigned(axis_in_n),CONST_LSUM_BITS) + 
 						resize(unsigned(axis_in_ne),CONST_LSUM_BITS) + 
 						resize(unsigned(axis_in_nw),CONST_LSUM_BITS)
 					);
-			elsif STDLV2CB(axis_in_coord).first_y = '1' and STDLV2CB(axis_in_coord).first_x = '0' then
+			elsif F_STDLV2CB(axis_in_coord).first_y = '1' and F_STDLV2CB(axis_in_coord).first_x = '0' then
 				axis_out_ls <= std_logic_vector(
 						resize(unsigned(unsigned(axis_in_w) & "00"), CONST_LSUM_BITS)
 					);
-			elsif STDLV2CB(axis_in_coord).first_y = '0' and STDLV2CB(axis_in_coord).first_x = '1' then
+			elsif F_STDLV2CB(axis_in_coord).first_y = '0' and F_STDLV2CB(axis_in_coord).first_x = '1' then
 				axis_out_ls <= std_logic_vector(
 					resize(unsigned(unsigned(axis_in_n) & "0"),CONST_LSUM_BITS) + 
 					resize(unsigned(unsigned(axis_in_ne) & "0"),CONST_LSUM_BITS)
 				);
-			elsif STDLV2CB(axis_in_coord).first_y = '0' and STDLV2CB(axis_in_coord).last_x = '1' then
+			elsif F_STDLV2CB(axis_in_coord).first_y = '0' and F_STDLV2CB(axis_in_coord).last_x = '1' then
 				axis_out_ls <= std_logic_vector(
 						resize(unsigned(axis_in_w), CONST_LSUM_BITS)  +
 						resize(unsigned(unsigned(axis_in_n) & "0"),CONST_LSUM_BITS) + 
@@ -86,11 +86,11 @@ begin
 				axis_out_ls <= (others => '0');
 			end if;
 		elsif cfg_sum_type = WIDE_COLUMN_ORIENTED then
-			if STDLV2CB(axis_in_coord).first_y = '0' then
+			if F_STDLV2CB(axis_in_coord).first_y = '0' then
 				axis_out_ls <= std_logic_vector(
 					resize(unsigned(unsigned(axis_in_n) & "00"), CONST_LSUM_BITS)
 				);
-			elsif STDLV2CB(axis_in_coord).first_y = '1' and STDLV2CB(axis_in_coord).first_x = '0' then
+			elsif F_STDLV2CB(axis_in_coord).first_y = '1' and F_STDLV2CB(axis_in_coord).first_x = '0' then
 				axis_out_ls <= std_logic_vector(
 					resize(unsigned(unsigned(axis_in_w) & "00"), CONST_LSUM_BITS)
 				);

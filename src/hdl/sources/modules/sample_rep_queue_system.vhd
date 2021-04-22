@@ -28,7 +28,7 @@ use work.am_data_types.all;
 entity sample_rep_queue_system is
 	Port (
 		clk, rst				: in std_logic;
-		--input coordinate
+		--input coordinate for reading
 		axis_in_coord_valid		: in std_logic;
 		axis_in_coord_d 		: in coordinate_bounds_array_t;
 		axis_in_coord_ready		: out std_logic;

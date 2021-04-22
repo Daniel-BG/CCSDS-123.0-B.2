@@ -76,10 +76,13 @@ begin
 			output_data_1	=> axis_out_drsr,
 			output_user		=> axis_out_coord
 		);
-	update_axis_out: process(axis_out_coord,axis_out_drsr) begin
+	update_axis_out: process(axis_out_coord,axis_out_drsr, axis_out_d) begin
 		axis_out_cr_coord <= axis_out_coord;
-		axis_out_cr_d <= axis_out_d when STDLV2CB(axis_out_coord).first_x = '1' and STDLV2CB(axis_out_coord).first_y = '1' else
-				 std_logic_vector(resize(shift_right(unsigned(axis_out_drsr) + 1, 1), CONST_MAX_DATA_WIDTH));
+		if F_STDLV2CB(axis_out_coord).first_x = '1' and F_STDLV2CB(axis_out_coord).first_y = '1' then
+			axis_out_cr_d <= axis_out_d;
+		else
+			axis_out_cr_d  <= std_logic_vector(resize(shift_right(unsigned(axis_out_drsr) + 1, 1), CONST_MAX_DATA_WIDTH));
+		end if;
 	end process;
 
 

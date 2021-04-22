@@ -297,7 +297,7 @@ begin
 		if tf_state_curr = WORKING then
 			fss_valid <= ss_valid;
 			ss_ready <= fss_ready;
-			if (ss_valid = '1' and fss_ready = '1' and STDLV2CB(ss_coord).last_x = '1' and STDLV2CB(ss_coord).last_y = '1' and STDLV2CB(ss_coord).last_z = '1') then
+			if (ss_valid = '1' and fss_ready = '1' and F_STDLV2CB(ss_coord).last_x = '1' and F_STDLV2CB(ss_coord).last_y = '1' and F_STDLV2CB(ss_coord).last_z = '1') then
 				tf_state_next <= FLUSHING;
 				tf_flush_index_next <= (others => '0');
 			end if;
