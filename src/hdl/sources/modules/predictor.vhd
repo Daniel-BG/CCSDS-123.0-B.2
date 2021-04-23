@@ -77,6 +77,9 @@ architecture Behavioral of predictor is
 begin
 	
 	v2d: entity work.sample_rearrange
+		generic map (
+			RELOCATION_MODE => VERTICAL_TO_DIAGONAL 
+		)
 		port map ( 
 			clk => clk, rst => rst,
 			finished => open,
@@ -131,6 +134,9 @@ begin
 		
 		
 	d2v: entity work.sample_rearrange
+		generic map (
+			RELOCATION_MODE => DIAGONAL_TO_VERTICAL
+		)
 		port map ( 
 			clk => clk, rst => rst,
 			finished => open,
@@ -167,6 +173,19 @@ begin
 			valid => axis_v2d_core_valid,
 			ready => axis_v2d_core_ready,
 			data  => axis_v2d_core_d
+		);
+
+	TEST_CHECK_MQI_REORDERED: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MQI_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 20
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_out_mqi_valid,
+			ready => axis_out_mqi_ready,
+			data  => axis_out_mqi_d
 		);
 	--pragma synthesis_on
 end Behavioral;

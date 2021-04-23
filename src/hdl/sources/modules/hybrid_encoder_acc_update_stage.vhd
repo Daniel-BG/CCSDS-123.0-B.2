@@ -127,11 +127,21 @@ begin
 			output_valid	=> axis_shraq_valid
 		);
 		
-	update_axis_in_cond: process(axis_cnt_hraret_coord) begin
-		if F_STDLV2CB(axis_cnt_hraret_coord).first_x = '1' and F_STDLV2CB(axis_cnt_hraret_coord).first_y = '1' then
-			axis_in_cond <= '0';
-		else
-			axis_in_cond <= '1';
+	update_axis_in_cond: process(clk) begin
+		if rising_edge(clk) then
+			if rst = '1' then
+				axis_in_cond <= '0';
+			else
+				if F_STDLV2CB(axis_cnt_hraret_coord).last_z = '1' then --end of a pixel
+					if axis_cnt_hraret_valid = '1' and axis_cnt_hraret_ready = '1' then --when the transaction is made, check other coords
+						if F_STDLV2CB(axis_cnt_hraret_coord).last_x = '1' and F_STDLV2CB(axis_cnt_hraret_coord).last_y = '1' then
+							axis_in_cond <= '0'; --if we are on the last pixel of all, reset to zero
+						else
+							axis_in_cond <= '1'; --if we are on any other pixel, reset to 1 to pipe hret
+						end if;
+					end if ;
+				end if;
+			end if;
 		end if;
 	end process;
 	hra_retrieval: entity work.axis_conditioned_selector

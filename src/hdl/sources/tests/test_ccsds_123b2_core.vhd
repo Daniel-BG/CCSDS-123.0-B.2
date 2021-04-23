@@ -71,6 +71,10 @@ architecture testbench of test_ccsds_123b2_core is
 	signal cfg_final_counter     : std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 	signal cfg_u_max             : std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
 	signal cfg_iacc				 : std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
+	--input control
+	signal inputter_d           : std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+	signal inputter_valid       : std_logic;
+	signal inputter_ready       : std_logic;
 	signal axis_in_s_d           : std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal axis_in_s_valid       : std_logic;
 	signal axis_in_s_ready       : std_logic;
@@ -162,11 +166,14 @@ begin
 		port map (
 			clk => clk, rst => rst, 
 			enable => input_enable,
-			output_valid => axis_in_s_valid,
-			output_ready => axis_in_s_ready,
-			output_data  => axis_in_s_d
+			output_valid => inputter_valid,
+			output_ready => inputter_ready,
+			output_data  => inputter_d
 		);
 	
+	axis_in_s_d <= inputter_d;
+	inputter_ready <= axis_in_s_ready;
+	axis_in_s_valid <= inputter_valid;
 	
 	DUT : entity work.ccsds_123b2_core
 		generic map (

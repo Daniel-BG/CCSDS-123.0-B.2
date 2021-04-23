@@ -153,7 +153,7 @@ begin
 						64 + unsigned(buffered_free) - unsigned(input_latch_length)  --127 + 1 to avoid overflow to 8 bit repr
 					)));
 					buffered_free_next <= std_logic_vector(64 + unsigned(buffered_free) - unsigned(input_latch_length));
-					if input_latch_last <= '1' then
+					if input_latch_last = '1' then
 						state_next <= FLUSHING;
 					end if;
 				end if;
