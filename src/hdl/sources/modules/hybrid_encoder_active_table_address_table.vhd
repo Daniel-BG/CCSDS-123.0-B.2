@@ -41,9 +41,9 @@ architecture Behavioral of hybrid_encoder_active_table_address_table is
 	signal active_addresses: active_address_register_file_t;
 begin
 	
-	bypass: process(write_addr, read_index, write_index, active_addresses)
+	bypass: process(write_addr, read_index, write_index, active_addresses, write_enable)
 	begin
-		if (read_index /= write_index) then
+		if (read_index /= write_index or write_enable = '0') then
 			read_addr <= active_addresses(to_integer(unsigned(read_index)));
 		else
 			read_addr <= write_addr;

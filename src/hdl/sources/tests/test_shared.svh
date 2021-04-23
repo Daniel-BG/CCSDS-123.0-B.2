@@ -1,31 +1,32 @@
 `ifndef CCSDS_TEST_SHARED_SVH
 	`define CCSDS_TEST_SHARED_SVH
+	//`define DO_NOT_CHECK
 	
 	`define GOLDEN_ROOT_DIR "C:/Users/Daniel/Basurero/out/"
 	`define GOLDEN_EXT ".smp"
 	`define GOLDEN_EXT_DIAG ".smp.diag"
 	//PREDICTOR
-	`define CONST_GOLDEN_S 	    {`GOLDEN_ROOT_DIR, "c_s",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_DRPSV  {`GOLDEN_ROOT_DIR, "c_drpsv",				`GOLDEN_EXT}
-	`define CONST_GOLDEN_PSV 	{`GOLDEN_ROOT_DIR, "c_psv",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_PR 	{`GOLDEN_ROOT_DIR, "c_pr",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_W		{`GOLDEN_ROOT_DIR, "c_w",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_WUSE   {`GOLDEN_ROOT_DIR, "c_wuse",				`GOLDEN_EXT}
-	`define CONST_GOLDEN_DRPE   {`GOLDEN_ROOT_DIR, "c_drpe",				`GOLDEN_EXT}
-	`define CONST_GOLDEN_DRSR   {`GOLDEN_ROOT_DIR, "c_drsr",				`GOLDEN_EXT}
-	`define CONST_GOLDEN_CQBC   {`GOLDEN_ROOT_DIR, "c_cqbc",				`GOLDEN_EXT}
-	`define CONST_GOLDEN_MEV 	{`GOLDEN_ROOT_DIR, "c_mev",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_HRPS   {`GOLDEN_ROOT_DIR, "c_hrpsv",				`GOLDEN_EXT}
-	`define CONST_GOLDEN_PCD 	{`GOLDEN_ROOT_DIR, "c_pcd",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_CLD 	{`GOLDEN_ROOT_DIR, "c_cld",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_NWD 	{`GOLDEN_ROOT_DIR, "c_nwd",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_WD 	{`GOLDEN_ROOT_DIR, "c_wd",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_ND 	{`GOLDEN_ROOT_DIR, "c_nd",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_LS 	{`GOLDEN_ROOT_DIR, "c_ls",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_QI 	{`GOLDEN_ROOT_DIR, "c_qi",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_SR 	{`GOLDEN_ROOT_DIR, "c_sr",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_TS 	{`GOLDEN_ROOT_DIR, "c_ts",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_MQI 	{`GOLDEN_ROOT_DIR, "c_mqi",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_S 	    	{`GOLDEN_ROOT_DIR, "c_s",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_DRPSV  	{`GOLDEN_ROOT_DIR, "c_drpsv",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_PSV 		{`GOLDEN_ROOT_DIR, "c_psv",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_PR 		{`GOLDEN_ROOT_DIR, "c_pr",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_W			{`GOLDEN_ROOT_DIR, "c_w",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_WUSE   	{`GOLDEN_ROOT_DIR, "c_wuse",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_DRPE   	{`GOLDEN_ROOT_DIR, "c_drpe",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_DRSR   	{`GOLDEN_ROOT_DIR, "c_drsr",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_CQBC   	{`GOLDEN_ROOT_DIR, "c_cqbc",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_MEV 		{`GOLDEN_ROOT_DIR, "c_mev",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_HRPS   	{`GOLDEN_ROOT_DIR, "c_hrpsv",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_PCD 		{`GOLDEN_ROOT_DIR, "c_pcd",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_CLD 		{`GOLDEN_ROOT_DIR, "c_cld",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_NWD 		{`GOLDEN_ROOT_DIR, "c_nwd",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_WD 		{`GOLDEN_ROOT_DIR, "c_wd",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_ND 		{`GOLDEN_ROOT_DIR, "c_nd",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_LS 		{`GOLDEN_ROOT_DIR, "c_ls",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_QI 		{`GOLDEN_ROOT_DIR, "c_qi",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_SR 		{`GOLDEN_ROOT_DIR, "c_sr",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_TS 		{`GOLDEN_ROOT_DIR, "c_ts",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_MQI 		{`GOLDEN_ROOT_DIR, "c_mqi",					`GOLDEN_EXT}
 	//PREDICTOR DIAGONAL
 	`define CONST_GOLDEN_DIAG_S		{`GOLDEN_ROOT_DIR, "c_s",					`GOLDEN_EXT_DIAG}
 	`define CONST_GOLDEN_DIAG_DRPSV {`GOLDEN_ROOT_DIR, "c_drpsv",				`GOLDEN_EXT_DIAG}
@@ -53,32 +54,42 @@
 	`define CONST_GOLDEN_DIAG_NER 	{`GOLDEN_ROOT_DIR, "c_ner",					`GOLDEN_EXT_DIAG}
 	`define CONST_GOLDEN_DIAG_NR 	{`GOLDEN_ROOT_DIR, "c_nr",					`GOLDEN_EXT_DIAG}
 	//ENCODER
-	`define CONST_GOLDEN_ACC 	{`GOLDEN_ROOT_DIR, "c_acc",					`GOLDEN_EXT}
-	`define CONST_GOLDEN_CNT 	{`GOLDEN_ROOT_DIR, "c_cnt",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_ACC 		{`GOLDEN_ROOT_DIR, "c_acc",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_CNT 		{`GOLDEN_ROOT_DIR, "c_cnt",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_NTID 		{`GOLDEN_ROOT_DIR, "c_ntid",				`GOLDEN_EXT}
+	`define CONST_GOLDEN_IT 		{`GOLDEN_ROOT_DIR, "c_it",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_FB 		{`GOLDEN_ROOT_DIR, "c_fb",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_IS 		{`GOLDEN_ROOT_DIR, "c_is",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_IHE 		{`GOLDEN_ROOT_DIR, "c_ihe",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_CQ 		{`GOLDEN_ROOT_DIR, "c_cq",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_CI 		{`GOLDEN_ROOT_DIR, "c_ci",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_K			{`GOLDEN_ROOT_DIR, "c_k",					`GOLDEN_EXT}
+	`define CONST_GOLDEN_CWB 		{`GOLDEN_ROOT_DIR, "c_cwb", 				`GOLDEN_EXT}
+	`define CONST_GOLDEN_CWV 		{`GOLDEN_ROOT_DIR, "c_cwv", 				`GOLDEN_EXT}
+	`define CONST_GOLDEN_CTID		{`GOLDEN_ROOT_DIR, "c_ctid", 				`GOLDEN_EXT}
 	
 	
-	
-	`define CONST_GOLDEN_NUM_S 	    0
-	`define CONST_GOLDEN_NUM_DRPSV  1
-	`define CONST_GOLDEN_NUM_PSV 	2
-	`define CONST_GOLDEN_NUM_PR 	3
-	`define CONST_GOLDEN_NUM_W		4
-	`define CONST_GOLDEN_NUM_WUSE   5
-	`define CONST_GOLDEN_NUM_DRPE   6
-	`define CONST_GOLDEN_NUM_DRSR   7
-	`define CONST_GOLDEN_NUM_CQBC   8
-	`define CONST_GOLDEN_NUM_MEV 	9
-	`define CONST_GOLDEN_NUM_HRPS   10
-	`define CONST_GOLDEN_NUM_PCD 	11
-	`define CONST_GOLDEN_NUM_CLD 	12
-	`define CONST_GOLDEN_NUM_NWD 	13
-	`define CONST_GOLDEN_NUM_WD 	14
-	`define CONST_GOLDEN_NUM_ND 	15
-	`define CONST_GOLDEN_NUM_LS 	16
-	`define CONST_GOLDEN_NUM_QI 	17
-	`define CONST_GOLDEN_NUM_SR 	18
-	`define CONST_GOLDEN_NUM_TS 	19
-	`define CONST_GOLDEN_NUM_MQI 	20
+	`define CONST_GOLDEN_NUM_S 	    		0
+	`define CONST_GOLDEN_NUM_DRPSV  		1
+	`define CONST_GOLDEN_NUM_PSV 			2
+	`define CONST_GOLDEN_NUM_PR 			3
+	`define CONST_GOLDEN_NUM_W				4
+	`define CONST_GOLDEN_NUM_WUSE   		5
+	`define CONST_GOLDEN_NUM_DRPE   		6
+	`define CONST_GOLDEN_NUM_DRSR   		7
+	`define CONST_GOLDEN_NUM_CQBC   		8
+	`define CONST_GOLDEN_NUM_MEV 			9
+	`define CONST_GOLDEN_NUM_HRPS   		10
+	`define CONST_GOLDEN_NUM_PCD 			11
+	`define CONST_GOLDEN_NUM_CLD 			12
+	`define CONST_GOLDEN_NUM_NWD 			13
+	`define CONST_GOLDEN_NUM_WD 			14
+	`define CONST_GOLDEN_NUM_ND 			15
+	`define CONST_GOLDEN_NUM_LS 			16
+	`define CONST_GOLDEN_NUM_QI 			17
+	`define CONST_GOLDEN_NUM_SR 			18
+	`define CONST_GOLDEN_NUM_TS 			19
+	`define CONST_GOLDEN_NUM_MQI 			20
 	`define CONST_GOLDEN_NUM_DIAG_S 	    21
 	`define CONST_GOLDEN_NUM_DIAG_DRPSV  	22
 	`define CONST_GOLDEN_NUM_DIAG_PSV 		23
@@ -105,8 +116,19 @@
 	`define CONST_GOLDEN_NUM_DIAG_NER 		44
 	`define CONST_GOLDEN_NUM_DIAG_NR 		45
 	//ENCODER
-	`define CONST_GOLDEN_NUM_ACC 	100
-	`define CONST_GOLDEN_NUM_CNT 	101
+	`define CONST_GOLDEN_NUM_ACC 			100
+	`define CONST_GOLDEN_NUM_CNT 			101
+	`define CONST_GOLDEN_NUM_NTID 			102
+	`define CONST_GOLDEN_NUM_IT 			103
+	`define CONST_GOLDEN_NUM_FB 			104
+	`define CONST_GOLDEN_NUM_IS 			105
+	`define CONST_GOLDEN_NUM_IHE 			106
+	`define CONST_GOLDEN_NUM_CQ 			107
+	`define CONST_GOLDEN_NUM_CI 			108
+	`define CONST_GOLDEN_NUM_K				109
+	`define CONST_GOLDEN_NUM_CWB			110
+	`define CONST_GOLDEN_NUM_CWV			111
+	`define CONST_GOLDEN_NUM_CTID			112
 	
 	
 	function string getFileNameFromNum (input int x);
@@ -159,6 +181,17 @@
 			`CONST_GOLDEN_NUM_DIAG_NWR 		: return `CONST_GOLDEN_DIAG_NWR;
 			`CONST_GOLDEN_NUM_DIAG_NER 		: return `CONST_GOLDEN_DIAG_NER;
 			`CONST_GOLDEN_NUM_DIAG_NR 		: return `CONST_GOLDEN_DIAG_NR;
+			`CONST_GOLDEN_NUM_NTID 			: return `CONST_GOLDEN_NTID;
+			`CONST_GOLDEN_NUM_IT 			: return `CONST_GOLDEN_IT;
+			`CONST_GOLDEN_NUM_FB 			: return `CONST_GOLDEN_FB;
+			`CONST_GOLDEN_NUM_IS 			: return `CONST_GOLDEN_IS;
+			`CONST_GOLDEN_NUM_IHE 			: return `CONST_GOLDEN_IHE;
+			`CONST_GOLDEN_NUM_CQ 			: return `CONST_GOLDEN_CQ;
+			`CONST_GOLDEN_NUM_CI 			: return `CONST_GOLDEN_CI;
+			`CONST_GOLDEN_NUM_K				: return `CONST_GOLDEN_K;
+			`CONST_GOLDEN_NUM_CWB			: return `CONST_GOLDEN_CWB;
+			`CONST_GOLDEN_NUM_CWV			: return `CONST_GOLDEN_CWV;
+			`CONST_GOLDEN_NUM_CTID			: return `CONST_GOLDEN_CTID;
 			default							: return "FUNCTION INCOMPLETE @test_shared.svh";
 		endcase // x
 	endfunction

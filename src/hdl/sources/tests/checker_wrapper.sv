@@ -40,14 +40,16 @@ module checker_wrapper (
 	
 	localparam string FILE_NAME = getFileNameFromNum(FILE_NUMBER);
 	
-	inline_axis_checker #(
-		.DATA_WIDTH(DATA_WIDTH),
-		.SKIP(SKIP),
-		.FILE_NAME(FILE_NAME),
-		.SHOW_ALL(SHOW_ALL)
-	) checker_instance (
-		.clk(clk), .rst(rst),
-		.valid(valid), .data(data), .ready(ready)
-	);
+	`ifndef DO_NOT_CHECK
+		inline_axis_checker #(
+			.DATA_WIDTH(DATA_WIDTH),
+			.SKIP(SKIP),
+			.FILE_NAME(FILE_NAME),
+			.SHOW_ALL(SHOW_ALL)
+		) checker_instance (
+			.clk(clk), .rst(rst),
+			.valid(valid), .data(data), .ready(ready)
+		);
+	`endif
     
 endmodule

@@ -64,7 +64,8 @@ begin
 			if rst = '1' then
 				counter <= cfg_initial_counter;
 			else
-				if axis_out_ready = '1' and axis_in_mqi_valid = '1' then --transaction done, update counter
+				if axis_out_ready = '1' and axis_in_mqi_valid = '1' and F_STDLV2CB(axis_in_mqi_coord).last_z = '1' then 
+					--current pixel is done as well as the transaction, update counter for next pixel
 					if unsigned(counter) < unsigned(cfg_final_counter) then
 						counter <= std_logic_vector(unsigned(counter) + 1);
 					else

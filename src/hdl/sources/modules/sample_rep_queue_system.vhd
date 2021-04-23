@@ -115,8 +115,26 @@ architecture Behavioral of sample_rep_queue_system is
 	signal axis_wqp_wq_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal axis_wqp_wq_valid, axis_wqp_wq_ready: std_logic;
 
+	--input coord fifo
+	signal axis_coordq_valid	: std_logic;
+	signal axis_coordq_d 		: coordinate_bounds_array_t;
+	signal axis_coordq_ready	: std_logic;
 begin
 
+	input_coord_queue: entity work.axis_fifo
+		Generic map (
+			DATA_WIDTH => coordinate_bounds_array_t'length,
+			FIFO_DEPTH => CONST_MAX_BANDS
+		)
+		Port map ( 
+			clk => clk, rst => rst,
+			input_valid	=> axis_in_coord_valid,
+			input_ready => axis_in_coord_ready,
+			input_data	=> axis_in_coord_d,
+			output_ready=> axis_coordq_ready,
+			output_data	=> axis_coordq_d,
+			output_valid=> axis_coordq_valid
+		);
 
 	neigh_ret_coord_splitter: entity work.AXIS_SPLITTER_4
 		Generic map (
@@ -125,9 +143,9 @@ begin
 		Port map (
 			clk => clk, rst	=> rst,
 			--to input axi port
-			input_valid		=> axis_in_coord_valid,
-			input_data		=> axis_in_coord_d,
-			input_ready		=> axis_in_coord_ready,
+			input_valid		=> axis_coordq_valid,
+			input_data		=> axis_coordq_d,
+			input_ready		=> axis_coordq_ready,
 			--to output axi ports
 			output_0_valid	=> axis_nrcs_nrn_valid,
 			output_0_data	=> axis_nrcs_nrn_coord,

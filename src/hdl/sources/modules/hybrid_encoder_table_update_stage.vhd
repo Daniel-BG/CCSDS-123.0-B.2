@@ -67,6 +67,7 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 	signal fs_k					: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
 	signal fs_ihe				: std_logic;
 	signal fs_code_index		: std_logic_vector(CONST_CODE_INDEX_BITS - 1 downto 0);
+	signal fs_cnt_t_49			: std_logic_vector(CONST_MAX_COUNTER_BITS + 6 - 1 downto 0);
 
 	type cnt_t_t_array is array(0 to CONST_LE_TABLE_COUNT - 1) of std_logic_vector(CONST_MAX_COUNTER_BITS + threshold_value_t'length - 1 downto 0);
 	signal fs_cnt_array: cnt_t_t_array;
@@ -121,7 +122,8 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 	signal ts_at_wren 			: std_logic;
 	signal ts_at_next_addr		: std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0);
 			
-
+	--for testing
+	signal ts_ihe_stdlv: std_logic_vector(0 downto 0);
 			
 begin
 	axis_in_ready <= axis_in_ready_buf;
@@ -185,15 +187,37 @@ begin
 				output_ready	=> transaction_at_mult_input
 			);
 	end generate;
+	--mutliplier for cnt*49 (k calc later)
+	multiply_cnt_t_49: entity work.AXIS_MULTIPLIER
+		Generic map (
+			DATA_WIDTH_0 		=> CONST_MAX_COUNTER_BITS,
+			DATA_WIDTH_1 		=> 6,
+			SIGNED_0	 		=> false,
+			SIGNED_1			=> false,
+			STAGES_AFTER_SYNC	=> FIRST_STAGE_MULTIPLIER_NUMBER_OF_STAGES
+		)
+		Port map (
+			clk => clk, rst => rst,
+			input_0_data	=> axis_in_cnt,
+			input_0_valid	=> transaction_at_mult_input,
+			input_0_ready	=> open,
+			input_1_data	=> "110001",
+			input_1_valid	=> '1',
+			input_1_ready	=> open,
+			output_data		=> fs_cnt_t_49,
+			output_valid	=> open,
+			output_ready	=> transaction_at_mult_input
+		);
+
 
 	--parameter calculation for output of first stage
 	k_calc: process(fs_cnt, fs_hra)
 		variable new_k: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
 	begin
-		new_k := (others => '0');
-		for i in 1 to CONST_MAX_DATA_WIDTH - 2 loop
-			if shift_left(resize(unsigned(fs_cnt), CONST_MAX_HR_ACC_BITS + 1), i) <= unsigned(fs_hra) then
-				new_k := std_logic_vector(to_unsigned(i, new_k'length));
+		new_k := std_logic_vector(to_unsigned(1, new_k'length));
+		for i in 1 to CONST_MAX_DATA_WIDTH - 3 loop
+			if shift_left(resize(unsigned(fs_cnt), CONST_MAX_HR_ACC_BITS + 1), i+1+2) <= unsigned(fs_hra) + shift_right(unsigned(fs_cnt_t_49), 5) then
+				new_k := std_logic_vector(to_unsigned(i+1, new_k'length));
 			end if;
 		end loop;
 		fs_k <= new_k;
@@ -448,6 +472,150 @@ begin
 		);
 		
 
+	--pragma synthesis_off
+	TEST_CHECK_CTID: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => ts_code_table_addr'length,
+			SKIP => 0,
+			FILE_NUMBER => 112
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_code_table_addr
+		);
 
+	TEST_CHECK_NTID: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => ts_at_next_addr'length,
+			SKIP => 0,
+			FILE_NUMBER => 102
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_at_next_addr
+		);
+
+	TEST_CHECK_ISTREE: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => 1,
+			SKIP => 0,
+			FILE_NUMBER => 103
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_is_tree
+		);
+
+	TEST_CHECK_FLUSHBIT: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => ts_flush_bit'length,
+			SKIP => 0,
+			FILE_NUMBER => 104
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_flush_bit
+		);
+
+	TEST_CHECK_INPUT_SYMBOL: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => ts_input_symbol'length,
+			SKIP => 0,
+			FILE_NUMBER => 105
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_input_symbol
+		);
+
+	ts_ihe_stdlv(0) <= ts_ihe;
+	TEST_CHECK_IS_HIGH_ENTROPY: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => 1,
+			SKIP => 0,
+			FILE_NUMBER => 106
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_ihe_stdlv
+		);
+
+	TEST_CHECK_CODE_QUANT: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => ts_code_quant'length,
+			SKIP => 0,
+			FILE_NUMBER => 107
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_code_quant
+		);
+
+	TEST_CHECK_CODE_INDEX: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => ts_code_index'length,
+			SKIP => 0,
+			FILE_NUMBER => 108
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_code_index
+		);
+
+	TEST_CHECK_K: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => ts_k'length,
+			SKIP => 0,
+			FILE_NUMBER => 109
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_k
+		);
+
+	TEST_CHECK_CWB: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => ts_cw_length'length,
+			SKIP => 0,
+			FILE_NUMBER => 110
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_cw_length
+		);
+
+	TEST_CHECK_CWV: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => ts_cw_bits'length,
+			SKIP => 0,
+			FILE_NUMBER => 111
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => ts_valid,
+			ready => ts_ready,
+			data  => ts_cw_bits
+		);
+	--pragma synthesis_on
 
 end Behavioral;

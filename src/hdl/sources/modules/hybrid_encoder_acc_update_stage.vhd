@@ -92,8 +92,9 @@ architecture Behavioral of hybrid_encoder_acc_update_stage is
 	--t+1 counter
 	signal cfg_initial_counter_p_1	: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 
-
-	
+	--for testing purposes
+	signal axis_out_cnt_pre	: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal axis_out_valid_pre : std_logic;
 begin
 
 	counter_t: entity work.counter
@@ -253,14 +254,41 @@ begin
 			axis_in_mqi_user(CONST_MAX_HR_ACC_BITS - 1 downto 0) => axis_hrau_caccs_hra,
 			axis_out_mqi			=> axis_out_mqi,
 			axis_out_coord			=> axis_out_coord,
-			axis_out_counter		=> axis_out_cnt,
+			axis_out_counter		=> axis_out_cnt_pre,
 			axis_out_ready			=> axis_out_ready,
-			axis_out_valid			=> axis_out_valid,
+			axis_out_valid			=> axis_out_valid_pre,
 			axis_out_user(flush_bit_t'length + CONST_MAX_HR_ACC_BITS - 1 downto CONST_MAX_HR_ACC_BITS) => axis_out_flush_bit,
 			axis_out_user(CONST_MAX_HR_ACC_BITS - 1 downto 0) => axis_out_hra
 		);
+	axis_out_cnt <= axis_out_cnt_pre;
+	axis_out_valid <= axis_out_valid_pre;
 
-	
-		
+	--pragma synthesis_off
+	TEST_ACCUMULATOR: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_HR_ACC_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 100
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_fbo_hrau_valid,
+			ready => axis_fbo_hrau_ready,
+			data  => axis_fbo_hrau_hra
+		);
+
+	TEST_COUNTER: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_COUNTER_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 101
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_out_valid_pre,
+			ready => axis_out_ready,
+			data  => axis_out_cnt_pre
+		);		
+	--pragma synthesis_on
 	
 end Behavioral;

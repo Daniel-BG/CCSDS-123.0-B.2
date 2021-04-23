@@ -6,7 +6,7 @@
 -- Author      : User Name <user.email@user.company.com>
 -- Company     : User Company Name
 -- Created     : Fri Apr 16 11:13:14 2021
--- Last update : Fri Apr 16 11:16:08 2021
+-- Last update : Fri Apr 23 12:43:04 2021
 -- Platform    : Default Part Number
 -- Standard    : <VHDL-2008 | VHDL-2002 | VHDL-1993 | VHDL-1987>
 --------------------------------------------------------------------------------
@@ -85,6 +85,9 @@ architecture testbench of test_ccsds_123b2_core is
 
 	-- Other constants
 	constant C_CLK_PERIOD : real := 10.0e-9; -- NS
+	constant C_SAMPLES: integer := 64;
+	constant C_LINES: integer := 8;
+	constant C_BANDS: integer := 64;
 	
 begin
 	-----------------------------------------------------------
@@ -115,10 +118,18 @@ begin
 	-----------------------------------------------------------
 	CONFIG_UNIT : process
 	begin
+		--image size constants
+		cfg_samples 		<= std_logic_vector(to_unsigned(C_SAMPLES, CONST_MAX_SAMPLES_BITS));
+		cfg_max_x			<= std_logic_vector(to_unsigned(C_SAMPLES-1, CONST_MAX_X_VALUE_BITS));
+		cfg_max_y 			<= std_logic_vector(to_unsigned(C_LINES-1, CONST_MAX_Y_VALUE_BITS));
+		cfg_max_z 			<= std_logic_vector(to_unsigned(C_BANDS-1, CONST_MAX_Z_VALUE_BITS));
+		cfg_max_t 			<= std_logic_vector(to_unsigned(C_SAMPLES*C_LINES - 1, CONST_MAX_T_VALUE_BITS));
+		--architecture constants
+		cfg_min_preload_value <= std_logic_vector(to_unsigned(((C_BANDS-1)*(C_BANDS-2))/2+2, CONST_MAX_Z_VALUE_BITS*2)); --((cfg_max_z)*(cfg_max_z-1))/2 + 2
+		cfg_max_preload_value <= std_logic_vector(to_unsigned(((C_BANDS-1)*(C_BANDS-2))/2+6, CONST_MAX_Z_VALUE_BITS*2)); --((cfg_max_z)*(cfg_max_z-1))/2 + 6
 		--algorithm constants
 		cfg_p 				<= std_logic_vector(to_unsigned(CONST_MAX_P, CONST_MAX_P_WIDTH_BITS));
 		cfg_sum_type 		<= WIDE_NEIGHBOR_ORIENTED; 
-		cfg_samples 		<= std_logic_vector(to_unsigned(8, CONST_MAX_SAMPLES_BITS));
 		cfg_tinc 			<= std_logic_vector(to_unsigned(6, CONST_TINC_BITS));
 		cfg_vmax			<= std_logic_vector(to_unsigned(3, CONST_VMINMAX_BITS));
 		cfg_vmin			<= std_logic_vector(to_signed(-1, CONST_VMINMAX_BITS));
@@ -133,10 +144,6 @@ begin
 		cfg_resolution 		<= std_logic_vector(to_unsigned(4, CONST_RES_BITS));
 		cfg_damping 		<= std_logic_vector(to_unsigned(4, CONST_DAMPING_BITS));
 		cfg_offset 			<= std_logic_vector(to_unsigned(4, CONST_OFFSET_BITS));
-		cfg_max_x			<= std_logic_vector(to_unsigned(7, CONST_MAX_X_VALUE_BITS));
-		cfg_max_y 			<= std_logic_vector(to_unsigned(7, CONST_MAX_Y_VALUE_BITS));
-		cfg_max_z 			<= std_logic_vector(to_unsigned(7, CONST_MAX_Z_VALUE_BITS));
-		cfg_max_t 			<= std_logic_vector(to_unsigned(63, CONST_MAX_T_VALUE_BITS));
 		cfg_initial_counter <= std_logic_vector(to_unsigned(2, CONST_MAX_COUNTER_BITS)); 
 		cfg_final_counter 	<= std_logic_vector(to_unsigned(2**6-1, CONST_MAX_COUNTER_BITS));
 		cfg_u_max 			<= std_logic_vector(to_unsigned(18, CONST_U_MAX_BITS));
@@ -147,9 +154,7 @@ begin
 			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= std_logic_vector(to_unsigned(7*(2**19) / (2**(3*(CONST_MAX_P - i))) , CONST_MAX_WEIGHT_BITS));
 		end loop;
 		cfg_iacc 			<= std_logic_vector(to_unsigned(4*(2**1)*5,  CONST_MAX_HR_ACC_BITS)); --4*(1 << this.gammaZero)*meanMQIestimate (5)
-		--architecture constants
-		cfg_min_preload_value <= std_logic_vector(to_unsigned(7*6/2+2, CONST_MAX_Z_VALUE_BITS*2)); --((cfg_max_z)*(cfg_max_z-1))/2 + 2
-		cfg_max_preload_value <= std_logic_vector(to_unsigned(7*6/2+6, CONST_MAX_Z_VALUE_BITS*2)); --((cfg_max_z)*(cfg_max_z-1))/2 + 6
+
 		
 		wait;
 	end process CONFIG_UNIT;

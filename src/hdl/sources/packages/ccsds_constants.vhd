@@ -170,7 +170,7 @@ package ccsds_constants is
 		x"C", x"A", x"8", x"6",
 		x"6", x"4", x"4", x"4",
 		x"2", x"2", x"2", x"2",
-		x"0", x"0", x"0", x"0"		
+		x"2", x"2", x"2", x"0"		
 	);
 	
 	constant CONST_CODEWORD_BITS: integer := 21;
