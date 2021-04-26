@@ -164,4 +164,19 @@ begin
 			axis_out_ready		=> axis_out_ready
 		);
 		
+	--pragma synthesis_off
+	TEST_CHECK_MQI_REORDERED: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MQI_BITS,
+			SKIP => 0,
+			FILE_NUMBER => 20
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_pred_enc_valid,
+			ready => axis_pred_enc_ready,
+			data  => axis_pred_enc_mqi
+		);
+	--pragma synthesis_on
+		
 end Behavioral;

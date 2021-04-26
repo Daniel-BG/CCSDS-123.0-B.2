@@ -32,10 +32,11 @@ module checker_wrapper (
 	parameter FILE_NUMBER = 0;
 	parameter SKIP = 0;
 	parameter SHOW_ALL = 0;
+	parameter BINARY = 0;
 	
 	input					clk, rst;
-	output 					valid;
-	output [DATA_WIDTH-1:0]	data;
+	input 					valid;
+	input [DATA_WIDTH-1:0]	data;
 	input					ready;
 	
 	localparam string FILE_NAME = getFileNameFromNum(FILE_NUMBER);
@@ -45,7 +46,8 @@ module checker_wrapper (
 			.DATA_WIDTH(DATA_WIDTH),
 			.SKIP(SKIP),
 			.FILE_NAME(FILE_NAME),
-			.SHOW_ALL(SHOW_ALL)
+			.SHOW_ALL(SHOW_ALL),
+			.BINARY(BINARY)
 		) checker_instance (
 			.clk(clk), .rst(rst),
 			.valid(valid), .data(data), .ready(ready)

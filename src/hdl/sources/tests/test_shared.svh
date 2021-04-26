@@ -67,7 +67,8 @@
 	`define CONST_GOLDEN_CWB 		{`GOLDEN_ROOT_DIR, "c_cwb", 				`GOLDEN_EXT}
 	`define CONST_GOLDEN_CWV 		{`GOLDEN_ROOT_DIR, "c_cwv", 				`GOLDEN_EXT}
 	`define CONST_GOLDEN_CTID		{`GOLDEN_ROOT_DIR, "c_ctid", 				`GOLDEN_EXT}
-	
+	//OUTPUT
+	`define CONST_GOLDEN_OUTPUT		{`GOLDEN_ROOT_DIR, "output2.dat"}
 	
 	`define CONST_GOLDEN_NUM_S 	    		0
 	`define CONST_GOLDEN_NUM_DRPSV  		1
@@ -129,6 +130,8 @@
 	`define CONST_GOLDEN_NUM_CWB			110
 	`define CONST_GOLDEN_NUM_CWV			111
 	`define CONST_GOLDEN_NUM_CTID			112
+	//OUTPUT
+	`define CONST_GOLDEN_NUM_OUTPUT			200
 	
 	
 	function string getFileNameFromNum (input int x);
@@ -192,6 +195,7 @@
 			`CONST_GOLDEN_NUM_CWB			: return `CONST_GOLDEN_CWB;
 			`CONST_GOLDEN_NUM_CWV			: return `CONST_GOLDEN_CWV;
 			`CONST_GOLDEN_NUM_CTID			: return `CONST_GOLDEN_CTID;
+			`CONST_GOLDEN_NUM_OUTPUT		: return `CONST_GOLDEN_OUTPUT;
 			default							: return "FUNCTION INCOMPLETE @test_shared.svh";
 		endcase // x
 	endfunction

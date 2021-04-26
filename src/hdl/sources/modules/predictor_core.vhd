@@ -1551,19 +1551,6 @@ begin
 			data  => axis_t_tq_d
 		);
 		
-	TEST_CHECK_MQI: entity work.checker_wrapper
-		generic map (
-			DATA_WIDTH => CONST_MQI_BITS,
-			SKIP => 0,
-			FILE_NUMBER => 41
-		)
-		port map (
-			clk => clk, rst => rst, 
-			valid => axis_out_mqi_valid,
-			ready => axis_out_mqi_ready,
-			data  => axis_out_mqi_d
-		);
-		
 	TEST_CHECK_NR: entity work.checker_wrapper
 		generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,

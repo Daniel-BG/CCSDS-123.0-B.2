@@ -174,18 +174,19 @@ begin
 			ready => axis_v2d_core_ready,
 			data  => axis_v2d_core_d
 		);
-
-	TEST_CHECK_MQI_REORDERED: entity work.checker_wrapper
+		
+				
+	TEST_CHECK_MQI: entity work.checker_wrapper
 		generic map (
 			DATA_WIDTH => CONST_MQI_BITS,
 			SKIP => 0,
-			FILE_NUMBER => 20
+			FILE_NUMBER => 41
 		)
 		port map (
 			clk => clk, rst => rst, 
-			valid => axis_out_mqi_valid,
-			ready => axis_out_mqi_ready,
-			data  => axis_out_mqi_d
+			valid => axis_core_d2v_valid,
+			ready => axis_core_d2v_ready,
+			data  => axis_core_d2v_d
 		);
 	--pragma synthesis_on
 end Behavioral;

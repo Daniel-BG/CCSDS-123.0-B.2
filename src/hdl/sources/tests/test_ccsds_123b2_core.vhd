@@ -88,8 +88,11 @@ architecture testbench of test_ccsds_123b2_core is
 	constant C_SAMPLES: integer := 64;
 	constant C_LINES: integer := 8;
 	constant C_BANDS: integer := 64;
-	
+
 begin
+
+
+
 	-----------------------------------------------------------
 	-- Clocks and Reset
 	-----------------------------------------------------------
@@ -229,5 +232,20 @@ begin
 		axis_out_ready <= '1';
 		wait;
 	end process OUTPUT_CTRL;
+	
+	--pragma synthesis_off
+	TEST_OUTPUT: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => 64,
+			SKIP => 0,
+			FILE_NUMBER => 200
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_out_valid,
+			ready => axis_out_ready,
+			data  => axis_out_data
+		);
+	--pragma synthesis_on
 
 end architecture testbench;
