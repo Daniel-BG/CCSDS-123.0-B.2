@@ -42,7 +42,11 @@ entity hybrid_encoder_acc_update_stage is
 		axis_out_flush_bit		: out flush_bit_t;
 		axis_out_mqi			: out std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 		axis_out_coord			: out coordinate_bounds_array_t;
-		axis_out_cnt			: out std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0)
+		axis_out_cnt			: out std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+		--output for flushing
+		axis_out_flush_hra_valid: out std_logic;
+		axis_out_flush_hra_ready: in std_logic;
+		axis_out_flush_hra_d 	: out std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0)
 	);
 end hybrid_encoder_acc_update_stage;
 
@@ -91,6 +95,9 @@ architecture Behavioral of hybrid_encoder_acc_update_stage is
 	
 	--t+1 counter
 	signal cfg_initial_counter_p_1	: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+
+	--flush HRA
+	signal flush_hra_enable: std_logic;
 
 	--for testing purposes
 	signal axis_out_cnt_pre	: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
@@ -262,6 +269,22 @@ begin
 		);
 	axis_out_cnt <= axis_out_cnt_pre;
 	axis_out_valid <= axis_out_valid_pre;
+
+	flush_hra_enable <= axis_hrau_caccs_valid and axis_hrau_caccs_ready and F_STDLV2CB(axis_hrau_caccs_coord).last_x and F_STDLV2CB(axis_hrau_caccs_coord).last_y;
+	flush_hra_fifo: entity work.AXIS_FIFO
+		Generic map (
+			DATA_WIDTH => CONST_MAX_HR_ACC_BITS,
+			FIFO_DEPTH => CONST_MAX_BANDS
+		)
+		Port map ( 
+			clk	=> clk, rst => rst,
+			input_valid		=> flush_hra_enable,
+			input_ready		=> open,
+			input_data		=> axis_hrau_caccs_hra,
+			output_ready	=> axis_out_flush_hra_ready,
+			output_data		=> axis_out_flush_hra_d,
+			output_valid	=> axis_out_flush_hra_valid
+		);
 
 	--pragma synthesis_off
 	TEST_ACCUMULATOR: entity work.checker_wrapper

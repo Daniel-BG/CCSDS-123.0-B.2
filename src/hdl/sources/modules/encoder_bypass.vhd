@@ -36,6 +36,8 @@ entity encoder_bypass is
 		cfg_iacc				: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 		cfg_u_max				: in std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
 		cfg_depth				: in std_logic_vector(CONST_MAX_DATA_WIDTH_BITS - 1 downto 0);
+		cfg_gamma_star			: in std_logic_vector(CONST_MAX_GAMMA_STAR_BITS - 1 downto 0);
+		cfg_max_z 				: in std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
 		axis_in_mqi_d			: in std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 		axis_in_mqi_ready		: out std_logic;
 		axis_in_mqi_valid		: in std_logic;
@@ -190,6 +192,8 @@ begin
 				cfg_ihra				=> cfg_iacc,
 				cfg_u_max				=> cfg_u_max,
 				cfg_depth				=> cfg_depth,
+				cfg_gamma_star 			=> cfg_gamma_star,
+				cfg_max_z 				=> cfg_max_z,
 				axis_in_mqi_d			=> coder_axis_in_mqi_d,
 				axis_in_mqi_ready		=> coder_axis_in_mqi_ready,
 				axis_in_mqi_valid		=> coder_axis_in_mqi_valid,

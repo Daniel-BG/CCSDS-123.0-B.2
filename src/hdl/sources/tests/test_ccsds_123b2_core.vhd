@@ -69,6 +69,7 @@ architecture testbench of test_ccsds_123b2_core is
 	signal cfg_weight_vec		 : std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 	signal cfg_initial_counter   : std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 	signal cfg_final_counter     : std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal cfg_gamma_star		 : std_logic_vector(CONST_MAX_GAMMA_STAR_BITS - 1 downto 0);
 	signal cfg_u_max             : std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
 	signal cfg_iacc				 : std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 	--input control
@@ -148,7 +149,8 @@ begin
 		cfg_damping 		<= std_logic_vector(to_unsigned(4, CONST_DAMPING_BITS));
 		cfg_offset 			<= std_logic_vector(to_unsigned(4, CONST_OFFSET_BITS));
 		cfg_initial_counter <= std_logic_vector(to_unsigned(2, CONST_MAX_COUNTER_BITS)); 
-		cfg_final_counter 	<= std_logic_vector(to_unsigned(2**6-1, CONST_MAX_COUNTER_BITS));
+		cfg_final_counter 	<= std_logic_vector(to_unsigned(2**6-1, CONST_MAX_COUNTER_BITS)); --2**gamma_star - 1
+		cfg_gamma_star 		<= std_logic_vector(to_unsigned(6, CONST_MAX_GAMMA_STAR_BITS));
 		cfg_u_max 			<= std_logic_vector(to_unsigned(18, CONST_U_MAX_BITS));
 		for i in CONST_MAX_C - 1 downto CONST_MAX_P loop
 			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= (others => '0'); 
@@ -216,6 +218,7 @@ begin
 			cfg_weight_vec    	  => cfg_weight_vec,
 			cfg_initial_counter   => cfg_initial_counter,
 			cfg_final_counter     => cfg_final_counter,
+			cfg_gamma_star		  => cfg_gamma_star,
 			cfg_u_max             => cfg_u_max,
 			cfg_iacc              => cfg_iacc,
 			axis_in_s_d           => axis_in_s_d,

@@ -121,6 +121,7 @@ package ccsds_constants is
 	constant CONST_MIN_GAMMA_ZERO		: integer := 1;
 	constant CONST_MAX_GAMMA_ZERO		: integer := 8;
 	constant CONST_MAX_GAMMA_STAR		: integer := 11;
+	constant CONST_MAX_GAMMA_STAR_BITS	: integer := BITS(CONST_MAX_GAMMA_STAR);
 	constant CONST_MAX_COUNTER_BITS 	: integer := CONST_MAX_GAMMA_STAR;
 	constant CONST_MAX_ACC_BITS			: integer := CONST_MAX_GAMMA_STAR + CONST_MAX_DATA_WIDTH;
 	constant CONST_MAX_HR_ACC_BITS		: integer := CONST_MAX_ACC_BITS + 2;

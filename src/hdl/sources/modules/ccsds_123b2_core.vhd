@@ -60,6 +60,7 @@ entity ccsds_123b2_core is
 		--encoder things
 		cfg_initial_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+		cfg_gamma_star			: in std_logic_vector(CONST_MAX_GAMMA_STAR_BITS - 1 downto 0);
 		cfg_u_max				: in std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
 		cfg_iacc				: in std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 		--input port
@@ -136,6 +137,8 @@ begin
 			cfg_u_max				=> cfg_u_max,
 			cfg_depth 				=> cfg_depth,
 			cfg_iacc				=> cfg_iacc,
+			cfg_gamma_star			=> cfg_gamma_star,
+			cfg_max_z				=> cfg_max_z,
 			axis_in_mqi_d			=> axis_pred_enc_mqi,
 			axis_in_mqi_ready		=> axis_pred_enc_ready,
 			axis_in_mqi_valid		=> axis_pred_enc_valid,

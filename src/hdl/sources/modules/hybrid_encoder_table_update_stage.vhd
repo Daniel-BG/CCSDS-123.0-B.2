@@ -95,7 +95,7 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 	signal fss_input_symbol		: std_logic_vector(CONST_INPUT_SYMBOL_BITS - 1 downto 0);
 	
 	--table flushing fsm between second and third stage
-	type table_flushing_fsm_state_t is (WORKING, FLUSHING, FINISHED);
+	type table_flushing_fsm_state_t is (WORKING, FLUSHING_LEC, FINISHED);
 	signal tf_state_curr, tf_state_next: table_flushing_fsm_state_t;
 	signal tf_flush_index, tf_flush_index_next: std_logic_vector(CONST_CODE_INDEX_BITS - 1 downto 0);
 	
@@ -211,7 +211,7 @@ begin
 
 
 	--parameter calculation for output of first stage
-	k_calc: process(fs_cnt, fs_hra)
+	k_calc: process(fs_cnt, fs_hra, fs_cnt_t_49)
 		variable new_k: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
 	begin
 		new_k := std_logic_vector(to_unsigned(1, new_k'length));
@@ -322,15 +322,15 @@ begin
 			fss_valid <= ss_valid;
 			ss_ready <= fss_ready;
 			if (ss_valid = '1' and fss_ready = '1' and F_STDLV2CB(ss_coord).last_x = '1' and F_STDLV2CB(ss_coord).last_y = '1' and F_STDLV2CB(ss_coord).last_z = '1') then
-				tf_state_next <= FLUSHING;
+				tf_state_next <= FLUSHING_LEC;
 				tf_flush_index_next <= (others => '0');
 			end if;
-		elsif tf_state_curr = FLUSHING then
+		elsif tf_state_curr = FLUSHING_LEC then
 			fss_valid <= '1';
 			if (fss_ready = '1') then
 				if tf_flush_index = std_logic_vector(to_unsigned(CONST_LE_TABLE_COUNT - 1, CONST_CODE_INDEX_BITS)) then
 					fss_last <= '1';
-					tf_state_next <= finished;
+					tf_state_next <= FINISHED;
 				else
 					tf_flush_index_next <= std_logic_vector(unsigned(tf_flush_index) + 1);
 				end if;
@@ -340,7 +340,7 @@ begin
 			fss_ihe 			<= '0'; 					--force low entropy
 			fss_code_index		<= tf_flush_index;			--get the table with the current flush index
 --			fss_mqi				<= ss_mqi; 					--dont care value, keep previous
-			fss_coord			<= ss_coord;				--keep last coordinate
+			fss_coord			<= "000111";				--keep last coordinate
 			fss_flush_bit		<= (others => '0'); 		--force no flush bit
 			fss_input_symbol 	<= CONST_INPUT_SYMBOL_FLUSH;--from the current table, read the flush symbol
 		elsif tf_state_curr = FINISHED then
