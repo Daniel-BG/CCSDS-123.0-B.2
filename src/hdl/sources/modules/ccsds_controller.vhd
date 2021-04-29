@@ -840,19 +840,50 @@ begin
 	------------------------
 	
 	
-	input_sample_fifo: axis_data_fifo_16b_512s
-		Port map (
-			s_axis_aresetn => ccsds_rstn,
-			s_axis_aclk => d_m_axi_clk,
-			s_axis_tvalid =>  ififo_input_valid,
-			s_axis_tready => ififo_input_ready,
-			s_axis_tdata => ififo_input_data,
-			m_axis_aclk =>  ccsds_clk,
-			m_axis_tvalid => ififo_output_valid,
-			m_axis_tready => ififo_output_ready,
-			m_axis_tdata => ififo_output_data,
-			prog_empty => ififo_almost_empty_pre
+	input_sample_fifo: entity work.AXIS_ASYNC_FIFO_SWRAP
+		Generic map (
+			DATA_WIDTH => 16,
+			FIFO_DEPTH_LOG => 9, --greater than 2!! (otherwise use other AXIS LINKS)
+			ALMOST_FULL_THRESHOLD => 256,
+			ALMOST_EMPTY_THRESHOLD => 256
+		)
+		Port map ( 
+			rst	=> ccsds_rst,
+			--input ctrl signals
+			axis_in_clk				=> d_m_axi_clk,
+			--input axi port
+			axis_in_valid			=> ififo_input_valid,
+			axis_in_ready			=> ififo_input_ready,
+			axis_in_data			=> ififo_input_data,
+			axis_in_last			=> '0',
+			axis_in_user			=> (others => '0'), 
+			axis_in_almost_full		=> open,
+			axis_in_full			=> open,
+			--output ctrl signals
+			axis_out_clk		 	=> ccsds_clk,
+			--output axi port
+			axis_out_ready			=> ififo_output_ready,
+			axis_out_data			=> ififo_output_data,
+			axis_out_last			=> open,
+			axis_out_user			=> open,
+			axis_out_valid			=> ififo_output_valid,
+			axis_out_almost_empty	=> ififo_almost_empty_pre,
+			axis_out_empty			=> open
 		);
+	
+--	input_sample_fifo: axis_data_fifo_16b_512s
+--		Port map (
+--			s_axis_aresetn => ccsds_rstn,
+--			s_axis_aclk => d_m_axi_clk,
+--			s_axis_tvalid =>  ififo_input_valid,
+--			s_axis_tready => ififo_input_ready,
+--			s_axis_tdata => ififo_input_data,
+--			m_axis_aclk =>  ccsds_clk,
+--			m_axis_tvalid => ififo_output_valid,
+--			m_axis_tready => ififo_output_ready,
+--			m_axis_tdata => ififo_output_data,
+--			prog_empty => ififo_almost_empty_pre
+--		);
 		
 	d_m_axi_reset <= not d_m_axi_resetn;
 	ififo_almost_empty_ccd: entity work.flag_cross_clock_domain
@@ -959,22 +990,53 @@ begin
 			rst_b => d_m_axi_reset,
 			flag_b => ofifo_seen_last
 		);
-	
-	output_sample_fifo: axis_data_fifo_32b_512s
-		Port map (
-			s_axis_aresetn => ccsds_rstn,
-			s_axis_aclk => ccsds_clk,
-			s_axis_tvalid => core_output_valid,
-			s_axis_tready => core_output_ready,
-			s_axis_tdata => core_output_data,
-			s_axis_tlast => core_output_last,
-			m_axis_aclk => d_m_axi_clk,
-			m_axis_tvalid => ofifo_output_valid,
-			m_axis_tready => ofifo_output_ready,
-			m_axis_tdata => ofifo_output_data,
-			m_axis_tlast => ofifo_output_last,
-			prog_full => ofifo_almost_full_pre
+		
+	output_sample_fifo: entity work.AXIS_ASYNC_FIFO_SWRAP
+		Generic map (
+			DATA_WIDTH => 32,
+			FIFO_DEPTH_LOG => 9, --greater than 2!! (otherwise use other AXIS LINKS)
+			ALMOST_FULL_THRESHOLD => 256,
+			ALMOST_EMPTY_THRESHOLD => 256
+		)
+		Port map ( 
+			rst	=> ccsds_rst,
+			--input ctrl signals
+			axis_in_clk	=> ccsds_clk,
+			--input axi port
+			axis_in_valid			=> core_output_valid,
+			axis_in_ready			=> core_output_ready,
+			axis_in_data			=> core_output_data,
+			axis_in_last			=> core_output_last,
+			axis_in_user			=> (others => '0'), 
+			axis_in_almost_full		=> ofifo_almost_full_pre,
+			axis_in_full			=> open,
+			--output ctrl signals
+			axis_out_clk		 	=> d_m_axi_clk,
+			--output axi port
+			axis_out_ready			=> ofifo_output_ready,
+			axis_out_data			=> ofifo_output_data,
+			axis_out_last			=> ofifo_output_last,
+			axis_out_user			=> open,
+			axis_out_valid			=> ofifo_output_valid,
+			axis_out_almost_empty	=> open,
+			axis_out_empty			=> open
 		);
+	
+--	output_sample_fifo: axis_data_fifo_32b_512s
+--		Port map (
+--			s_axis_aresetn => ccsds_rstn,
+--			s_axis_aclk => ccsds_clk,
+--			s_axis_tvalid => core_output_valid,
+--			s_axis_tready => core_output_ready,
+--			s_axis_tdata => core_output_data,
+--			s_axis_tlast => core_output_last,
+--			m_axis_aclk => d_m_axi_clk,
+--			m_axis_tvalid => ofifo_output_valid,
+--			m_axis_tready => ofifo_output_ready,
+--			m_axis_tdata => ofifo_output_data,
+--			m_axis_tlast => ofifo_output_last,
+--			prog_full => ofifo_almost_full_pre
+--		);
 		
 	ofifo_almost_full_ccd: entity work.flag_cross_clock_domain
 		port map (
@@ -1021,7 +1083,7 @@ begin
 	d_m_axi_awaddr	<= ddr_write_addr_curr;
 	--
 	d_m_axi_wdata  <= ofifo_output_data;
-	ddr_write_comb: process(ddr_write_state_curr, ddr_write_addr_curr, ddr_write_transactions_left_curr,
+	ddr_write_comb: process(ddr_write_state_curr, ddr_write_addr_curr, ddr_write_transactions_left_curr, s_axi_reg_tgaddr,
 			control_output_transfer_enable, control_output_reset, s_axi_reg_outbyt,
 			d_m_axi_awready, d_m_axi_wready, d_m_axi_bvalid, ofifo_output_valid, ofifo_output_last,
 			ofifo_almost_full, ofifo_seen_last)
