@@ -52,7 +52,7 @@ entity predictor is
 		cfg_min_preload_value 	: in std_logic_vector(CONST_MAX_Z_VALUE_BITS*2 - 1 downto 0);
 		cfg_max_preload_value 	: in std_logic_vector(CONST_MAX_Z_VALUE_BITS*2 - 1 downto 0);
 		--axis for starting weights (cfg)
-		cfg_weight_vec			: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
+--		cfg_weight_vec			: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 		--input itself
 		axis_in_s_d				: in std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		axis_in_s_valid			: in std_logic;
@@ -120,7 +120,7 @@ begin
 			cfg_damping				=> cfg_damping,
 			cfg_offset				=> cfg_offset,
 			--axis for starting weights (cfg)
-			cfg_weight_vec			=> cfg_weight_vec,
+--			cfg_weight_vec			=> cfg_weight_vec,
 			--input itself
 			axis_in_s_d				=> axis_v2d_core_d,
 			axis_in_s_full_coord	=> axis_v2d_core_coord,

@@ -56,7 +56,7 @@ entity ccsds_123b2_core is
 		cfg_min_preload_value 	: in std_logic_vector(CONST_MAX_Z_VALUE_BITS*2 - 1 downto 0);
 		cfg_max_preload_value 	: in std_logic_vector(CONST_MAX_Z_VALUE_BITS*2 - 1 downto 0);
 		--axis for starting weights (cfg)
-		cfg_weight_vec			: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
+--		cfg_weight_vec			: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 		--encoder things
 		cfg_initial_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 		cfg_final_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
@@ -114,7 +114,7 @@ begin
 			cfg_min_preload_value 	=> cfg_min_preload_value,
 			cfg_max_preload_value 	=> cfg_max_preload_value,
 			--axis for starting weights (cfg)
-			cfg_weight_vec			=> cfg_weight_vec,
+--			cfg_weight_vec			=> cfg_weight_vec,
 			--input itself
 			axis_in_s_d				=> axis_in_s_d,
 			axis_in_s_valid			=> axis_in_s_valid,

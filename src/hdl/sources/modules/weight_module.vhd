@@ -21,6 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use ieee.numeric_std.all;
 use work.ccsds_constants.all;
 use work.ccsds_data_structures.all;
 
@@ -35,7 +36,7 @@ entity weight_module is
 		cfg_omega				: in std_logic_vector(CONST_MAX_OMEGA_WIDTH_BITS - 1 downto 0);
 		cfg_weo					: in std_logic_vector(CONST_WEO_BITS - 1 downto 0);
 		--axis for starting weights (cfg)
-		cfg_weight_vec			: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
+--		cfg_weight_vec			: in std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 		--axis for coordinate 
 		axis_in_coord_d			: in coordinate_bounds_array_t;
 		axis_in_coord_valid		: in std_logic;
@@ -90,6 +91,9 @@ architecture Behavioral of weight_module is
 	
 	--helpers
 	signal axis_in_coord_cond: std_logic;
+	
+	--default weights
+	signal cfg_weight_vec: std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 begin
 
 		
@@ -116,7 +120,13 @@ begin
 			axis_in_coord_cond <= '1';
 		end if;
 	end process;
-		
+	
+	gen_default_weights_dir: for i in CONST_MAX_C - 1 downto CONST_MAX_P generate
+		cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= (others => '0'); 
+	end generate;
+	gen_default_weights_central: for i in CONST_MAX_P - 1 downto 0 generate
+		cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= std_logic_vector(to_unsigned(7*(2**19) / (2**(3*(CONST_MAX_P - i))) , CONST_MAX_WEIGHT_BITS));
+	end generate;
 	weight_retrieval: entity work.axis_conditioned_selector
 		generic map (
 			DATA_WIDTH => CONST_WEIGHTVEC_BITS

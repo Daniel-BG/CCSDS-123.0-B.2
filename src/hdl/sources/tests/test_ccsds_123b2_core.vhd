@@ -66,7 +66,7 @@ architecture testbench of test_ccsds_123b2_core is
 	signal cfg_max_t             : std_logic_vector(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 	signal cfg_min_preload_value : std_logic_vector(CONST_MAX_Z_VALUE_BITS*2 - 1 downto 0);
 	signal cfg_max_preload_value : std_logic_vector(CONST_MAX_Z_VALUE_BITS*2 - 1 downto 0);
-	signal cfg_weight_vec		 : std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
+--	signal cfg_weight_vec		 : std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
 	signal cfg_initial_counter   : std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 	signal cfg_final_counter     : std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 	signal cfg_gamma_star		 : std_logic_vector(CONST_MAX_GAMMA_STAR_BITS - 1 downto 0);
@@ -152,12 +152,12 @@ begin
 		cfg_final_counter 	<= std_logic_vector(to_unsigned(2**6-1, CONST_MAX_COUNTER_BITS)); --2**gamma_star - 1
 		cfg_gamma_star 		<= std_logic_vector(to_unsigned(6, CONST_MAX_GAMMA_STAR_BITS));
 		cfg_u_max 			<= std_logic_vector(to_unsigned(18, CONST_U_MAX_BITS));
-		for i in CONST_MAX_C - 1 downto CONST_MAX_P loop
-			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= (others => '0'); 
-		end loop;
-		for i in CONST_MAX_P - 1 downto 0 loop
-			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= std_logic_vector(to_unsigned(7*(2**19) / (2**(3*(CONST_MAX_P - i))) , CONST_MAX_WEIGHT_BITS));
-		end loop;
+--		for i in CONST_MAX_C - 1 downto CONST_MAX_P loop
+--			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= (others => '0'); 
+--		end loop;
+--		for i in CONST_MAX_P - 1 downto 0 loop
+--			cfg_weight_vec(CONST_MAX_WEIGHT_BITS*(i+1) - 1 downto CONST_MAX_WEIGHT_BITS*i) <= std_logic_vector(to_unsigned(7*(2**19) / (2**(3*(CONST_MAX_P - i))) , CONST_MAX_WEIGHT_BITS));
+--		end loop;
 		cfg_iacc 			<= std_logic_vector(to_unsigned(4*(2**1)*5,  CONST_MAX_HR_ACC_BITS)); --4*(1 << this.gammaZero)*meanMQIestimate (5)
 
 		
@@ -215,7 +215,7 @@ begin
 			cfg_max_t             => cfg_max_t,
 			cfg_min_preload_value => cfg_min_preload_value,
 			cfg_max_preload_value => cfg_max_preload_value,
-			cfg_weight_vec    	  => cfg_weight_vec,
+--			cfg_weight_vec    	  => cfg_weight_vec,
 			cfg_initial_counter   => cfg_initial_counter,
 			cfg_final_counter     => cfg_final_counter,
 			cfg_gamma_star		  => cfg_gamma_star,
