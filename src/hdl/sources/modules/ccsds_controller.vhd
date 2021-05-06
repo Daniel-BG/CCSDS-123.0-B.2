@@ -231,7 +231,7 @@ architecture Behavioral of ccsds_controller is
 	signal c_s_axi_writeaddr_curr, c_s_axi_writeaddr_next: std_logic_vector(CONTROLLER_ADDR_WIDTH - 1 downto 0);
 	signal c_s_axi_writedata_curr, c_s_axi_writedata_next: std_logic_vector((2**CONTROLLER_DATA_BYTES_LOG)*8 - 1 downto 0);
 
-	signal local_c_s_axi_writeaddr: integer range 0 to 255;
+	signal local_c_s_axi_writeaddr: integer range 0 to 511;
 
 	--control registers read state and signals
 	type control_slave_read_state_t is (CSR_IDLE, CSR_AWAIT_ADDR, CSR_SEND_DATA);
@@ -239,7 +239,7 @@ architecture Behavioral of ccsds_controller is
 
 	signal c_s_axi_readdata: std_logic_vector((2**CONTROLLER_DATA_BYTES_LOG)*8 - 1 downto 0);
 
-	signal local_c_s_axi_readaddr: integer range 0 to 255;
+	signal local_c_s_axi_readaddr: integer range 0 to 511;
 
 	--control state machine and control signals for other processes
 	type control_main_state_t is (CONTROL_IDLE, CONTROL_RESET, CONTROL_WAIT_START_1, CONTROL_START, CONTROL_ABRUPT_END, CONTROL_END);

@@ -106,7 +106,8 @@ begin
 			output_ready	=> t_minus_samples_shifted_plus_vmin_ready
 		);
 		
-	depth_minus_omega <= std_logic_vector(signed("00" & unsigned(cfg_depth)) - signed("00" & unsigned(cfg_omega)));
+	depth_minus_omega <= std_logic_vector(resize(signed("0" & unsigned(cfg_depth)), depth_minus_omega'length) - 
+										  resize(signed("0" & unsigned(cfg_omega)), depth_minus_omega'length));
 	
 	t_clipped <= 
 		std_logic_vector(resize(signed(cfg_vmin), t_clipped'length)) when signed(t_minus_samples_shifted_plus_vmin) < signed(cfg_vmin) else

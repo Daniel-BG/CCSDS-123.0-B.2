@@ -207,7 +207,7 @@ begin
 			output_user   => joint_sm_coord
 		);
 		
-	sm_calc <= std_logic_vector(signed("0" & unsigned(joint_sm_cqbc)) - signed(joint_sm_mevqi));
+	sm_calc <= std_logic_vector(resize(signed("0" & unsigned(joint_sm_cqbc)) - signed(joint_sm_mevqi), sm_calc'length));
 	
 	fm_times_sm_multiplier: entity work.AXIS_MULTIPLIER
 		Generic map (

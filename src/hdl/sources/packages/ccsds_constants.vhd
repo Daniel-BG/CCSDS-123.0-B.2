@@ -96,7 +96,7 @@ package ccsds_constants is
 	constant CONST_PR_BITS 				: integer := CONST_MAX_DATA_WIDTH + 1;
 	
 	constant CONST_MEV_BITS 			: integer := MAX(CONST_ABS_ERR_BITS, CONST_REL_ERR_BITS);
-	constant CONST_PCLD_BITS 			: integer := CONST_MAX_WEIGHT_BITS + BITS((2**CONST_MAX_DATA_WIDTH - 1)*(8*CONST_MAX_P + 19));
+	constant CONST_PCLD_BITS 			: integer := CONST_MAX_WEIGHT_BITS + CONST_MAX_DATA_WIDTH + BITS(8*CONST_MAX_P + 19);
 	constant CONST_HRPSV_BITS			: integer := CONST_MAX_OMEGA + 2 + CONST_MAX_DATA_WIDTH;
 	
 	constant CONST_RES_BITS				: integer := BITS(CONST_MAX_RES_VAL);
