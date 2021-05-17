@@ -70,6 +70,7 @@ begin
 			DATA_WIDTH_1 => axis_in_mev_d'length + 1, --length+1
 			SIGNED_0=> true,
 			SIGNED_1=> false,
+			STAGES_AFTER_SYNC => 2,
 			USER_WIDTH   => coordinate_bounds_array_t'length
 		)
 		Port map (

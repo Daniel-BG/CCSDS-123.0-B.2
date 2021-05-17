@@ -58,16 +58,27 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 	--first stage signals
 	signal axis_in_ready_buf: std_logic;
 	signal transaction_at_mult_input, transaction_at_mult_output: std_logic;
+	signal fs_comp				: std_logic_vector(CONST_MAX_HR_ACC_BITS downto 0);
 	signal fs_hra				: std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 	signal fs_flush_bit			: flush_bit_t;
 	signal fs_mqi				: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
 	signal fs_coord				: coordinate_bounds_array_t;
 	signal fs_cnt				: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 	signal fs_ready, fs_valid	: std_logic;
-	signal fs_k					: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
 	signal fs_ihe				: std_logic;
 	signal fs_code_index		: std_logic_vector(CONST_CODE_INDEX_BITS - 1 downto 0);
 	signal fs_cnt_t_49			: std_logic_vector(CONST_MAX_COUNTER_BITS + 6 - 1 downto 0);
+	
+	--first stage latch
+	signal fsl_comp				: std_logic_vector(CONST_MAX_HR_ACC_BITS downto 0);
+	signal fsl_flush_bit			: flush_bit_t;
+	signal fsl_mqi				: std_logic_vector(CONST_MQI_BITS - 1 downto 0);
+	signal fsl_coord				: coordinate_bounds_array_t;
+	signal fsl_cnt				: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+	signal fsl_ready, fsl_valid	: std_logic;
+	signal fsl_k					: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
+	signal fsl_ihe				: std_logic;
+	signal fsl_code_index		: std_logic_vector(CONST_CODE_INDEX_BITS - 1 downto 0);
 
 	type cnt_t_t_array is array(0 to CONST_LE_TABLE_COUNT - 1) of std_logic_vector(CONST_MAX_COUNTER_BITS + threshold_value_t'length - 1 downto 0);
 	signal fs_cnt_array: cnt_t_t_array;
@@ -211,16 +222,9 @@ begin
 
 
 	--parameter calculation for output of first stage
-	k_calc: process(fs_cnt, fs_hra, fs_cnt_t_49)
-		variable new_k: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
+	k_comp_calc: process(fs_hra, fs_cnt_t_49)
 	begin
-		new_k := std_logic_vector(to_unsigned(1, new_k'length));
-		for i in 1 to CONST_MAX_DATA_WIDTH - 3 loop
-			if shift_left(resize(unsigned(fs_cnt), CONST_MAX_HR_ACC_BITS + 1), i+1+2) <= unsigned(fs_hra) + shift_right(unsigned(fs_cnt_t_49), 5) then
-				new_k := std_logic_vector(to_unsigned(i+1, new_k'length));
-			end if;
-		end loop;
-		fs_k <= new_k;
+		fs_comp <= std_logic_vector(resize(unsigned(fs_hra) + shift_right(unsigned(fs_cnt_t_49), 5), fs_comp'length));
 	end process;
 	
 	condition_calc: process(fs_cnt_array, fs_hra)
@@ -246,23 +250,62 @@ begin
 		fs_code_index <= code_index;
 	end process;
 
+	fs_latch: entity work.AXIS_DATA_LATCH 
+		Generic map (
+			DATA_WIDTH => fs_comp'length + fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length
+		)
+		Port map ( 
+			clk => clk, rst => rst,
+			input_data (fs_comp'length + fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length)	=> fs_comp,
+			input_data (				 fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto 				 fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length)	=> fs_mqi,
+			input_data (								 fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto 								 fs_flush_bit'length + fs_coord'length + fs_code_index'length)	=> fs_cnt,
+			input_data (												 fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto 				   					  				   fs_coord'length + fs_code_index'length)	=> fs_flush_bit,
+			input_data (													  				   fs_coord'length + fs_code_index'length - 1 downto 				   														 fs_code_index'length)	=> fs_coord,
+			input_data (																						 fs_code_index'length - 1 downto 				   										   				   				 	0)	=> fs_code_index,
+			input_ready => fs_ready,
+			input_valid => fs_valid,
+			input_last  => fs_ihe,
+			output_data(fs_comp'length + fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length)	=> fsl_comp,
+			output_data(				 fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto 				 fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length)	=> fsl_mqi,
+			output_data(								 fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto 								 fs_flush_bit'length + fs_coord'length + fs_code_index'length)	=> fsl_cnt,
+			output_data(												 fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto 				   					  				   fs_coord'length + fs_code_index'length)	=> fsl_flush_bit,
+			output_data(													  				   fs_coord'length + fs_code_index'length - 1 downto 				   														 fs_code_index'length)	=> fsl_coord,
+			output_data(																						 fs_code_index'length - 1 downto 				   										   				   				 	0)	=> fsl_code_index,
+			output_ready=> fsl_ready,
+			output_valid=> fsl_valid,
+			output_last => fsl_ihe
+		);
+
+	--parameter calculation for output of first stage
+	k_calc: process(fsl_cnt, fsl_comp)
+		variable new_k: std_logic_vector(CONST_MAX_K_BITS - 1 downto 0);
+	begin
+		new_k := std_logic_vector(to_unsigned(1, new_k'length));
+		for i in 1 to CONST_MAX_DATA_WIDTH - 3 loop
+			if shift_left(resize(unsigned(fsl_cnt), CONST_MAX_HR_ACC_BITS + 1), i+1+2) <= unsigned(fsl_comp) then
+				new_k := std_logic_vector(to_unsigned(i+1, new_k'length));
+			end if;
+		end loop;
+		fsl_k <= new_k;
+	end process;
+
 	
 	--second stage: k, codeIndex and condition calculated
-	ss_latch: entity work.AXIS_DATA_LATCH 
+	ss_latch: entity work.AXIS_LATCHED_CONNECTION 
 		Generic map (
 			DATA_WIDTH => CONST_MQI_BITS,
 			USER_WIDTH => flush_bit_t'length + CONST_MAX_K_BITS + coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS
 		)
 		Port map ( 
 			clk => clk, rst => rst,
-			input_data	=> fs_mqi,
-			input_ready => fs_ready,
-			input_valid => fs_valid,
-			input_user(flush_bit_t'length + CONST_MAX_K_BITS + coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS - 1 downto CONST_MAX_K_BITS + coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS) => fs_flush_bit,
-			input_user(CONST_MAX_K_BITS + coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS - 1 downto coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS) => fs_k,
-			input_user(coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS - 1 downto CONST_CODE_INDEX_BITS) => fs_coord,
-			input_user(CONST_CODE_INDEX_BITS - 1 downto 0) => fs_code_index,
-			input_last  => fs_ihe,
+			input_data	=> fsl_mqi,
+			input_ready => fsl_ready,
+			input_valid => fsl_valid,
+			input_user(flush_bit_t'length + CONST_MAX_K_BITS + coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS - 1 downto CONST_MAX_K_BITS + coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS) => fsl_flush_bit,
+			input_user(CONST_MAX_K_BITS + coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS - 1 downto coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS) => fsl_k,
+			input_user(coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS - 1 downto CONST_CODE_INDEX_BITS) => fsl_coord,
+			input_user(CONST_CODE_INDEX_BITS - 1 downto 0) => fsl_code_index,
+			input_last  => fsl_ihe,
 			output_data	=> ss_mqi,
 			output_ready=> ss_ready,
 			output_valid=> ss_valid,

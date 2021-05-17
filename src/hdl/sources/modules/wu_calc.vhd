@@ -204,9 +204,14 @@ begin
 	end generate;
 	axis_wuse_ready <= axis_wuse_ready_vec(0);
 
-
-	omega_min <= std_logic_vector(- shift_left(to_signed(1, CONST_MAX_WEIGHT_BITS), to_integer(unsigned(cfg_omega))+2));
-	omega_max <= std_logic_vector(shift_left(to_signed(1, CONST_MAX_WEIGHT_BITS), to_integer(unsigned(cfg_omega))+2) - 1);
+	update_omega_bounds : process( clk, rst )
+	begin
+		if rising_edge(clk) and rst = '1' then
+			omega_min <= std_logic_vector(- shift_left(to_signed(1, CONST_MAX_WEIGHT_BITS), to_integer(unsigned(cfg_omega))+2));
+			omega_max <= std_logic_vector(shift_left(to_signed(1, CONST_MAX_WEIGHT_BITS), to_integer(unsigned(cfg_omega))+2) - 1);
+		end if;
+	end process ; -- update_omega_bounds
+	
 	final_sync: for i in 0 to CONST_MAX_C - 1 generate
 		clamped_syncer: entity work.AXIS_SYNCHRONIZER_2
 			Generic map (

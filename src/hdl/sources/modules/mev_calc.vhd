@@ -63,7 +63,7 @@ begin
 			DATA_WIDTH_1	=> CONST_MAX_DATA_WIDTH,
 			SIGNED_0		=> false,
 			SIGNED_1		=> false,
-			STAGES_AFTER_SYNC  => 3,
+			STAGES_AFTER_SYNC  => 2,
 			USER_WIDTH 		=> coordinate_bounds_array_t'length,
 			USER_POLICY 	=> PASS_ONE
 		)
@@ -82,30 +82,30 @@ begin
 			output_user 	=> rel_err_coord
 		);
 		
-		rel_err_out_shifted <= rel_err_out(rel_err_out'high downto CONST_MAX_DATA_WIDTH);
+	rel_err_out_shifted <= rel_err_out(rel_err_out'high downto CONST_MAX_DATA_WIDTH);
+	
+	comb: process(rel_err_out_shifted, rel_err_coord, cfg_abs_err, axis_out_mev_ready, rel_err_valid, cfg_use_abs_err, cfg_use_rel_err)
+	begin
+		axis_out_mev_valid <= rel_err_valid;
+		rel_err_ready <= axis_out_mev_ready;
 		
-		comb: process(rel_err_out_shifted, rel_err_coord, cfg_abs_err, axis_out_mev_ready, rel_err_valid, cfg_use_abs_err, cfg_use_rel_err)
-		begin
-			axis_out_mev_valid <= rel_err_valid;
-			rel_err_ready <= axis_out_mev_ready;
-			
-			if F_STDLV2CB(rel_err_coord).first_x = '1' and F_STDLV2CB(rel_err_coord).first_y = '1' then
-				axis_out_mev_d <= (others => '0');
-			elsif cfg_use_abs_err = '1' and cfg_use_rel_err = '1' then
-				--take minimum
-				if resize(unsigned(cfg_abs_err), CONST_MEV_BITS) < resize(unsigned(rel_err_out_shifted), CONST_MEV_BITS) then
-					axis_out_mev_d <= std_logic_vector(resize(unsigned(cfg_abs_err), CONST_MEV_BITS));
-				else
-					axis_out_mev_d <= std_logic_vector(resize(unsigned(rel_err_out_shifted), CONST_MEV_BITS));
-				end if;
-			elsif cfg_use_abs_err = '1' then
+		if F_STDLV2CB(rel_err_coord).first_x = '1' and F_STDLV2CB(rel_err_coord).first_y = '1' then
+			axis_out_mev_d <= (others => '0');
+		elsif cfg_use_abs_err = '1' and cfg_use_rel_err = '1' then
+			--take minimum
+			if resize(unsigned(cfg_abs_err), CONST_MEV_BITS) < resize(unsigned(rel_err_out_shifted), CONST_MEV_BITS) then
 				axis_out_mev_d <= std_logic_vector(resize(unsigned(cfg_abs_err), CONST_MEV_BITS));
-			elsif cfg_use_rel_err = '1' then
-				axis_out_mev_d <= std_logic_vector(resize(unsigned(rel_err_out_shifted), CONST_MEV_BITS));
 			else
-				axis_out_mev_d <= (others => '0');
+				axis_out_mev_d <= std_logic_vector(resize(unsigned(rel_err_out_shifted), CONST_MEV_BITS));
 			end if;
-		end process;
+		elsif cfg_use_abs_err = '1' then
+			axis_out_mev_d <= std_logic_vector(resize(unsigned(cfg_abs_err), CONST_MEV_BITS));
+		elsif cfg_use_rel_err = '1' then
+			axis_out_mev_d <= std_logic_vector(resize(unsigned(rel_err_out_shifted), CONST_MEV_BITS));
+		else
+			axis_out_mev_d <= (others => '0');
+		end if;
+	end process;
 		
 
 

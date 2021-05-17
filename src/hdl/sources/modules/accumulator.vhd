@@ -204,7 +204,7 @@ begin
 			SIGNED_1			=> false,
 			USER_WIDTH			=> coordinate_bounds_array_t'length + CONST_MAX_ACC_BITS + CONST_MAX_COUNTER_BITS + CONST_MQI_BITS, 
 			USER_POLICY 		=> PASS_ZERO,
-			STAGES_AFTER_SYNC	=> 3
+			STAGES_AFTER_SYNC	=> 2
 		)
 		Port map (
 			clk => clk, rst => rst,

@@ -777,8 +777,8 @@ begin
 	hrpsv_calc: entity work.hrpsv_calc
 		Port map ( 
 			clk => clk, rst => rst,
-			cfg_in_data_width_log	=> cfg_depth,
-			cfg_in_weight_width_log => cfg_omega, 
+			cfg_smax				=> cfg_smax,
+			cfg_omega				=> cfg_omega, 
 			axis_in_pcd_d			=> axis_pcld_hrpsv_d,
 			axis_in_pcd_valid		=> axis_pcld_hrpsv_valid,
 			axis_in_pcd_ready		=> axis_pcld_hrpsv_ready,

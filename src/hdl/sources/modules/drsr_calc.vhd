@@ -117,7 +117,7 @@ begin
 			DATA_WIDTH_1		=> cfg_offset'length,
 			SIGNED_0			=> false,
 			SIGNED_1			=> false,
-			STAGES_AFTER_SYNC	=> 3
+			STAGES_AFTER_SYNC	=> 2
 		)
 		Port map(
 			clk => clk, rst => rst,

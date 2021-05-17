@@ -30,8 +30,8 @@ use work.am_data_types.all;
 entity hrpsv_calc is
 	Port ( 
 		clk, rst: in std_logic;
-		cfg_in_data_width_log: in std_logic_vector(CONST_MAX_DATA_WIDTH_BITS - 1 downto 0);
-		cfg_in_weight_width_log: in std_logic_vector(CONST_MAX_OMEGA_WIDTH_BITS - 1 downto 0); 
+		cfg_smax: in std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+		cfg_omega: in std_logic_vector(CONST_MAX_OMEGA_WIDTH_BITS - 1 downto 0);
 		axis_in_pcd_d: in std_logic_vector(CONST_PCLD_BITS - 1 downto 0);
 		axis_in_pcd_valid: in std_logic;
 		axis_in_pcd_ready: out std_logic;
@@ -65,13 +65,14 @@ architecture Behavioral of hrpsv_calc is
 	signal hrpsv_unclamped:  std_logic_vector(CONST_INTERMEDIATE_REGISTER_WIDTH - 1 downto 0);   
 	signal hrpsv_result, hrpsv_clamped, hrpsv_low, hrpsv_high: std_logic_vector(CONST_HRPSV_BITS - 1 downto 0);
 
+
 begin
 
 	sync_inputs: entity work.AXIS_SYNCHRONIZER_2
 		Generic map (
 			DATA_WIDTH_0 => CONST_PCLD_BITS,
 			DATA_WIDTH_1 => CONST_LSUM_BITS,
-			LATCH 		 => false,
+			LATCH 		 => true,
 			USER_WIDTH   => coordinate_bounds_array_t'length,
 			USER_POLICY  => PASS_ZERO
 		)
@@ -97,9 +98,9 @@ begin
 		hrpsv_unclamped <= std_logic_vector(
 			resize(signed(axis_joint_pcd), hrpsv_unclamped'length) 
 			+
-			shift_left(resize(signed("0" & unsigned(axis_joint_lsum)), hrpsv_unclamped'length) , to_integer(unsigned(cfg_in_weight_width_log))) 
+			shift_left(resize(signed("0" & unsigned(axis_joint_lsum)), hrpsv_unclamped'length) , to_integer(unsigned(cfg_omega))) 
 			+
-			shift_left(resize(signed(U_TWO), hrpsv_unclamped'length), to_integer(unsigned(cfg_in_weight_width_log)))
+			shift_left(resize(signed(U_TWO), hrpsv_unclamped'length), to_integer(unsigned(cfg_omega)))
 		);
 		
 		unclamped_latch: entity work.AXIS_DATA_LATCH
@@ -120,14 +121,20 @@ begin
 			);
 	
 		hrpsv_low <= (others => '0');
-		hrpsv_high <= std_logic_vector(
-			shift_left(
-				shift_left(resize(signed(U_ONE), hrpsv_high'length), to_integer(unsigned(cfg_in_data_width_log))) - 1,
-				to_integer(unsigned(cfg_in_weight_width_log) + 2)
-			)
-			+
-			shift_left(resize(signed(U_TWO), hrpsv_high'length), to_integer(unsigned(cfg_in_weight_width_log)))
-		);
+		hrpsv_high_set : process( cfg_omega, cfg_smax )
+		begin
+			if rising_edge(clk) and rst = '1' then
+				hrpsv_high <= std_logic_vector(
+					shift_left(
+						resize(signed("0" & unsigned(cfg_smax)), hrpsv_high'length),
+						to_integer(unsigned(cfg_omega) + 2)
+					)
+					+
+					shift_left(resize(signed(U_TWO), hrpsv_high'length), to_integer(unsigned(cfg_omega)))
+				);
+			end if;
+		end process ; -- hrpsv_high_set
+		
 		
 		hrpsv_result <= hrpsv_low when axis_hrpsv_u_d(axis_hrpsv_u_d'high) = '1' --is negative
 			else hrpsv_high when signed(axis_hrpsv_u_d) > signed("0" & unsigned(hrpsv_high)) 
