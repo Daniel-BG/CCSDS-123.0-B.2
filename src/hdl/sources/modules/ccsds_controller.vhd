@@ -163,9 +163,16 @@ architecture Behavioral of ccsds_controller is
 	constant C_S_AXI_REG_OUTBYT_LOCALADDR: integer := 264;  --number of bytes output so far
 	constant C_S_AXI_REG_DDRRST_LOCALADDR: integer := 268;  --ddr read status register
 	constant C_S_AXI_REG_DDRWST_LOCALADDR: integer := 272;  --ddr write status register
+	constant C_S_AXI_REG_CNCLKL_LOCALADDR: integer := 276;  --lower part of clock count for control bus
+	constant C_S_AXI_REG_CNCLKU_LOCALADDR: integer := 280;	--upper part of clock count for control bus
+	constant C_S_AXI_REG_MMCLKL_LOCALADDR: integer := 284;	--lower part of clock count for memory bus
+	constant C_S_AXI_REG_MMCLKU_LOCALADDR: integer := 288;	--upper part of clock count for memory bus
+	constant C_S_AXI_REG_COCLKL_LOCALADDR: integer := 292;	--lower part of clock count for core
+	constant C_S_AXI_REG_COCLKU_LOCALADDR: integer := 296;	--upper part of clock count for core
 	--ccsds generics to know how it was configured
 	constant C_S_AXI_REG_CONFIG_LOCALADDR: integer := 384;  
 	--debug register
+	constant C_S_AXI_REG_SIGN_LOCALADDR: integer := 500;
 	constant C_S_AXI_REG_DBGREG_LOCALADDR: integer := 508;
 
 	--codes for running the core by writing to status registe
@@ -175,7 +182,7 @@ architecture Behavioral of ccsds_controller is
 
 	--metaconfig registers
 	signal 
-		s_axi_reg_ctrlrg, s_axi_reg_staddr, s_axi_reg_tgaddr, s_axi_reg_status,
+		s_axi_reg_ctrlrg, s_axi_reg_staddr, s_axi_reg_tgaddr, s_axi_reg_status, s_axi_reg_signature, s_axi_reg_dbgreg,
 		s_axi_reg_byteno,
 		s_axi_reg_ddrrst, s_axi_reg_ddrwst,
 		s_axi_reg_inbyte, s_axi_reg_inbyte_next,
@@ -213,7 +220,7 @@ architecture Behavioral of ccsds_controller is
 
 	--clock registers
 	--control axis bus, master axis bus, core axis bus
-	signal s_axi_reg_cnclk, s_axi_reg_mmclk, s_axi_reg_coclk, s_axi_reg_coclk_pre: std_logic_vector((2**CONTROLLER_DATA_BYTES_LOG)*2*8 - 1 downto 0);
+	signal s_axi_reg_cnclk, s_axi_reg_mmclk, s_axi_reg_mmclk_pre, s_axi_reg_coclk, s_axi_reg_coclk_pre: std_logic_vector((2**CONTROLLER_DATA_BYTES_LOG)*2*8 - 1 downto 0);
 	alias s_axi_reg_cnclku: std_logic_vector((2**CONTROLLER_DATA_BYTES_LOG)*8 - 1 downto 0) is s_axi_reg_cnclk((2**CONTROLLER_DATA_BYTES_LOG)*2*8 - 1 downto (2**CONTROLLER_DATA_BYTES_LOG)*8);
 	alias s_axi_reg_cnclkl: std_logic_vector((2**CONTROLLER_DATA_BYTES_LOG)*8 - 1 downto 0) is s_axi_reg_cnclk((2**CONTROLLER_DATA_BYTES_LOG)  *8 - 1 downto 0);
 	alias s_axi_reg_mmclku: std_logic_vector((2**CONTROLLER_DATA_BYTES_LOG)*8 - 1 downto 0) is s_axi_reg_mmclk((2**CONTROLLER_DATA_BYTES_LOG)*2*8 - 1 downto (2**CONTROLLER_DATA_BYTES_LOG)*8);
@@ -277,9 +284,8 @@ architecture Behavioral of ccsds_controller is
 	signal ofifo_output_data: std_logic_vector(2**(DDR3_AXI_DATA_BYTES_LOG)*8 - 1 downto 0);
 
 	---------------------------------------------------
-	--LCPLC SIGNALS
+	--CCSDS SIGNALS
 	---------------------------------------------------
-	--signal lcplc_clk: std_logic;
 	signal ccsds_rst: std_logic;
 	signal ccsds_rstn: std_logic;
 	
@@ -331,12 +337,14 @@ architecture Behavioral of ccsds_controller is
 	signal c_s_axi_reset: std_logic;
 begin
 	-- DEBUG BEGIN
---	s_axi_reg_dbgreg <= 
---		x"cafe"
---		& ofifo_almost_full & ofifo_output_last & ofifo_output_valid & ofifo_output_ready
---		& 				"0" & core_output_last  & core_output_valid  & core_output_ready 
---		& 				"0" &  				"0" & ififo_output_valid & ififo_output_ready
---		& ififo_almost_empty& 				"0" & ififo_input_valid  & ififo_input_ready; 
+	s_axi_reg_signature <= x"cc5d5004";
+	s_axi_reg_dbgreg <= 
+		x"caf"
+		& ofifo_almost_full & ofifo_output_last 	& ofifo_output_valid	& ofifo_output_ready
+		& 				"0" & core_raw_output_last  & core_raw_output_valid & core_raw_output_ready 
+		& 				"0" & core_output_last  	& core_output_valid  	& core_output_ready 
+		& 				"0" & "0" 					& ififo_output_valid 	& ififo_output_ready
+		& ififo_almost_empty& "0" 					& ififo_input_valid  	& ififo_input_ready; 
 	-- DEBUG END
 
 	------------------------------
@@ -499,6 +507,8 @@ begin
 				if s_axi_reg_readen = '1' then
 					if local_c_s_axi_readaddr = C_S_AXI_REG_CTRLRG_LOCALADDR then
 						c_s_axi_readdata <= s_axi_reg_ctrlrg;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_STATUS_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_status;
 					elsif local_c_s_axi_readaddr = C_S_AXI_REG_INBYTE_LOCALADDR then
 						c_s_axi_readdata <= s_axi_reg_inbyte;
 					elsif local_c_s_axi_readaddr = C_S_AXI_REG_DDRRST_LOCALADDR then
@@ -569,15 +579,31 @@ begin
 						c_s_axi_readdata <= s_axi_reg_outbyt;
 					elsif local_c_s_axi_readaddr = C_S_AXI_REG_DDRWST_LOCALADDR then
 						c_s_axi_readdata <= s_axi_reg_ddrwst;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CNCLKL_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_cnclkl;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CNCLKU_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_cnclku;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_MMCLKL_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_mmclkl;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_MMCLKU_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_mmclku;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_COCLKL_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_coclkl;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_COCLKU_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_coclku;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_SIGN_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_signature;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_DBGREG_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_dbgreg;
 					else --fallback to all zeroes
-						c_s_axi_readdata <= (others => '0');
+						c_s_axi_readdata <= x"fa11fa11";
 					end if;
 				end if;
 			end if;
 		end if;
 	end process;
 
-	local_c_s_axi_readaddr <= to_integer(unsigned(c_s_axi_araddr(7 downto 0)));
+	local_c_s_axi_readaddr <= to_integer(unsigned(c_s_axi_araddr(8 downto 0)));
 
 	control_read_comb: process(c_s_r_state_curr,
 		c_s_axi_arvalid, c_s_axi_rready)
@@ -831,10 +857,9 @@ begin
 
 	------------------------
 	------------------------
-	--LCPLC PIPELINE BELOW--
+	--CCSDS PIPELINE BELOW--
 	------------------------
 	------------------------
-	--lcplc_clk <= d_m_axi_clk;
 	--ccsds_rst is controlled by main process
 	ccsds_rstn <= not ccsds_rst;
 	------------------------
@@ -964,6 +989,22 @@ begin
 			output_last => core_output_last
 		);
 
+--	core_bypass: entity work.axis_width_converter
+--		generic map (
+--			INPUT_DATA_WIDTH		=> 16,
+--			OUTPUT_DATA_WIDTH		=> 32
+--		)
+--		port map (
+--			clk => ccsds_clk, rst => ccsds_rst,
+--			input_ready	=> ififo_output_ready,
+--			input_valid	=> ififo_output_valid,
+--			input_data	=> ififo_output_data,
+--			output_ready=> core_output_ready,
+--			output_valid=> core_output_valid,
+--			output_data	=> core_output_data
+--		);
+--	core_output_last <= '0';
+
 	last_watcher: process(ccsds_clk)
 	begin
 		if rising_edge(ccsds_clk) then
@@ -1050,7 +1091,7 @@ begin
 		
 	------------------------
 	------------------------
-	--LCPLC PIPELINE ABOVE--
+	--CCSDS PIPELINE ABOVE--
 	------------------------
 	------------------------
 
@@ -1208,13 +1249,25 @@ begin
 	begin
 		if rising_edge(d_m_axi_clk) then
 			if d_m_axi_resetn = '0' then
-				s_axi_reg_mmclk <= (others => '0');
+				s_axi_reg_mmclk_pre <= (others => '0');
 			else
-				s_axi_reg_mmclk <= std_logic_vector(unsigned(s_axi_reg_mmclk) + to_unsigned(1, s_axi_reg_mmclk'length));
+				s_axi_reg_mmclk_pre <= std_logic_vector(unsigned(s_axi_reg_mmclk_pre) + to_unsigned(1, s_axi_reg_mmclk_pre'length));
 			end if;
 		end if;
 	end process;
-	clk_lcplc_update: process(ccsds_clk)
+	mmclk_cross: entity work.stdlv_cross_clock_domain
+		generic map (
+			SIGNAL_WIDTH => (2**CONTROLLER_DATA_BYTES_LOG)*2*8
+		)
+		port map (
+			clk_a => d_m_axi_clk,
+			rst_a => '0',
+			signal_a => s_axi_reg_mmclk_pre,
+			clk_b => c_s_axi_clk,
+			rst_b => '0',
+			signal_b => s_axi_reg_mmclk
+		);
+	clk_ccsds_update: process(ccsds_clk)
 	begin
 		if rising_edge(ccsds_clk) then
 			if ccsds_rst = '1' then
@@ -1231,10 +1284,10 @@ begin
 		)
 		port map (
 			clk_a => ccsds_clk,
-			rst_a => ccsds_rst,
+			rst_a => '0',
 			signal_a => s_axi_reg_coclk_pre,
 			clk_b => c_s_axi_clk,
-			rst_b => c_s_axi_reset,
+			rst_b => '0',
 			signal_b => s_axi_reg_coclk
 		);
 

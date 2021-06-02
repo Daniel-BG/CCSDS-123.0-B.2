@@ -195,7 +195,7 @@ begin
 				input_1_ready	=> open,
 				output_data		=> fs_cnt_array(i),
 				output_valid	=> open,
-				output_ready	=> transaction_at_mult_input
+				output_ready	=> transaction_at_mult_output
 			);
 	end generate;
 	--mutliplier for cnt*49 (k calc later)
@@ -217,7 +217,7 @@ begin
 			input_1_ready	=> open,
 			output_data		=> fs_cnt_t_49,
 			output_valid	=> open,
-			output_ready	=> transaction_at_mult_input
+			output_ready	=> transaction_at_mult_output
 		);
 
 

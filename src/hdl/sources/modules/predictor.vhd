@@ -66,6 +66,8 @@ entity predictor is
 end predictor;
 
 architecture Behavioral of predictor is
+	signal axis_in_s_ready_inner: std_logic;
+
 	signal axis_v2d_core_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal axis_v2d_core_coord: coordinate_array_t;
 	signal axis_v2d_core_valid, axis_v2d_core_ready: std_logic;
@@ -90,7 +92,7 @@ begin
 			cfg_min_preload_value 	=> cfg_min_preload_value,
 			cfg_max_preload_value 	=> cfg_max_preload_value,
 			axis_input_d			=> axis_in_s_d,
-			axis_input_ready		=> axis_in_s_ready,
+			axis_input_ready		=> axis_in_s_ready_inner,
 			axis_input_valid		=> axis_in_s_valid,
 			axis_output_d			=> axis_v2d_core_d,
 			axis_output_coord 		=> axis_v2d_core_coord,
@@ -98,6 +100,7 @@ begin
 			axis_output_valid		=> axis_v2d_core_valid,
 			axis_output_ready		=> axis_v2d_core_ready
 		);
+	axis_in_s_ready <= axis_in_s_ready_inner;
 		
 	core: entity work.predictor_core
 		port map (
@@ -163,6 +166,19 @@ begin
 	--test stuff
 	--pragma synthesis_off
 	TEST_CHECK_INPUT_SAMPLES: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => 0
+		)
+		port map (
+			clk => clk, rst => rst, 
+			valid => axis_in_s_valid,
+			ready => axis_in_s_ready_inner,
+			data  => axis_in_s_d
+		);
+		
+	TEST_CHECK_INPUT_SAMPLES_DIAG: entity work.checker_wrapper
 		generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
 			SKIP => 0,

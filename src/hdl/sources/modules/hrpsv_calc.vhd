@@ -121,7 +121,7 @@ begin
 			);
 	
 		hrpsv_low <= (others => '0');
-		hrpsv_high_set : process( cfg_omega, cfg_smax )
+		hrpsv_high_set : process( cfg_omega, cfg_smax, clk, rst)
 		begin
 			if rising_edge(clk) and rst = '1' then
 				hrpsv_high <= std_logic_vector(
