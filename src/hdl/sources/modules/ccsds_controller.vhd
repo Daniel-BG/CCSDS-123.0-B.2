@@ -337,7 +337,7 @@ architecture Behavioral of ccsds_controller is
 	signal c_s_axi_reset: std_logic;
 begin
 	-- DEBUG BEGIN
-	s_axi_reg_signature <= x"cc5d5004";
+	s_axi_reg_signature <= x"cc5d5006";
 	s_axi_reg_dbgreg <= 
 		x"caf"
 		& ofifo_almost_full & ofifo_output_last 	& ofifo_output_valid	& ofifo_output_ready

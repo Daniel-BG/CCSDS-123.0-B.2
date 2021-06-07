@@ -187,7 +187,7 @@ begin
 	begin
 		--cut flow
 		wait until rising_edge(clk);
-		input_enable <= '0';
+		--input_enable <= '0';
 		wait for C_CLK_PERIOD * (1 SEC);
 		--resume flow
 		wait until rising_edge(clk);

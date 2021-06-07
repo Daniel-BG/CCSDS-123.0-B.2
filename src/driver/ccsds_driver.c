@@ -88,21 +88,21 @@ inline long long XCCSDS_GetMemTime(UINTPTR BaseAddress) {
 	unsigned int mtime_low, mtime_high;
 	mtime_low	= XCCSDS_In32(BaseAddress + CCSDS_REG_MMCLKL_LOCALADDR);
 	mtime_high	= XCCSDS_In32(BaseAddress + CCSDS_REG_MMCLKU_LOCALADDR);
-	return ((long long) mtime_high) << 32 | ((long long) mtime_low);
+	return ((long long) mtime_high) << 32 | (((long long) mtime_low) & 0xffffffffl);
 }
 
 inline long long XCCSDS_GetControlTime(UINTPTR BaseAddress) {
 	unsigned int mtime_low, mtime_high;
 	mtime_low	= XCCSDS_In32(BaseAddress + CCSDS_REG_CNCLKL_LOCALADDR);
 	mtime_high	= XCCSDS_In32(BaseAddress + CCSDS_REG_CNCLKU_LOCALADDR);
-	return ((long long) mtime_high) << 32 | ((long long) mtime_low);
+	return ((long long) mtime_high) << 32 | (((long long) mtime_low) & 0xffffffffl);
 }
 
 inline long long XCCSDS_GetCoreTime(UINTPTR BaseAddress) {
 	unsigned int mtime_low, mtime_high;
 	mtime_low	= XCCSDS_In32(BaseAddress + CCSDS_REG_COCLKL_LOCALADDR);
 	mtime_high	= XCCSDS_In32(BaseAddress + CCSDS_REG_COCLKU_LOCALADDR);
-	return ((long long) mtime_high) << 32 | ((long long) mtime_low);
+	return ((long long) mtime_high) << 32 | (((long long) mtime_low) & 0xffffffffl);
 }
 
 

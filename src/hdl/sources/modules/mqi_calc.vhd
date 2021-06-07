@@ -123,7 +123,7 @@ begin
 		
 		if unsigned(final_qi_abs) > unsigned(final_theta) then
 			axis_out_mqi_d <= std_logic_vector(resize(unsigned(final_qi_abs) + unsigned(final_theta), CONST_MQI_BITS));
-		elsif qi_times_drpsv_pos and unsigned(final_qi_abs) < unsigned(final_theta) then
+		elsif qi_times_drpsv_pos and unsigned(final_qi_abs) <= unsigned(final_theta) then
 			axis_out_mqi_d <= std_logic_vector(resize(unsigned(final_qi_abs) & "0", CONST_MQI_BITS));
 		else
 			axis_out_mqi_d <= std_logic_vector(resize(unsigned(unsigned(final_qi_abs) & "0") - 1, CONST_MQI_BITS));

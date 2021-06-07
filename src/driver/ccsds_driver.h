@@ -58,6 +58,8 @@
 #define CCSDS_REG_MMCLKU_LOCALADDR					288	//upper part of clock count for memory bus
 #define CCSDS_REG_COCLKL_LOCALADDR					292	//lower part of clock count for core
 #define CCSDS_REG_COCLKU_LOCALADDR					296	//upper part of clock count for core
+
+
 					
 #define CCSDS_REG_CONFIG_LOCALADDR 					384 
 #define CCSDS_REG_SIGN_LOCALADDR					500
