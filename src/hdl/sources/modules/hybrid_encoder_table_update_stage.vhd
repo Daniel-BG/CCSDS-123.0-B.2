@@ -104,6 +104,9 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 	signal fss_flush_bit		: flush_bit_t;
 	signal fss_code_table_addr	: std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0);
 	signal fss_input_symbol		: std_logic_vector(CONST_INPUT_SYMBOL_BITS - 1 downto 0);
+
+	--code rom
+	signal code_rom_enable 		: std_logic;
 	
 	--table flushing fsm between second and third stage
 	type table_flushing_fsm_state_t is (WORKING, FLUSHING_LEC, FINISHED);
@@ -135,7 +138,7 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 			
 	--for testing
 	signal ts_ihe_stdlv: std_logic_vector(0 downto 0);
-			
+	
 begin
 	axis_in_ready <= axis_in_ready_buf;
 
@@ -360,7 +363,7 @@ begin
 		
 		tf_state_next <= tf_state_curr;
 		tf_flush_index_next <= tf_flush_index;
-		
+
 		if tf_state_curr = WORKING then
 			fss_valid <= ss_valid;
 			ss_ready <= fss_ready;
@@ -436,23 +439,27 @@ begin
 		);
 		
 	--code table ROM
-	code_rom: entity work.code_table_rom
+	code_rom_enable <= fss_ready and fss_valid;
+	code_rom: entity work.code_table_clocked_rom
 		Port map ( 
-			addr => ts_code_table_addr,
-			data => ts_code_table_data
+			clk => clk, rst => rst,
+			enable => code_rom_enable,
+			addr_table_entry => fss_code_table_addr,
+			addr_input_symbol => fss_input_symbol,
+			data => ts_selected_table_entry
 		);
 		
-	assign_ts_table_entries: process(ts_code_table_data)
-	begin
-		--put first the actual symbol tables which are at the end of the code table data
-		for i in 0 to CONST_INPUT_SYMBOL_AMOUNT - 2 loop
-			ts_code_table_entries(i) <= ts_code_table_data(CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*(CONST_INPUT_SYMBOL_AMOUNT-i-1) - 1 downto CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*(CONST_INPUT_SYMBOL_AMOUNT-i-2));
-		end loop;
-		--put terminal code last which is actually at the beginning of the code table data
-		ts_code_table_entries(CONST_INPUT_SYMBOL_AMOUNT - 1) <= ts_code_table_data(CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*CONST_INPUT_SYMBOL_AMOUNT - 1 downto CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*(CONST_INPUT_SYMBOL_AMOUNT-1));
-	end process;
+--	assign_ts_table_entries: process(ts_code_table_data)
+--	begin
+--		--put first the actual symbol tables which are at the end of the code table data
+--		for i in 0 to CONST_INPUT_SYMBOL_AMOUNT - 2 loop
+--			ts_code_table_entries(i) <= ts_code_table_data(CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*(CONST_INPUT_SYMBOL_AMOUNT-i-1) - 1 downto CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*(CONST_INPUT_SYMBOL_AMOUNT-i-2));
+--		end loop;
+--		--put terminal code last which is actually at the beginning of the code table data
+--		ts_code_table_entries(CONST_INPUT_SYMBOL_AMOUNT - 1) <= ts_code_table_data(CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*CONST_INPUT_SYMBOL_AMOUNT - 1 downto CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*(CONST_INPUT_SYMBOL_AMOUNT-1));
+--	end process;
 		
-	ts_selected_table_entry <= ts_code_table_entries(to_integer(unsigned(ts_input_symbol)));
+--	ts_selected_table_entry <= ts_code_table_entries(to_integer(unsigned(ts_input_symbol)));
 	
 	process_table_entry: process(ts_selected_table_entry, ts_code_index, ts_valid, ts_ready, ts_ihe)
 	begin

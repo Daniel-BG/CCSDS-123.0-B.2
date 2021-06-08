@@ -286,8 +286,8 @@ architecture Behavioral of ccsds_controller is
 	---------------------------------------------------
 	--CCSDS SIGNALS
 	---------------------------------------------------
-	signal ccsds_rst: std_logic;
-	signal ccsds_rstn: std_logic;
+	signal ccsds_rst_precc: std_logic;
+	signal ccsds_rst, ccsds_rstn: std_logic;
 	
 	signal core_raw_output_data: std_logic_vector(63 downto 0);
 	signal core_raw_output_valid, core_raw_output_last, core_raw_output_ready: std_logic;
@@ -654,7 +654,7 @@ begin
 		control_input_transfer_done, control_output_transfer_done, control_input_idle, control_output_idle)
 	begin
 		control_main_state_next <= control_main_state_curr;
-		ccsds_rst <= '0';
+		ccsds_rst_precc <= '0';
 		control_input_transfer_enable	<= '0';
 		control_output_transfer_enable	<= '0';
 		control_input_reset    <= '0';
@@ -670,7 +670,7 @@ begin
 			end if;
 		elsif control_main_state_curr = CONTROL_RESET then
 			s_axi_reg_status <= x"00000010";
-			ccsds_rst <= '1';
+			ccsds_rst_precc <= '1';
 			--get out of reset state
 			if s_axi_reg_ctrlrg /= CONTROL_CODE_RESET then
 				control_main_state_next <= CONTROL_IDLE;
@@ -709,7 +709,16 @@ begin
 			end if;
 		end if;
 	end process;
-
+	ccsds_rst_ccd: entity work.flag_cross_clock_domain
+		port map (
+			clk_a => c_s_axi_clk,
+			rst_a => '0',
+			flag_a => ccsds_rst_precc,
+			clk_b => ccsds_clk,
+			rst_b => '0',
+			flag_b => ccsds_rst
+		);
+	ccsds_rstn <= not ccsds_rst;
 
 
 	-------------------------------
@@ -859,9 +868,6 @@ begin
 	------------------------
 	--CCSDS PIPELINE BELOW--
 	------------------------
-	------------------------
-	--ccsds_rst is controlled by main process
-	ccsds_rstn <= not ccsds_rst;
 	------------------------
 	
 	
