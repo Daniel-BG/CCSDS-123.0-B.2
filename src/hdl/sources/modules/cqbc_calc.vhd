@@ -60,7 +60,15 @@ architecture Behavioral of cqbc_calc is
 	signal joint_mult: std_logic_vector(axis_in_qi_d'length + axis_in_mev_d'length downto 0);
 	signal joint_coord: coordinate_bounds_array_t;
 
+	signal inner_reset: std_logic;
+
 begin
+	
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	axis_in_mev_t2p1 <= axis_in_mev_d & "1";
 
@@ -74,7 +82,7 @@ begin
 			USER_WIDTH   => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> axis_in_qi_d,
 			input_0_valid	=> axis_in_qi_valid,
 			input_0_ready	=> axis_in_qi_ready,
@@ -98,7 +106,7 @@ begin
 			USER_POLICY  => PASS_ONE
 		)
 		port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_0_valid => axis_in_psv_valid,
 			input_0_ready => axis_in_psv_ready,

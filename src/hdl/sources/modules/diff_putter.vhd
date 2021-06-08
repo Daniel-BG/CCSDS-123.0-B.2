@@ -85,6 +85,6 @@ begin
 	end generate;
 	axis_out_diffs_d(CONST_LDIF_BITS*CONST_MAX_P - 1 downto CONST_LDIF_BITS*(CONST_MAX_P-1)) <= joint_cdif;
 	
-	joint_ready <= '1' when deleting else axis_out_diffs_ready;
-	axis_out_diffs_valid <= '0' when deleting else joint_valid;
+	joint_ready <= '0' when rst = '1' else '1' when deleting else axis_out_diffs_ready;
+	axis_out_diffs_valid <= '0' when deleting or rst = '1'  else joint_valid;
 end Behavioral;

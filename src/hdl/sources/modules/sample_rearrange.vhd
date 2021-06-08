@@ -52,8 +52,9 @@ end sample_rearrange;
 
 architecture Behavioral of sample_rearrange is
 
-	type rearrange_state_t is (ST_WORKING, ST_FINISHED);
+	type rearrange_state_t is (ST_RESET, ST_WORKING, ST_FINISHED);
 	signal state_curr, state_next: rearrange_state_t;	
+	signal inner_reset: std_logic;
 	
 	--input coordinate creator
 	signal input_coord_gen_finished		: std_logic;
@@ -122,7 +123,7 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				state_curr <= ST_WORKING;
+				state_curr <= ST_RESET;
 			else
 				state_curr <= state_next;
 			end if;
@@ -133,8 +134,12 @@ begin
 	begin
 		finished <= '0';
 		state_next <= state_curr;
+		inner_reset <= '0';
 		
-		if state_curr = ST_WORKING then
+		if state_curr = ST_RESET then
+			inner_reset <= '1';
+			state_next <= ST_WORKING;
+		elsif state_curr = ST_WORKING then
 			if input_coord_gen_diag_finished = '1' and input_coord_gen_finished = '1'
 					and sample_relocator_finished = '1' and flag_coord_gen_diag_finished = '1' then
 				state_next <= ST_FINISHED;
@@ -148,7 +153,7 @@ begin
 		input_coord_gen: entity work.coord_gen_vertical
 			port map (
 				--control signals 
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				finished => input_coord_gen_finished,
 				--control inputs
 				cfg_max_z => cfg_max_z,
@@ -164,7 +169,7 @@ begin
 			
 		input_coord_gen_new: entity work.coord_gen_diagonal
 			port map (
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				finished => input_coord_gen_diag_finished,
 				--control inputs
 				cfg_max_z => cfg_max_z,
@@ -180,7 +185,7 @@ begin
 		
 		flag_coord_gen_new: entity work.coord_gen_diagonal
 			port map (
-				clk => clk, rst => rst, 
+				clk => clk, rst => inner_reset, 
 				finished => flag_coord_gen_diag_finished,
 				--control inputs
 				cfg_max_z => cfg_max_z,
@@ -198,7 +203,7 @@ begin
 		input_coord_gen: entity work.coord_gen_diagonal
 			port map (
 				--control signals 
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				finished => input_coord_gen_finished,
 				--control inputs
 				cfg_max_z => cfg_max_z,
@@ -214,7 +219,7 @@ begin
 			
 		input_coord_gen_new: entity work.coord_gen_vertical
 			port map (
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				finished => input_coord_gen_diag_finished,
 				--control inputs
 				cfg_max_z => cfg_max_z,
@@ -230,7 +235,7 @@ begin
 		
 		flag_coord_gen_new: entity work.coord_gen_vertical
 			port map (
-				clk => clk, rst => rst, 
+				clk => clk, rst => inner_reset, 
 				finished => flag_coord_gen_diag_finished,
 				--control inputs
 				cfg_max_z => cfg_max_z,
@@ -255,7 +260,7 @@ begin
 			LAST_POLICY => PASS_ONE
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_0_valid => axis_input_valid,
 			input_0_ready => axis_input_ready,
@@ -281,7 +286,7 @@ begin
 		)
 		port map (
 			--control signals 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			finished => sample_relocator_finished,
 			--control inputs
 			cfg_min_preload_value => cfg_min_preload_value,
@@ -317,7 +322,7 @@ begin
 			USER_POLICY => PASS_ZERO
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_dividend_data 		=> axis_flag_coord_gen_data_t,
 			axis_dividend_ready		=> axis_flag_coord_gen_ready,
 			axis_dividend_valid		=> axis_flag_coord_gen_valid,
@@ -381,7 +386,7 @@ begin
 			LAST_POLICY => PASS_ZERO
 		)
 		port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_0_valid => axis_reloc_valid,
 			input_0_ready => axis_reloc_ready,

@@ -52,8 +52,8 @@ architecture Behavioral of counter is
 begin
 	
 	axis_out_mqi <= axis_in_mqi_d;
-	axis_in_mqi_ready <= axis_out_ready;
-	axis_out_valid <= axis_in_mqi_valid;
+	axis_in_mqi_ready <= (not rst) and axis_out_ready;
+	axis_out_valid <= (not rst) and axis_in_mqi_valid;
 	axis_out_coord <= axis_in_mqi_coord;
 	axis_out_counter <= counter;
 	axis_out_user <= axis_in_mqi_user;

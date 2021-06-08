@@ -103,7 +103,15 @@ architecture Behavioral of drsr_calc is
 	signal latched_final_ready, latched_final_valid: std_logic;
 	signal latched_final_coord: coordinate_bounds_array_t;
 	
+	signal inner_reset: std_logic;
+
 begin
+	
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	fm 							<= std_logic_vector(shift_left(resize(unsigned(STDLV_ONE), fm'length),to_integer(unsigned(cfg_resolution))) - unsigned(cfg_damping));
 	omega_minus_resolution 		<= std_logic_vector(unsigned(cfg_omega) - unsigned(cfg_resolution));
@@ -120,7 +128,7 @@ begin
 			STAGES_AFTER_SYNC	=> 2
 		)
 		Port map(
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> axis_in_mev_d,
 			input_0_valid	=> axis_in_mev_valid,
 			input_0_ready	=> axis_in_mev_ready,
@@ -141,7 +149,7 @@ begin
 			STAGES_AFTER_SYNC	=> 3
 		)
 		Port map(
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> axis_in_hrpsv_d,
 			input_0_valid	=> axis_in_hrpsv_valid,
 			input_0_ready	=> axis_in_hrpsv_ready,
@@ -160,7 +168,7 @@ begin
 			LATCH 		 => false
 		)
 		Port map (
-			clk => clk , rst => rst,
+			clk => clk , rst => inner_reset,
 			--to input axi port
 			input_0_valid => axis_in_qi_valid,
 			input_0_ready => axis_in_qi_ready,
@@ -190,7 +198,7 @@ begin
 			USER_POLICY  => PASS_ONE
 		)
 		Port map (
-			clk => clk , rst => rst,
+			clk => clk , rst => inner_reset,
 			--to input axi port
 			input_0_valid => joint_qi_mev_valid,
 			input_0_ready => joint_qi_mev_ready,
@@ -220,7 +228,7 @@ begin
 			USER_POLICY => PASS_ZERO
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> sm_calc,
 			input_0_valid	=> joint_sm_valid,
 			input_0_ready	=> joint_sm_ready,
@@ -245,7 +253,7 @@ begin
 			USER_POLICY  => PASS_ZERO
 		)
 		Port map (
-			clk => clk , rst => rst,
+			clk => clk , rst => inner_reset,
 			--to input axi port
 			input_0_valid => fm_times_sm_valid,
 			input_0_ready => fm_times_sm_ready,
@@ -270,7 +278,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data	=> final_unshifted,
 			input_ready => joint_last_ready,
 			input_valid => joint_last_valid,

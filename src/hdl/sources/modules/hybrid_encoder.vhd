@@ -78,9 +78,10 @@ architecture Behavioral of hybrid_encoder is
 	signal axis_flush_hra_valid, axis_flush_hra_ready: std_logic;
 	signal axis_flush_hra_d: std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 
-	type flushing_fsm_state_t is (WORKING, FLUSHING_ACC, LAST_BIT, FINISHED);
+	type flushing_fsm_state_t is (RESET, WORKING, FLUSHING_ACC, LAST_BIT, FINISHED);
 	signal state_curr, state_next: flushing_fsm_state_t;
 	signal flush_index, flush_index_next: std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+	signal inner_reset: std_logic;
 	
 	signal axis_out_code_pre	: std_logic_vector(CONST_OUTPUT_CODE_LENGTH - 1 downto 0);
 	signal axis_out_length_pre	: std_logic_vector(CONST_OUTPUT_CODE_LENGTH_BITS - 1 downto 0);
@@ -94,7 +95,7 @@ begin
 
 	acc_update_stage: entity work.hybrid_encoder_acc_update_stage
 		Port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			cfg_initial_counter		=> cfg_initial_counter,
 			cfg_final_counter		=> cfg_final_counter,
 			cfg_ihra				=> cfg_ihra,
@@ -117,7 +118,7 @@ begin
 		
 	table_update_stage: entity work.hybrid_encoder_table_update_stage
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_valid			=> axis_au_tu_valid,
 			axis_in_ready			=> axis_au_tu_ready,
 			axis_in_hra				=> axis_au_tu_hra,
@@ -143,7 +144,7 @@ begin
 
 	code_gen_stage: entity work.hybrid_encoder_code_gen_stage 
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--configs
 			cfg_u_max				=> cfg_u_max,
 			cfg_depth				=> cfg_depth,
@@ -173,7 +174,7 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				state_curr <= WORKING;
+				state_curr <= RESET;
 				flush_index <= (others => '0');
 			else
 				state_curr <= STATE_NEXT;
@@ -199,7 +200,11 @@ begin
 
 		axis_flush_hra_ready <= '0';
 
-		if state_curr = WORKING then
+		inner_reset <= '0';
+		if state_curr = RESET then
+			inner_reset <= '1';
+			state_next <= WORKING;
+		elsif state_curr = WORKING then
 			axis_out_code 		<= axis_out_code_pre;
 			axis_out_length 	<= axis_out_length_pre;
 			axis_out_coord 		<= axis_out_coord_pre;

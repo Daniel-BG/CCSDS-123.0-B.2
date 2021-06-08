@@ -59,6 +59,8 @@ entity predictor_core is
 end predictor_core;
 
 architecture Behavioral of predictor_core is
+	signal inner_reset: std_logic;
+
 	--input splitter signals
 	--from input splitter to neighbor retrieval
 	signal axis_is_nrcs_valid, axis_is_nrcs_ready: std_logic;
@@ -337,6 +339,11 @@ architecture Behavioral of predictor_core is
 	signal axis_tq_mqi_d: std_logic_vector(CONST_THETA_BITS - 1 downto 0);
 begin
 
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	input_splitter: entity work.AXIS_SPLITTER_4
 		Generic map (
@@ -344,7 +351,7 @@ begin
 			USER_WIDTH => coordinate_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_in_s_valid,
 			input_data		=> axis_in_s_d,
@@ -374,7 +381,7 @@ begin
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_is_ss_valid,
 			input_data		=> axis_is_ss_d,
@@ -394,7 +401,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_ss_sprq_valid,
 			input_ready => axis_ss_sprq_ready,
 			input_data	=> axis_ss_sprq_d,
@@ -409,7 +416,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_ss_scrq_valid,
 			input_ready => axis_ss_scrq_ready,
 			input_data	=> axis_ss_scrq_d,
@@ -423,7 +430,7 @@ begin
 			DATA_WIDTH => coordinate_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_valid		=> axis_is_cs_valid,
 			input_data		=> axis_is_cs_full_coord,
@@ -449,7 +456,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_cqs_cqdq_valid,
 			input_ready => axis_cqs_cqdq_ready,
 			input_data	=> axis_cqs_cqdq_coord,
@@ -464,7 +471,7 @@ begin
 	end process;
 	first_pixel_queue_filler: entity work.first_pixel_queue_filler
 		Port map (
-			clk => clk, rst	=> rst, 
+			clk => clk, rst	=> inner_reset, 
 			cfg_p => cfg_p,
 			axis_in_sample_d	=> axis_is_fpp_d,
 			axis_in_sample_coord=> axis_is_fpp_coord,	
@@ -480,7 +487,7 @@ begin
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_ready => axis_fpp_fpq_ready,
 			input_valid => axis_fpp_fpq_valid,
 			input_data  => axis_fpp_fpq_d,
@@ -494,7 +501,7 @@ begin
 	end process;
 	sample_rep_queue_system: entity work.sample_rep_queue_system
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--input coordinate
 			axis_in_coord_valid		=> axis_is_nrcs_valid,
 			axis_in_coord_d 		=> axis_is_nrcs_coord,
@@ -540,7 +547,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_ls_lss_valid,
 			input_data		=> axis_ls_lss_d,
@@ -567,7 +574,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_lss_lshrpsvq_valid,
 			input_ready => axis_lss_lshrpsvq_ready,
 			input_data	=> axis_lss_lshrpsvq_ls,
@@ -583,7 +590,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_lss_lscdq_valid,
 			input_ready => axis_lss_lscdq_ready,
 			input_data	=> axis_lss_lscdq_ls,
@@ -617,7 +624,7 @@ begin
 		
 	diff_queue_system: entity work.difference_queue_system
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_coord_d			=> axis_cqdq_dqsy_d,
 			axis_in_coord_ready		=> axis_cqdq_dqsy_ready,
 			axis_in_coord_valid		=> axis_cqdq_dqsy_valid,
@@ -643,7 +650,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			input_valid		=> axis_dqsy_dvs_valid,
 			input_data		=> axis_dqsy_dvs_d,
 			input_ready		=> axis_dqsy_dvs_ready,
@@ -665,7 +672,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_dvs_dvq_valid,
 			input_ready => axis_dvs_dvq_ready,
 			input_data	=> axis_dvs_dvq_d,
@@ -686,7 +693,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_cqs_cqwq_valid,
 			input_ready => axis_cqs_cqwq_ready,
 			input_data	=> axis_cqs_cqwq_coord,
@@ -705,7 +712,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_cqs_cqwuseq_valid,
 			input_ready => axis_cqs_cqwuseq_ready,
 			input_data	=> axis_cqs_cqwuseq_t,
@@ -717,7 +724,7 @@ begin
 			
 	weight_retrieval_and_update: entity work.weight_module
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_samples				=> cfg_samples,
 			cfg_tinc				=> cfg_tinc,
 			cfg_vmax				=> cfg_vmax,
@@ -760,7 +767,7 @@ begin
 			USER_POLICY 	=> PASS_ZERO
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_input_a_d		=> axis_dvs_dot_d,
 			axis_input_a_ready	=> axis_dvs_dot_ready,
 			axis_input_a_valid  => axis_dvs_dot_valid,
@@ -776,7 +783,7 @@ begin
 		
 	hrpsv_calc: entity work.hrpsv_calc
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_smax				=> cfg_smax,
 			cfg_omega				=> cfg_omega, 
 			axis_in_pcd_d			=> axis_pcld_hrpsv_d,
@@ -798,7 +805,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_hrpsv_hrpsvs_valid,
 			input_data		=> axis_hrpsv_hrpsvs_d,
@@ -820,7 +827,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_hrpsvs_hrpsvq_valid,
 			input_ready => axis_hrpsvs_hrpsvq_ready,
 			input_data	=> axis_hrpsvs_hrpsvq_d,
@@ -831,7 +838,7 @@ begin
 		
 	drpsv_calc: entity work.drpsv_calc
 		Port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			cfg_pred_bands 			=> cfg_p,
 			cfg_in_data_width_log	=> cfg_depth,
 			cfg_in_weight_width_log	=> cfg_omega,
@@ -854,7 +861,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_drpsv_drpsvs_valid,
 			input_data		=> axis_drpsv_drpsvs_d,
@@ -879,7 +886,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_drpsvs_drpsvmqiq_valid,
 			input_ready => axis_drpsvs_drpsvmqiq_ready,
 			input_data	=> axis_drpsvs_drpsvmqiq_d,
@@ -894,7 +901,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_drpsvs_drpsvdrpeq_valid,
 			input_ready => axis_drpsvs_drpsvdrpeq_ready,
 			input_data	=> axis_drpsvs_drpsvdrpeq_d,
@@ -921,7 +928,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_psv_psvs_valid,
 			input_data		=> axis_psv_psvs_d,
@@ -950,7 +957,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_psvs_psvcqbcq_valid,
 			input_ready => axis_psvs_psvcqbcq_ready,
 			input_data	=> axis_psvs_psvcqbcq_d,
@@ -965,7 +972,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_psvs_psvtq_valid,
 			input_ready => axis_psvs_psvtq_ready,
 			input_data	=> axis_psvs_psvtq_d,
@@ -976,7 +983,7 @@ begin
 		
 	prediction_residual_calc: entity work.pr_calc
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_sample_d	=> axis_sprq_pr_d,
 			axis_in_sample_valid=> axis_sprq_pr_valid,
 			axis_in_sample_ready=> axis_sprq_pr_ready,
@@ -997,7 +1004,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_pr_prq_valid,
 			input_ready => axis_pr_prq_ready,
 			input_data	=> axis_pr_prq_d,
@@ -1010,7 +1017,7 @@ begin
 			
 	mev_calc: entity work.mev_calc
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_use_abs_err		=> cfg_use_abs_err,
 			cfg_use_rel_err		=> cfg_use_rel_err,
 			cfg_abs_err 		=> cfg_abs_err,
@@ -1029,7 +1036,7 @@ begin
 			DATA_WIDTH => CONST_MEV_BITS
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			input_valid		=> axis_mev_mevs_valid,
 			input_data		=> axis_mev_mevs_d,
 			input_ready		=> axis_mev_mevs_ready,
@@ -1053,7 +1060,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_mevs_mevdrsrq_valid,
 			input_ready => axis_mevs_mevdrsrq_ready,
 			input_data	=> axis_mevs_mevdrsrq_d,
@@ -1068,7 +1075,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_mevs_mevcqbcq_valid,
 			input_ready => axis_mevs_mevcqbcq_ready,
 			input_data	=> axis_mevs_mevcqbcq_d,
@@ -1079,7 +1086,7 @@ begin
 		
 	quantized_index_calc: entity work.qi_calc
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_pr_d 		=> axis_prq_qi_d,
 			axis_in_pr_coord	=> axis_prq_qi_coord,
 			axis_in_pr_valid	=> axis_prq_qi_valid,
@@ -1099,7 +1106,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_qi_qis_valid,
 			input_data		=> axis_qi_qis_d,
@@ -1124,7 +1131,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_qis_qiq_valid,
 			input_ready => axis_qis_qiq_ready,
 			input_data	=> axis_qis_qiq_d,
@@ -1135,7 +1142,7 @@ begin
 		
 	cqbc_calc: entity work.cqbc_calc
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_smax			=> cfg_smax,
 			axis_in_psv_d		=> axis_psvcqbcq_cqbc_d,
 			axis_in_psv_valid	=> axis_psvcqbcq_cqbc_valid,
@@ -1159,7 +1166,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			input_valid		=> axis_cqbc_cqbcs_valid,
 			input_data		=> axis_cqbc_cqbcs_d,
 			input_ready		=> axis_cqbc_cqbcs_ready,
@@ -1179,7 +1186,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_cqbcs_cqbcq_valid,
 			input_ready => axis_cqbcs_cqbcq_ready,
 			input_data	=> axis_cqbcs_cqbcq_d,
@@ -1190,7 +1197,7 @@ begin
 		
 	drsr_calc: entity work.drsr_calc 
 		port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			cfg_resolution		=> cfg_resolution,
 			cfg_damping			=> cfg_damping,
 			cfg_offset			=> cfg_offset,
@@ -1216,7 +1223,7 @@ begin
 
 	drpe_calc: entity work.drpe_calc
 	port map( 
-		clk => clk, rst => rst,
+		clk => clk, rst => inner_reset,
 		axis_in_cqbc_d		=> axis_cqbcq_drpe_d,
 		axis_in_cqbc_valid  => axis_cqbcq_drpe_valid,
 		axis_in_cqbc_ready	=> axis_cqbcq_drpe_ready,
@@ -1230,7 +1237,7 @@ begin
 	
 	curre_repp_calc: entity work.current_rep_calc
 		Port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			axis_s_d			=> axis_scrq_cr_d,
 			axis_s_valid		=> axis_scrq_cr_valid,
 			axis_s_ready		=> axis_scrq_cr_ready,
@@ -1250,7 +1257,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			input_valid		=> axis_cr_crs_valid,
 			input_data		=> axis_cr_crs_d,
 			input_ready		=> axis_cr_crs_ready,
@@ -1267,7 +1274,7 @@ begin
 		
 	current_diff_calc: entity work.current_diff_calc
 		Port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			axis_repr_d			=> axis_crs_cd_d,
 			axis_repr_valid		=> axis_crs_cd_valid,
 			axis_repr_ready		=> axis_crs_cd_ready,
@@ -1283,7 +1290,7 @@ begin
 
 	theta_calc: entity work.theta_calc
 		Port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			cfg_smax			=> cfg_smax,
 			axis_in_psv_d		=> axis_psvtq_t_d,
 			axis_in_psv_valid	=> axis_psvtq_t_valid,
@@ -1302,7 +1309,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_t_tq_valid,
 			input_ready => axis_t_tq_ready,
 			input_data	=> axis_t_tq_d,
@@ -1313,7 +1320,7 @@ begin
 		
 	mqi_calc: entity work.mqi_calc
 	Port map ( 
-		clk => clk, rst => rst,
+		clk => clk, rst => inner_reset,
 		axis_in_drpsv_d		=> axis_drpsvq_mqi_data,
 		axis_in_drpsv_valid	=> axis_drpsvq_mqi_valid,
 		axis_in_drpsv_ready	=> axis_drpsvq_mqi_ready,
@@ -1337,7 +1344,7 @@ begin
 			FILE_NUMBER => 36
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_dd_dqsy_valid,
 			ready => axis_dd_dqsy_ready,
 			data  => axis_dd_dqsy_nd
@@ -1350,7 +1357,7 @@ begin
 			FILE_NUMBER => 35
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_dd_dqsy_valid,
 			ready => axis_dd_dqsy_ready,
 			data  => axis_dd_dqsy_wd
@@ -1363,7 +1370,7 @@ begin
 			FILE_NUMBER => 34
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_dd_dqsy_valid,
 			ready => axis_dd_dqsy_ready,
 			data  => axis_dd_dqsy_nwd
@@ -1376,7 +1383,7 @@ begin
 			FILE_NUMBER => 22
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_drpsv_drpsvs_valid,
 			ready => axis_drpsv_drpsvs_ready,
 			data  => axis_drpsv_drpsvs_d
@@ -1389,7 +1396,7 @@ begin
 			FILE_NUMBER => 23
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_psv_psvs_valid,
 			ready => axis_psv_psvs_ready,
 			data  => axis_psv_psvs_d
@@ -1402,7 +1409,7 @@ begin
 			FILE_NUMBER => 24
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_pr_prq_valid,
 			ready => axis_pr_prq_ready,
 			data  => axis_pr_prq_d
@@ -1415,7 +1422,7 @@ begin
 			FILE_NUMBER => 27
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_drpe_wu_valid,
 			ready => axis_drpe_wu_ready,
 			data  => axis_drpe_wu_d
@@ -1428,7 +1435,7 @@ begin
 			FILE_NUMBER => 28
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_drsr_cr_valid,
 			ready => axis_drsr_cr_ready,
 			data  => axis_drsr_cr_d
@@ -1441,7 +1448,7 @@ begin
 			FILE_NUMBER => 29
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_cqbc_cqbcs_valid,
 			ready => axis_cqbc_cqbcs_ready,
 			data  => axis_cqbc_cqbcs_d
@@ -1454,7 +1461,7 @@ begin
 			FILE_NUMBER => 30
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_mev_mevs_valid,
 			ready => axis_mev_mevs_ready,
 			data  => axis_mev_mevs_d
@@ -1467,7 +1474,7 @@ begin
 			FILE_NUMBER => 31
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_hrpsv_hrpsvs_valid,
 			ready => axis_hrpsv_hrpsvs_ready,
 			data  => axis_hrpsv_hrpsvs_d
@@ -1480,7 +1487,7 @@ begin
 			FILE_NUMBER => 32
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_pcld_hrpsv_valid,
 			ready => axis_pcld_hrpsv_ready,
 			data  => axis_pcld_hrpsv_d
@@ -1493,7 +1500,7 @@ begin
 			FILE_NUMBER => 33
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_cd_dqsy_valid,
 			ready => axis_cd_dqsy_ready,
 			data  => axis_cd_dqsy_d
@@ -1506,7 +1513,7 @@ begin
 			FILE_NUMBER => 37
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_ls_lss_valid,
 			ready => axis_ls_lss_ready,
 			data  => axis_ls_lss_ls
@@ -1519,7 +1526,7 @@ begin
 			FILE_NUMBER => 38
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_qi_qis_valid,
 			ready => axis_qi_qis_ready,
 			data  => axis_qi_qis_d
@@ -1532,7 +1539,7 @@ begin
 			FILE_NUMBER => 39
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_cr_crs_valid,
 			ready => axis_cr_crs_ready,
 			data  => axis_cr_crs_d
@@ -1545,7 +1552,7 @@ begin
 			FILE_NUMBER => 40
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_t_tq_valid,
 			ready => axis_t_tq_ready,
 			data  => axis_t_tq_d
@@ -1558,7 +1565,7 @@ begin
 			FILE_NUMBER => 45
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_nr_ls_valid,
 			ready => axis_nr_ls_ready,
 			data  => axis_nr_ls_n
@@ -1571,7 +1578,7 @@ begin
 			FILE_NUMBER => 43
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_nr_ls_valid,
 			ready => axis_nr_ls_ready,
 			data  => axis_nr_ls_nw
@@ -1584,7 +1591,7 @@ begin
 			FILE_NUMBER => 44
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_nr_ls_valid,
 			ready => axis_nr_ls_ready,
 			data  => axis_nr_ls_ne
@@ -1597,7 +1604,7 @@ begin
 			FILE_NUMBER => 42
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_nr_ls_valid,
 			ready => axis_nr_ls_ready,
 			data  => axis_nr_ls_w

@@ -104,8 +104,9 @@ architecture Behavioral of hybrid_encoder_code_gen_stage is
 	signal bc_coord: coordinate_bounds_array_t;
 	
 	--state machine to output big codes correctly
-	type output_fsm_t is (BOTTOM_64, TOP_64);
+	type output_fsm_t is (RESET, BOTTOM_64, TOP_64);
 	signal state_curr, state_next: output_fsm_t;
+	signal inner_reset: std_logic;
 begin
 	
 	preprocess_and_select: process(axis_in_flush_bit, axis_in_ihe, axis_in_k, axis_in_mqi, axis_in_input_symbol, axis_in_code_quant, axis_in_is_tree,
@@ -151,7 +152,7 @@ begin
 			USER_WIDTH => 1 + CONST_MQI_BITS + coordinate_bounds_array_t'length + CONST_CODE_BITS + 1 + CONST_MAX_K_BITS + CONST_MQI_BITS + 1 + CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data	=> axis_in_code,
 			input_ready => axis_in_ready,
 			input_valid => axis_in_valid,
@@ -219,7 +220,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length + CONST_CODE_BITS + 1 + CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data	=> fs_updated_code,
 			input_ready => fs_ready,
 			input_valid => fs_valid,
@@ -257,7 +258,7 @@ begin
 			USER_WIDTH => CONST_CODE_BITS + coordinate_bounds_array_t'length
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data =>  ss_updated_code,
 			input_ready => ss_ready,
 			input_valid => ss_valid,
@@ -276,7 +277,7 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				state_curr <= BOTTOM_64;
+				state_curr <= RESET;
 			else
 				state_curr <= state_next;
 			end if;
@@ -288,8 +289,16 @@ begin
 		state_next <= state_curr;
 		axis_out_coord <= bc_coord;
 		axis_out_last <= bc_last;
+		inner_reset <= '0';
+		axis_out_code <= bc_code(CONST_OUTPUT_CODE_LENGTH-1 downto 0);
+		axis_out_length <= bc_code_length;
+		axis_out_valid <= '0';
+		bc_ready <= '0';
 		
-		if state_curr = BOTTOM_64 then
+		if state_curr = RESET then
+			inner_reset <= '1';
+			state_next <= BOTTOM_64;
+		elsif state_curr = BOTTOM_64 then
 			if unsigned(bc_code_length) <= CONST_OUTPUT_CODE_LENGTH then
 				axis_out_code <= bc_code(CONST_OUTPUT_CODE_LENGTH-1 downto 0);
 				axis_out_length <= bc_code_length;

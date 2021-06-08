@@ -94,7 +94,16 @@ architecture Behavioral of weight_module is
 	
 	--default weights
 	signal cfg_weight_vec: std_logic_vector(CONST_WEIGHTVEC_BITS - 1 downto 0);
+
+	--
+	signal inner_reset: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 		
 	saved_weight_queue: entity work.AXIS_FIFO 
@@ -103,7 +112,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_wqp_swq_valid,
 			input_ready => axis_wqp_swq_ready,
 			input_data	=> axis_wqp_swq_d,
@@ -132,7 +141,7 @@ begin
 			DATA_WIDTH => CONST_WEIGHTVEC_BITS
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_cond			=> axis_in_coord_cond,
 			axis_in_cond_valid		=> axis_in_coord_valid,
 			axis_in_cond_ready		=> axis_in_coord_ready,
@@ -152,7 +161,7 @@ begin
 			DATA_WIDTH => CONST_WEIGHTVEC_BITS
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_wret_ws_valid,
 			input_data		=> axis_wret_ws_d,
@@ -172,7 +181,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_ws_wuq_valid,
 			input_ready => axis_ws_wuq_ready,
 			input_data	=> axis_ws_wuq_d,
@@ -184,7 +193,7 @@ begin
 
 	wuse_calc: entity work.wuse_calc 
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_samples			=> cfg_samples,
 			cfg_tinc			=> cfg_tinc,
 			cfg_vmax			=> cfg_vmax,
@@ -204,7 +213,7 @@ begin
 			DATA_WIDTH => CONST_WUSE_BITS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data	=> axis_wuse_wu_d,
 			input_ready => axis_wuse_wu_ready,
 			input_valid => axis_wuse_wu_valid,
@@ -215,7 +224,7 @@ begin
 
 	weight_update: entity work.wu_calc
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_weo				=> cfg_weo,
 			cfg_omega			=> cfg_omega,
 			axis_dv_d			=> axis_in_dv_d,
@@ -239,7 +248,7 @@ begin
 		
 	weight_putter: entity work.weight_putter
 		Port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			axis_in_d		=> axis_wu_wqp_d,
 			axis_in_coord	=> axis_wu_wqp_coord,
 			axis_in_valid	=> axis_wu_wqp_valid,
@@ -257,7 +266,7 @@ begin
 			FILE_NUMBER => 26
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_wuse_wu_valid,
 			ready => axis_wuse_wu_ready,
 			data  => axis_wuse_wu_d

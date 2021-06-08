@@ -70,7 +70,15 @@ architecture Behavioral of difference_queue_system is
 	signal axis_out_cld: std_logic_vector(CONST_CLDVEC_BITS - 1 downto 0);
 	signal axis_out_dird: std_logic_vector(CONST_DIRDIFFVEC_BITS - 1 downto 0); 
 	signal axis_in_dd_ddv: std_logic_vector(CONST_DIRDIFFVEC_BITS - 1 downto 0);
+
+	signal inner_reset: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	cld_queue: entity work.AXIS_FIFO 
 		Generic map (
@@ -78,7 +86,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_dp_dq_valid,
 			input_ready => axis_dp_dq_ready,
 			input_data	=> axis_dp_dq_d,
@@ -90,7 +98,7 @@ begin
 
 	cld_vec_ret: entity work.diff_vec_retrieval
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_coord_d			=> axis_in_coord_d,
 			axis_in_coord_valid		=> axis_in_coord_valid,
 			axis_in_coord_ready		=> axis_in_coord_ready,
@@ -107,7 +115,7 @@ begin
 			DATA_WIDTH => CONST_CLDVEC_BITS
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			input_valid		=> axis_dvr_ds_valid,
 			input_data		=> axis_dvr_ds_d,
 			input_ready		=> axis_dvr_ds_ready,
@@ -125,7 +133,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_ds_dq2_valid,
 			input_ready => axis_ds_dq2_ready,
 			input_data	=> axis_ds_dq2_d,
@@ -137,7 +145,7 @@ begin
 		
 	diff_putter: entity work.diff_putter 
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_diffs_d		=> axis_dq2_dp_d,
 			axis_diffs_valid	=> axis_dq2_dp_valid,
 			axis_diffs_ready	=> axis_dq2_dp_ready,
@@ -160,7 +168,7 @@ begin
 			USER_POLICY => PASS_ONE
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_0_valid=> axis_ds_dsy_valid,
 			input_0_ready=> axis_ds_dsy_ready,

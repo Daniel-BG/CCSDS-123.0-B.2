@@ -40,8 +40,9 @@ entity code_aligner is
 end code_aligner;
 
 architecture Behavioral of code_aligner is
-	type state_t is (WORKING, FLUSHING, FINISHED);
+	type state_t is (RESET, WORKING, FLUSHING, FINISHED);
 	signal state_curr, state_next: state_t;
+	signal inner_reset: std_logic;
 	
 	signal buffered_free, buffered_free_next: std_logic_vector(6 downto 0);
 	signal buffered_code, buffered_code_next: std_logic_vector(63 downto 0);
@@ -65,7 +66,7 @@ begin
 			USER_WIDTH => 7
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_ready => axis_in_ready,
 			input_valid => axis_in_valid,
 			input_data  => axis_in_code,
@@ -82,7 +83,7 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				state_curr <= WORKING;
+				state_curr <= RESET;
 				buffered_free <= std_logic_vector(to_unsigned(64, buffered_free'length));
 				buffered_code <= (others => '0');
 			else
@@ -109,8 +110,12 @@ begin
 		output_latch_last <= '0';
 		
 		output_latch_data <= (others => 'X');
+		inner_reset <= '0';
 	
-		if state_curr = WORKING then
+		if state_curr = RESET then
+			inner_reset <= '1';
+			state_next <= WORKING;
+		elsif state_curr = WORKING then
 			--check if operation can be completed, otherwise don't do anything
 			--we violate axis stream protocol, but it is latched so for the outside
 			--ports we are still under strict standard
@@ -175,7 +180,7 @@ begin
 			DATA_WIDTH => 64
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_ready => output_latch_ready,
 			input_valid => output_latch_valid,
 			input_data  => output_latch_data,

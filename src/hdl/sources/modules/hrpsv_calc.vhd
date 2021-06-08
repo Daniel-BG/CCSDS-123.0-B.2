@@ -65,8 +65,15 @@ architecture Behavioral of hrpsv_calc is
 	signal hrpsv_unclamped:  std_logic_vector(CONST_INTERMEDIATE_REGISTER_WIDTH - 1 downto 0);   
 	signal hrpsv_result, hrpsv_clamped, hrpsv_low, hrpsv_high: std_logic_vector(CONST_HRPSV_BITS - 1 downto 0);
 
+	signal inner_reset: std_logic;
 
 begin
+	
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	sync_inputs: entity work.AXIS_SYNCHRONIZER_2
 		Generic map (
@@ -77,7 +84,7 @@ begin
 			USER_POLICY  => PASS_ZERO
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_0_valid => axis_in_pcd_valid,
 			input_0_ready => axis_in_pcd_ready,
@@ -109,7 +116,7 @@ begin
 				USER_WIDTH => coordinate_bounds_array_t'length
 			)
 			Port map ( 
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				input_data	=> hrpsv_unclamped,
 				input_ready => axis_joint_ready,
 				input_valid => axis_joint_valid,
@@ -121,9 +128,9 @@ begin
 			);
 	
 		hrpsv_low <= (others => '0');
-		hrpsv_high_set : process( cfg_omega, cfg_smax, clk, rst)
+		hrpsv_high_set : process( cfg_omega, cfg_smax, clk, inner_reset)
 		begin
-			if rising_edge(clk) and rst = '1' then
+			if rising_edge(clk) and inner_reset = '1' then
 				hrpsv_high <= std_logic_vector(
 					shift_left(
 						resize(signed("0" & unsigned(cfg_smax)), hrpsv_high'length),
@@ -146,7 +153,7 @@ begin
 				USER_WIDTH => coordinate_bounds_array_t'length
 			)
 			Port map ( 
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				input_data	=> hrpsv_result,
 				input_ready => axis_hrpsv_u_ready,
 				input_valid => axis_hrpsv_u_valid,

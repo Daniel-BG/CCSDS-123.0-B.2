@@ -94,7 +94,16 @@ architecture Behavioral of wu_calc is
 	signal joint_unclamped_coord: coord_arr_t;
 	signal omega_min, omega_max: std_logic_vector(CONST_MAX_WEIGHT_BITS - 1 downto 0);
 	
+	signal inner_reset: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
+
+		
 	update_axis_dv_d_filtered: process(axis_dv_coord, axis_dv_d) begin
 		if F_STDLV2CB(axis_dv_coord).first_x = '1' and F_STDLV2CB(axis_dv_coord).first_y = '1' then
 			axis_dv_d_filtered <= (others => '0');
@@ -111,7 +120,7 @@ begin
 			USER_POLICY  => PASS_ONE
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_0_valid => axis_drpe_valid,
 			input_0_ready => axis_drpe_ready,
@@ -145,7 +154,7 @@ begin
 				USER_POLICY  => PASS_ONE
 			)
 			Port map (
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				--to input axi port
 				input_0_valid => axis_wuse_valid,
 				input_0_ready => axis_wuse_ready_vec(i),
@@ -180,7 +189,7 @@ begin
 				USER_WIDTH => coordinate_bounds_array_t'length
 			)
 			Port map (
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				input_ready => joint_pre_add_ready(i),
 				input_valid => joint_pre_add_valid(i),
 				input_data(CONST_W_UPDATE_BITS*2 - 1 downto CONST_W_UPDATE_BITS)  =>  joint_pre_add_mult_shifted_left(i),
@@ -204,9 +213,9 @@ begin
 	end generate;
 	axis_wuse_ready <= axis_wuse_ready_vec(0);
 
-	update_omega_bounds : process( clk, rst )
+	update_omega_bounds : process( clk, inner_reset )
 	begin
-		if rising_edge(clk) and rst = '1' then
+		if rising_edge(clk) and inner_reset = '1' then
 			omega_min <= std_logic_vector(- shift_left(to_signed(1, CONST_MAX_WEIGHT_BITS), to_integer(unsigned(cfg_omega))+2));
 			omega_max <= std_logic_vector(shift_left(to_signed(1, CONST_MAX_WEIGHT_BITS), to_integer(unsigned(cfg_omega))+2) - 1);
 		end if;
@@ -222,7 +231,7 @@ begin
 				USER_POLICY  => PASS_ONE
 			)
 			Port map (
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				--to input axi port
 				input_0_valid => axis_wv_valid,
 				input_0_ready => axis_wv_ready_vec(i),

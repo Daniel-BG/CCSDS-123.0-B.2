@@ -53,7 +53,14 @@ architecture Behavioral of wuse_calc is
 	
 	
 	signal t_clipped: std_logic_vector(CONST_VMINMAX_BITS - 1 downto 0);
+
+	signal inner_reset: std_logic;
 begin
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	substract_samples_from_t: entity work.AXIS_ARITHMETIC_OP
 		Generic map (
@@ -67,7 +74,7 @@ begin
 			LATCH_INPUT_SYNC=> true
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data(CONST_MAX_T_VALUE_BITS) => '0',
 			input_0_data(CONST_MAX_T_VALUE_BITS - 1 downto 0) => axis_in_coord_t,
 			input_0_valid	=> axis_in_coord_valid,
@@ -94,7 +101,7 @@ begin
 			LATCH_INPUT_SYNC=> false
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> t_minus_samples_shifted,
 			input_0_valid	=> t_minus_samples_valid,
 			input_0_ready	=> t_minus_samples_ready,
@@ -126,7 +133,7 @@ begin
 			LATCH_INPUT_SYNC=> true
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> t_clipped,
 			input_0_valid	=> t_minus_samples_shifted_plus_vmin_valid,
 			input_0_ready	=> t_minus_samples_shifted_plus_vmin_ready,

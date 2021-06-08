@@ -58,11 +58,11 @@ entity sample_relocator is
 end sample_relocator;
 
 architecture Behavioral of sample_relocator is
-	type state_main_t is (ST_M_WORKING, ST_M_FINISHED);
+	type state_main_t is (ST_M_RESET, ST_M_WORKING, ST_M_FINISHED);
 	signal state_main_curr, state_main_next: state_main_t;
-	type state_write_t is (ST_W_LOADING, ST_W_FINISHED);
+	type state_write_t is (ST_W_RESET, ST_W_LOADING, ST_W_FINISHED);
 	signal state_write_curr, state_write_next: state_write_t;
-	type state_read_t is (ST_R_LOADING, ST_R_LOADED, ST_R_LOADED_LAST, ST_R_FINISHED);
+	type state_read_t is (ST_R_RESET, ST_R_LOADING, ST_R_LOADED, ST_R_LOADED_LAST, ST_R_FINISHED);
 	signal state_read_curr, state_read_next: state_read_t;
 
 	signal loaded_samples, loaded_samples_next: unsigned(MAX_SIDE_LOG*2-1 downto 0);
@@ -100,11 +100,11 @@ begin
 		if rising_edge(clk) then
 			if rst = '1' then
 				--main process
-				state_main_curr	   	<= ST_M_WORKING;
+				state_main_curr	   	<= ST_M_RESET;
 				loaded_samples     	<= (others => '0');
 				--write/read process
-				state_write_curr  	<= ST_W_LOADING;
-				state_read_curr 	<= ST_R_LOADING;
+				state_write_curr  	<= ST_W_RESET;
+				state_read_curr 	<= ST_R_RESET;
 			else
 				--main process
 				state_main_curr 	<= state_main_next;
@@ -126,7 +126,9 @@ begin
 		state_main_next 		<= state_main_curr;
 		finished 				<= '0';
 				
-		if state_main_curr = ST_M_WORKING then
+		if state_main_curr = ST_M_RESET then
+			state_main_next <= ST_M_WORKING;
+		elsif state_main_curr = ST_M_WORKING then
 			if ram_wena = '0' and ram_rdenb = '1' then
 				loaded_samples_next <= loaded_samples - 1;
 			elsif ram_wena = '1' and ram_rdenb = '0' then
@@ -151,8 +153,9 @@ begin
 		ram_wena <= '0';
 		axis_input_coord_ready <= '0';
 		
-		
-		if state_write_curr = ST_W_LOADING then
+		if state_write_curr = ST_W_RESET then
+			state_write_next <= ST_W_LOADING;
+		elsif state_write_curr = ST_W_LOADING then
 			if loaded_samples < unsigned(cfg_max_preload_value) then
 				axis_input_coord_ready <= '1';
 				if axis_input_coord_valid = '1' then
@@ -177,8 +180,9 @@ begin
 		axis_output_data_last <= '0';
 		axis_output_coord_ready <= '0';
 		
-		
-		if state_read_curr = ST_R_LOADING then
+		if state_read_curr = ST_R_RESET then
+			state_read_next <= ST_R_LOADING;
+		elsif state_read_curr = ST_R_LOADING then
 			if state_write_curr = ST_W_FINISHED or loaded_samples > unsigned(cfg_min_preload_value) then
 				axis_output_coord_ready <= '1';
 				if axis_output_coord_valid = '1' then

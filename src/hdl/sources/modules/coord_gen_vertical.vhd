@@ -43,7 +43,7 @@ entity coord_gen_vertical is
 end coord_gen_vertical;
 
 architecture Behavioral of coord_gen_vertical is
-	type state_t is (ST_WORKING, ST_FINISHED);
+	type state_t is (ST_RESET, ST_WORKING, ST_FINISHED);
 	signal state_curr, state_next: state_t;
 		
 	signal z_curr, z_next: unsigned(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
@@ -55,7 +55,7 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				state_curr <= ST_WORKING;
+				state_curr <= ST_RESET;
 				z_curr <= (others => '0');
 				tz_curr <= (others => '0');
 				t_curr <= (others => '0');
@@ -85,8 +85,10 @@ begin
 		axis_out_data_z <= std_logic_vector(z_curr);
 		axis_out_data_t <= std_logic_vector(t_curr);
 		axis_out_data_tz <= std_logic_vector(tz_curr);
-	
-		if state_curr = ST_WORKING then
+
+		if state_curr = ST_RESET then
+			state_next <= ST_WORKING;
+		elsif state_curr = ST_WORKING then
 			axis_out_valid <= '1';
 			if axis_out_ready = '1' then
 				--update coords in BIP mode

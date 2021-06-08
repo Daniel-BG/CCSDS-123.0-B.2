@@ -102,11 +102,20 @@ architecture Behavioral of hybrid_encoder_acc_update_stage is
 	--for testing purposes
 	signal axis_out_cnt_pre	: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 	signal axis_out_valid_pre : std_logic;
+
+
+	signal inner_reset: std_logic;
 begin
+	
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	counter_t: entity work.counter
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_initial_counter		=> cfg_initial_counter,
 			cfg_final_counter		=> cfg_final_counter,
 			axis_in_mqi_d			=> axis_in_mqi_d,
@@ -126,7 +135,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk	=> clk, rst => rst,
+			clk	=> clk, rst => inner_reset,
 			input_valid		=> axis_hrau_hraq_valid,
 			input_ready		=> axis_hrau_hraq_ready,
 			input_data		=> axis_hrau_hraq_hra,
@@ -137,7 +146,7 @@ begin
 		
 	update_axis_in_cond: process(clk) begin
 		if rising_edge(clk) then
-			if rst = '1' then
+			if inner_reset = '1' then
 				axis_in_cond <= '0';
 			else
 				if F_STDLV2CB(axis_cnt_hraret_coord).last_z = '1' then --end of a pixel
@@ -158,7 +167,7 @@ begin
 			USER_WIDTH	=> coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_cond	   		=> axis_in_cond,
 			axis_in_cond_valid 		=> axis_cnt_hraret_valid,
 			axis_in_cond_ready 		=> axis_cnt_hraret_ready,
@@ -185,7 +194,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data	=> axis_ar_fbo_pl_hra,
 			input_ready => axis_ar_fbo_pl_ready,
 			input_valid => axis_ar_fbo_pl_valid,
@@ -223,7 +232,7 @@ begin
 			USER_WIDTH => flush_bit_t'length + CONST_MQI_BITS + coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_fbo_hrau_valid,
 			input_data		=> axis_fbo_hrau_hra,
@@ -250,7 +259,7 @@ begin
 			USER_WIDTH => flush_bit_t'length + CONST_MAX_HR_ACC_BITS
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_initial_counter		=> cfg_initial_counter_p_1,
 			cfg_final_counter		=> cfg_final_counter,
 			axis_in_mqi_d			=> axis_hrau_caccs_mqi,
@@ -277,7 +286,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk	=> clk, rst => rst,
+			clk	=> clk, rst => inner_reset,
 			input_valid		=> flush_hra_enable,
 			input_ready		=> open,
 			input_data		=> axis_hrau_caccs_hra,
@@ -294,7 +303,7 @@ begin
 			FILE_NUMBER => 100
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_fbo_hrau_valid,
 			ready => axis_fbo_hrau_ready,
 			data  => axis_fbo_hrau_hra
@@ -307,7 +316,7 @@ begin
 			FILE_NUMBER => 101
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_out_valid_pre,
 			ready => axis_out_ready,
 			data  => axis_out_cnt_pre

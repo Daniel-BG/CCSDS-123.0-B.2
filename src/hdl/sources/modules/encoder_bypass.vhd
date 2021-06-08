@@ -80,8 +80,10 @@ architecture Behavioral of encoder_bypass is
 	
 	
 	--fsm control
-	type state_t is (FIRST_PIXEL, OTHER_PIXELS); 
+	type state_t is (RESET, FIRST_PIXEL, OTHER_PIXELS); 
 	signal state_curr, state_next: state_t;
+
+	signal inner_reset: std_logic;
 begin
 
 	input_latch: entity work.AXIS_DATA_LATCH 
@@ -105,7 +107,7 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				state_curr <= FIRST_PIXEL;
+				state_curr <= RESET;
 			else
 				state_curr <= state_next;
 			end if; 
@@ -124,21 +126,29 @@ begin
 			state_curr)
 	begin
 		state_next <= state_curr;
-	
-		if state_curr = FIRST_PIXEL then
+		inner_reset <= '0';
+		latched_mqi_ready 	<= '0';
+		olatch_in_code		<= std_logic_vector(resize(unsigned(latched_mqi_d), olatch_in_code'length));
+		olatch_in_length	<= std_logic_vector(resize(unsigned(cfg_depth), olatch_in_length'length));
+		olatch_in_coord		<= latched_mqi_coord;
+		olatch_in_valid		<= '0';
+		olatch_in_last 		<= '0';
+		--defaults for non-used signals
+		coder_axis_in_mqi_d     <= (others => '0');
+		coder_axis_in_mqi_valid <= '0';
+		coder_axis_out_ready    <= '0';
+		coder_axis_in_mqi_coord <= (others => '0');
+			
+		if state_curr = RESET then
+			inner_reset <= '1';
+			state_next <= FIRST_PIXEL;
+		elsif state_curr = FIRST_PIXEL then
 			--bypass since we are on the first pixel
 			olatch_in_code		<= std_logic_vector(resize(unsigned(latched_mqi_d), olatch_in_code'length));
 			olatch_in_length	<= std_logic_vector(resize(unsigned(cfg_depth), olatch_in_length'length));
 			olatch_in_coord		<= latched_mqi_coord;
 			olatch_in_valid		<= latched_mqi_valid;
-			olatch_in_last 		<= '0';
 			latched_mqi_ready 	<= olatch_in_ready;
-			
-			--defaults for non-used signals
-			coder_axis_in_mqi_d     <= (others => '0');
-			coder_axis_in_mqi_valid <= '0';
-			coder_axis_out_ready    <= '0';
-			coder_axis_in_mqi_coord <= (others => '0');
 			
 			if F_STDLV2CB(latched_mqi_coord).first_x = '1' and F_STDLV2CB(latched_mqi_coord).first_y = '1' and F_STDLV2CB(latched_mqi_coord).last_z = '1' then
 				if latched_mqi_valid = '1' and olatch_in_ready = '1' then
@@ -164,7 +174,7 @@ begin
 	gen_normal_coder: if not USE_HYBRID_CODER generate 
 		encoder: entity work.encoder
 			Port map ( 
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				cfg_initial_counter		=> cfg_initial_counter,
 				cfg_final_counter		=> cfg_final_counter,
 				cfg_u_max				=> cfg_u_max,
@@ -186,7 +196,7 @@ begin
 	gen_hybrid_coder: if USE_HYBRID_CODER generate 
 		encoder: entity work.hybrid_encoder
 			Port map ( 
-				clk => clk, rst	=> rst,
+				clk => clk, rst	=> inner_reset,
 				cfg_initial_counter		=> cfg_initial_counter,
 				cfg_final_counter		=> cfg_final_counter,
 				cfg_ihra				=> cfg_iacc,
@@ -213,7 +223,7 @@ begin
 			DATA_WIDTH => CONST_OUTPUT_CODE_LENGTH + CONST_OUTPUT_CODE_LENGTH_BITS + coordinate_bounds_array_t'length
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data(CONST_OUTPUT_CODE_LENGTH + CONST_OUTPUT_CODE_LENGTH_BITS + coordinate_bounds_array_t'length - 1 downto CONST_OUTPUT_CODE_LENGTH_BITS + coordinate_bounds_array_t'length)	=> olatch_in_code,
 			input_data(CONST_OUTPUT_CODE_LENGTH_BITS + coordinate_bounds_array_t'length - 1 downto coordinate_bounds_array_t'length)	=> olatch_in_length,
 			input_data(coordinate_bounds_array_t'length - 1 downto 0)	=> olatch_in_coord,

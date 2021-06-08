@@ -109,7 +109,7 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 	signal code_rom_enable 		: std_logic;
 	
 	--table flushing fsm between second and third stage
-	type table_flushing_fsm_state_t is (WORKING, FLUSHING_LEC, FINISHED);
+	type table_flushing_fsm_state_t is (RESET, WORKING, FLUSHING_LEC, FINISHED);
 	signal tf_state_curr, tf_state_next: table_flushing_fsm_state_t;
 	signal tf_flush_index, tf_flush_index_next: std_logic_vector(CONST_CODE_INDEX_BITS - 1 downto 0);
 	
@@ -139,6 +139,7 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 	--for testing
 	signal ts_ihe_stdlv: std_logic_vector(0 downto 0);
 	
+	signal inner_reset: std_logic;		
 begin
 	axis_in_ready <= axis_in_ready_buf;
 
@@ -154,7 +155,7 @@ begin
 			STAGES_AFTER_SYNC	=> FIRST_STAGE_MULTIPLIER_NUMBER_OF_STAGES
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> axis_in_cnt,
 			input_0_valid	=> axis_in_valid,
 			input_0_ready	=> axis_in_ready_buf,
@@ -189,7 +190,7 @@ begin
 				STAGES_AFTER_SYNC	=> FIRST_STAGE_MULTIPLIER_NUMBER_OF_STAGES
 			)
 			Port map (
-				clk => clk, rst => rst,
+				clk => clk, rst => inner_reset,
 				input_0_data	=> axis_in_cnt,
 				input_0_valid	=> transaction_at_mult_input,
 				input_0_ready	=> open,
@@ -211,7 +212,7 @@ begin
 			STAGES_AFTER_SYNC	=> FIRST_STAGE_MULTIPLIER_NUMBER_OF_STAGES
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> axis_in_cnt,
 			input_0_valid	=> transaction_at_mult_input,
 			input_0_ready	=> open,
@@ -258,7 +259,7 @@ begin
 			DATA_WIDTH => fs_comp'length + fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data (fs_comp'length + fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length)	=> fs_comp,
 			input_data (				 fs_mqi'length + fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto 				 fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length)	=> fs_mqi,
 			input_data (								 fs_cnt'length + fs_flush_bit'length + fs_coord'length + fs_code_index'length - 1 downto 								 fs_flush_bit'length + fs_coord'length + fs_code_index'length)	=> fs_cnt,
@@ -300,7 +301,7 @@ begin
 			USER_WIDTH => flush_bit_t'length + CONST_MAX_K_BITS + coordinate_bounds_array_t'length + CONST_CODE_INDEX_BITS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data	=> fsl_mqi,
 			input_ready => fsl_ready,
 			input_valid => fsl_valid,
@@ -334,7 +335,7 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				tf_state_curr <= WORKING;
+				tf_state_curr <= RESET;
 				tf_flush_index <= (others => '0');
 			else
 				tf_state_curr <= tf_state_next;
@@ -364,7 +365,11 @@ begin
 		tf_state_next <= tf_state_curr;
 		tf_flush_index_next <= tf_flush_index;
 
-		if tf_state_curr = WORKING then
+		inner_reset <= '0';
+		if tf_state_curr = RESET then
+			inner_reset <= '1';
+			tf_state_next <= WORKING;
+		elsif tf_state_curr = WORKING then
 			fss_valid <= ss_valid;
 			ss_ready <= fss_ready;
 			if (ss_valid = '1' and fss_ready = '1' and F_STDLV2CB(ss_coord).last_x = '1' and F_STDLV2CB(ss_coord).last_y = '1' and F_STDLV2CB(ss_coord).last_z = '1') then
@@ -398,7 +403,7 @@ begin
 	--things start to get FUNKEY in the intra SECOND_TO_THIRD stage modules
 	active_address_table: entity work.hybrid_encoder_active_table_address_table
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			read_index => fss_code_index,
 			read_addr => fss_code_table_addr,
 			write_enable => ts_at_wren,
@@ -413,7 +418,7 @@ begin
 			USER_WIDTH => 1 + CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS + coordinate_bounds_array_t'length + CONST_MAX_K_BITS + flush_bit_t'length + 4 + 4
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data => fss_mqi,
 			input_ready => fss_ready,
 			input_valid => fss_valid,
@@ -442,7 +447,7 @@ begin
 	code_rom_enable <= fss_ready and fss_valid;
 	code_rom: entity work.code_table_clocked_rom
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			enable => code_rom_enable,
 			addr_table_entry => fss_code_table_addr,
 			addr_input_symbol => fss_input_symbol,
@@ -492,7 +497,7 @@ begin
 			USER_WIDTH => 1 + flush_bit_t'length + coordinate_bounds_array_t'length + CONST_MAX_K_BITS + CONST_INPUT_SYMBOL_BITS + CONST_MQI_BITS + 1 + CONST_CODEWORD_BITS + CONST_CODEWORD_LENGTH_BITS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data => ts_mqi,
 			input_ready => ts_ready,
 			input_valid => ts_valid,

@@ -119,7 +119,17 @@ architecture Behavioral of sample_rep_queue_system is
 	signal axis_coordq_valid	: std_logic;
 	signal axis_coordq_d 		: coordinate_bounds_array_t;
 	signal axis_coordq_ready	: std_logic;
+
+	--inner signals
+	signal inner_reset			: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
+
 
 	input_coord_queue: entity work.axis_fifo
 		Generic map (
@@ -127,7 +137,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_in_coord_valid,
 			input_ready => axis_in_coord_ready,
 			input_data	=> axis_in_coord_d,
@@ -141,7 +151,7 @@ begin
 			DATA_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_coordq_valid,
 			input_data		=> axis_coordq_d,
@@ -163,7 +173,7 @@ begin
 		
 	neigh_ret_north: entity work.neigh_retrieval_north
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_coord_d		=> axis_nrcs_nrn_coord,
 			axis_in_coord_valid => axis_nrcs_nrn_valid,
 			axis_in_coord_ready => axis_nrcs_nrn_ready,
@@ -182,7 +192,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid		=> axis_nrn_nrns_valid,
 			input_data		=> axis_nrn_nrns_d,
 			input_ready		=> axis_nrn_nrns_ready,
@@ -200,7 +210,7 @@ begin
 		
 	neigh_ret_west: entity work.neigh_retrieval_west
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_coord_d		=> axis_nrcs_nrw_coord,
 			axis_in_coord_valid => axis_nrcs_nrw_valid,
 			axis_in_coord_ready => axis_nrcs_nrw_ready,
@@ -219,7 +229,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid		=> axis_nrw_nrws_valid,
 			input_data		=> axis_nrw_nrws_d,
 			input_ready		=> axis_nrw_nrws_ready,
@@ -237,7 +247,7 @@ begin
 		
 	neigh_ret_northwest: entity work.neigh_retrieval_northwest
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_coord_d		=> axis_nrcs_nrnw_coord,
 			axis_in_coord_valid => axis_nrcs_nrnw_valid,
 			axis_in_coord_ready => axis_nrcs_nrnw_ready,
@@ -255,7 +265,7 @@ begin
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_ready => axis_nrnw_nrnwl_ready,
 			input_valid => axis_nrnw_nrnwl_valid,
 			input_data  => axis_nrnw_nrnwl_d,
@@ -266,7 +276,7 @@ begin
 		
 	neigh_ret_northeast: entity work.neigh_retrieval_northeast
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_coord_d		=> axis_nrcs_nrne_coord,
 			axis_in_coord_valid => axis_nrcs_nrne_valid,
 			axis_in_coord_ready => axis_nrcs_nrne_ready,
@@ -285,7 +295,7 @@ begin
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid		=> axis_nrne_nrnes_valid,
 			input_data		=> axis_nrne_nrnes_d,
 			input_ready		=> axis_nrne_nrnes_ready,
@@ -303,7 +313,7 @@ begin
 		
 	north_west_putter: entity work.neigh_putter_northwest
 		Port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			axis_in_d		=> axis_nrns_nwqp_d,
 			axis_in_coord	=> axis_nrns_nwqp_coord,
 			axis_in_valid	=> axis_nrns_nwqp_valid,
@@ -315,7 +325,7 @@ begin
 		
 	north_putter: entity work.neigh_putter_north 
 		Port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			axis_in_d		=> axis_nrnes_nqp_d,
 			axis_in_coord	=> axis_nrnes_nqp_coord,
 			axis_in_valid	=> axis_nrnes_nqp_valid,
@@ -327,7 +337,7 @@ begin
 		
 	north_east_putter: entity work.neigh_putter_northeast
 		Port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			axis_in_d		=> axis_nrws_neqp_d,
 			axis_in_coord	=> axis_nrws_neqp_coord,
 			axis_in_valid	=> axis_nrws_neqp_valid,
@@ -339,7 +349,7 @@ begin
 		
 	west_putter: entity work.neigh_putter_west
 		Port map ( 
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			axis_in_d		=> axis_in_cr_d,
 			axis_in_coord	=> axis_in_cr_coord,
 			axis_in_valid	=> axis_in_cr_valid,
@@ -355,7 +365,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_nqp_nq_valid,
 			input_ready => axis_nqp_nq_ready,
 			input_data	=> axis_nqp_nq_d,
@@ -370,7 +380,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_wqp_wq_valid,
 			input_ready => axis_wqp_wq_ready,
 			input_data	=> axis_wqp_wq_d,
@@ -385,7 +395,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_nwqp_nwq_valid,
 			input_ready => axis_nwqp_nwq_ready,
 			input_data	=> axis_nwqp_nwq_d,
@@ -400,7 +410,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS*CONST_MAX_SAMPLES
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_valid	=> axis_neqp_neq_valid,
 			input_ready => axis_neqp_neq_ready,
 			input_data	=> axis_neqp_neq_d,
@@ -416,7 +426,7 @@ begin
 			USER_POLICY=> OR_ALL
 		)
 		port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_0_d		=> axis_nrns_nrsy_d,
 			axis_in_0_ready	=> axis_nrns_nrsy_ready,
 			axis_in_0_valid => axis_nrns_nrsy_valid,

@@ -58,7 +58,15 @@ architecture Behavioral of qi_calc is
 	signal axis_quot_d: std_logic_vector(axis_joint_pr_abs'range);
 	signal axis_out_pr: std_logic_vector(CONST_PR_BITS - 1 downto 0);
 	
+	signal inner_reset: std_logic;
+
 begin
+	
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	--DELTA is DWIDTH + 1 bits
 	--we take abs value so DWIDTH + 2, but it never reaches minimum so we can get away with DWIDTH + 1
@@ -74,7 +82,7 @@ begin
 			USER_POLICY 	=> PASS_ZERO
 		)
 		port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_0_valid	=> axis_in_pr_valid,
 			input_0_ready	=> axis_in_pr_ready,
@@ -104,7 +112,7 @@ begin
 			USER_POLICY		=> PASS_ZERO
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_dividend_data		=> axis_joint_pr_abs_plus_mev,
 			axis_dividend_ready		=> axis_joint_ready,
 			axis_dividend_valid		=> axis_joint_valid,

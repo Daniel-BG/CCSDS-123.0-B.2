@@ -48,7 +48,7 @@ end drpsv_calc;
 
 architecture Behavioral of drpsv_calc is
 
-	type state_t is (IDLE, VALUE_READ);
+	type state_t is (RESET, IDLE, VALUE_READ);
 	signal state_curr, state_next: state_t;
 	
 	signal buffered_coord_bounds, buffered_coord_bounds_next: coordinate_bounds_array_t;
@@ -60,7 +60,7 @@ begin
 	begin
 		if rising_edge(clk) then
 			if rst = '1' then
-				state_curr <= IDLE;
+				state_curr <= RESET;
 				buffered_coord_bounds <= (others => '0');
 				buffered_hrpsv <= (others => '0');
 			else
@@ -88,7 +88,9 @@ begin
 		axis_out_drpsv_d <= (others => '0');
 		axis_out_drpsv_coord <= buffered_coord_bounds;
 		
-		if state_curr = IDLE then
+		if state_curr = RESET then
+			state_next <= IDLE;
+		elsif state_curr = IDLE then
 			axis_in_hrpsv_ready <= '1';
 			if axis_in_hrpsv_valid = '1' then
 				state_next <= VALUE_READ;

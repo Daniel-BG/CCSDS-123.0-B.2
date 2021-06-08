@@ -57,7 +57,15 @@ architecture Behavioral of theta_calc is
 	
 	signal joint_lower_theta, joint_upper_theta: std_logic_vector(INNER_REG_SIZE - 1 downto 0);
 	
+	signal inner_reset: std_logic;
+
 begin
+	
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	sync_inputs: entity work.AXIS_SYNCHRONIZER_2
 		Generic map (
@@ -66,7 +74,7 @@ begin
 			LATCH => true
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_valid => axis_in_psv_valid,
 			input_0_ready => axis_in_psv_ready,
 			input_0_data  => axis_in_psv_d,
@@ -89,7 +97,7 @@ begin
 			DIVISOR_WIDTH => DOUBLE_MEV_REG_SIZE
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_dividend_data		=> psv_minus_smin_plus_mev,
 			axis_dividend_ready		=> joint_ready,
 			axis_dividend_valid		=> joint_valid,
@@ -107,7 +115,7 @@ begin
 			DIVISOR_WIDTH => DOUBLE_MEV_REG_SIZE
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_dividend_data		=> smax_minus_psv_plus_mev,
 			axis_dividend_ready		=> open,
 			axis_dividend_valid		=> joint_valid,
@@ -126,7 +134,7 @@ begin
 			LATCH => true
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_valid => upper_theta_valid,
 			input_0_ready => upper_theta_ready,
 			input_0_data  => upper_theta,
