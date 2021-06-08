@@ -55,7 +55,15 @@ architecture Behavioral of mqi_calc is
 	signal final_qi_abs: std_logic_vector(CONST_QI_BITS - 1 downto 0);
 	signal final_drpsv: std_logic_vector(CONST_DRPSV_BITS - 1 downto 0);
 
+	signal inner_reset: std_logic;
+
 begin
+	
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	sync_qi_theta: entity work.AXIS_SYNCHRONIZER_2
 		Generic map (
@@ -64,7 +72,7 @@ begin
 			LATCH => true
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_0_valid => axis_in_qi_valid,
 			input_0_ready => axis_in_qi_ready,
@@ -87,7 +95,7 @@ begin
 			LATCH => true
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--to input axi port
 			input_0_valid => joint_qt_valid,
 			input_0_ready => joint_qt_ready,
