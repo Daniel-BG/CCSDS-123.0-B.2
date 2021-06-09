@@ -39,7 +39,16 @@ architecture Behavioral of hybrid_encoder_active_table_address_table is
 	type active_address_register_file_t is array(0 to CONST_LE_TABLE_COUNT-1) of std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0);
 	
 	signal active_addresses: active_address_register_file_t;
+
+	--inner signals
+	signal inner_reset			: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 	
 	bypass: process(write_addr, read_index, write_index, active_addresses, write_enable)
 	begin
@@ -50,10 +59,10 @@ begin
 		end if;
 	end process;
 	
-	seq: process(clk, rst)
+	seq: process(clk, inner_reset)
 	begin
 		if (rising_edge(clk)) then
-			if rst = '1' then
+			if inner_reset = '1' then
 				for i in 0 to CONST_LE_TABLE_COUNT-1 loop
 					active_addresses(i) <= std_logic_vector(to_unsigned(i, CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS));
 				end loop;

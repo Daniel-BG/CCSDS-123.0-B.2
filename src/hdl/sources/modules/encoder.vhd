@@ -67,11 +67,19 @@ architecture Behavioral of encoder is
 	signal axis_out_length_raw: std_logic_vector(CONST_MAX_CODE_LENGTH_BITS - 1 downto 0);
 	signal axis_out_coord_raw: coordinate_bounds_array_t;
 	
+	--inner signals
+	signal inner_reset			: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 
 	counter: entity work.counter
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_initial_counter		=> cfg_initial_counter,
 			cfg_final_counter		=> cfg_final_counter,
 			axis_in_mqi_d			=> axis_in_mqi_d,
@@ -87,7 +95,7 @@ begin
 
 	accumulator: entity work.accumulator
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_final_counter		=> cfg_final_counter,
 			cfg_iacc				=> cfg_iacc, 
 			axis_in_mqi				=> axis_cnt_acc_mqi,
@@ -108,7 +116,7 @@ begin
 			USER_WIDTH => CONST_MAX_K_BITS + coordinate_bounds_array_t'length 
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data	=> axis_acc_cg_mqi,
 			input_ready => axis_acc_cg_ready,
 			input_valid => axis_acc_cg_valid,

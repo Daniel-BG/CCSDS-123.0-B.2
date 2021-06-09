@@ -117,12 +117,21 @@ architecture Behavioral of ccsds_123b2_core is
 	signal reg_cfg_gamma_star			: std_logic_vector(CONST_MAX_GAMMA_STAR_BITS - 1 downto 0);
 	signal reg_cfg_u_max				: std_logic_vector(CONST_U_MAX_BITS - 1 downto 0);
 	signal reg_cfg_iacc					: std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
+
+	--inner signals
+	signal inner_reset			: std_logic;
 begin
 
-	cfg_save: process(clk, rst)
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
+
+	cfg_save: process(clk, inner_reset)
 	begin
 		if rising_edge(clk) then
-			if rst = '1' then
+			if inner_reset = '1' then
 				reg_cfg_p					<= cfg_p;					
 				reg_cfg_sum_type 			<= cfg_sum_type; 			
 				reg_cfg_samples				<= cfg_samples;				
@@ -236,7 +245,7 @@ begin
 
 	predictor: entity work.predictor
 		port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			--core config
 			cfg_p					=> reg_cfg_p,
 			cfg_sum_type 			=> reg_cfg_sum_type,
@@ -278,7 +287,7 @@ begin
 			USE_HYBRID_CODER => USE_HYBRID_CODER
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_initial_counter		=> reg_cfg_initial_counter,
 			cfg_final_counter		=> reg_cfg_final_counter,
 			cfg_u_max				=> reg_cfg_u_max,
@@ -302,7 +311,7 @@ begin
 	
 	aligner: entity work.code_aligner
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_code		=> axis_enc_alg_code,
 			axis_in_length		=> axis_enc_alg_length,
 			axis_in_valid		=> axis_enc_alg_valid,
@@ -322,7 +331,7 @@ begin
 			FILE_NUMBER => 20
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_pred_enc_valid,
 			ready => axis_pred_enc_ready,
 			data  => axis_pred_enc_mqi

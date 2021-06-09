@@ -89,14 +89,22 @@ architecture Behavioral of accumulator is
 	signal axis_cmpg_kgen_cnt: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
 	signal axis_cmpg_kgen_coord: coordinate_bounds_array_t;
 	
+	--inner signals
+	signal inner_reset			: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 		
 	saved_acc_data_latch: entity work.AXIS_DATA_LATCH 
 		Generic map (
 			DATA_WIDTH => axis_na_saq_d'length
 		)
 		Port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_data	=> axis_na_saq_d,
 			input_ready => axis_na_saq_ready,
 			input_valid => axis_na_saq_valid,
@@ -111,7 +119,7 @@ begin
 			FIFO_DEPTH => CONST_MAX_BANDS
 		)
 		Port map ( 
-			clk	=> clk, rst => rst,
+			clk	=> clk, rst => inner_reset,
 			input_valid		=> axis_na_saq_latched_valid,
 			input_ready		=> axis_na_saq_latched_ready,
 			input_data		=> axis_na_saq_latched_d,
@@ -133,7 +141,7 @@ begin
 			USER_WIDTH	=> coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			axis_in_cond	   		=> axis_in_cond,
 			axis_in_cond_valid 		=> axis_in_valid,
 			axis_in_cond_ready 		=> axis_in_ready,
@@ -160,7 +168,7 @@ begin
 			USER_WIDTH	=> coordinate_bounds_array_t'length + CONST_MQI_BITS + CONST_MAX_COUNTER_BITS
 		)
 		Port map (
-			clk => clk, rst	=> rst,
+			clk => clk, rst	=> inner_reset,
 			--to input axi port
 			input_valid		=> axis_ar_ars_valid,
 			input_data		=> axis_ar_ars_acc,
@@ -207,7 +215,7 @@ begin
 			STAGES_AFTER_SYNC	=> 2
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> axis_ars_t49_cnt,
 			input_0_valid	=> axis_ars_t49_valid,
 			input_0_ready	=> axis_ars_t49_ready,
@@ -242,7 +250,7 @@ begin
 			USER_POLICY		=> PASS_ZERO
 		)
 		Port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			input_0_data	=> axis_t49_cmpg_acc,
 			input_0_valid	=> axis_t49_cmpg_valid,
 			input_0_ready	=> axis_t49_cmpg_ready,

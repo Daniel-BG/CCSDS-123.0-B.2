@@ -49,7 +49,16 @@ end counter;
 
 architecture Behavioral of counter is
 	signal counter: std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
+
+	--inner signals
+	signal inner_reset			: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 	
 	axis_out_mqi <= axis_in_mqi_d;
 	axis_in_mqi_ready <= (not rst) and axis_out_ready;
@@ -58,10 +67,10 @@ begin
 	axis_out_counter <= counter;
 	axis_out_user <= axis_in_mqi_user;
 	
-	seq: process(clk, rst, cfg_initial_counter)
+	seq: process(clk, inner_reset, cfg_initial_counter)
 	begin
 		if rising_edge(clk) then
-			if rst = '1' then
+			if inner_reset = '1' then
 				counter <= cfg_initial_counter;
 			else
 				if axis_out_ready = '1' and axis_in_mqi_valid = '1' and F_STDLV2CB(axis_in_mqi_coord).last_z = '1' then 

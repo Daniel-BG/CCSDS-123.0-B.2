@@ -75,7 +75,15 @@ architecture Behavioral of sample_relocator is
 	signal ram_doutb: std_logic_vector(DATA_WIDTH - 1 downto 0);
 	signal ram_rdenb: std_logic;
 	
+	--inner signals
+	signal inner_reset			: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 	--OUTPUTS
 	axis_output_data_d <= ram_doutb;
 
@@ -95,10 +103,10 @@ begin
 		); 
 	
 	--STATE AND OTHER UPDATES
-	seq: process(clk, rst, state_main_next) 
+	seq: process(clk, inner_reset, state_main_next) 
 	begin
 		if rising_edge(clk) then
-			if rst = '1' then
+			if inner_reset = '1' then
 				--main process
 				state_main_curr	   	<= ST_M_RESET;
 				loaded_samples     	<= (others => '0');

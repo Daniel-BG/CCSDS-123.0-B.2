@@ -67,12 +67,21 @@ architecture Behavioral of coord_gen_diagonal is
 	signal t_curr, t_next: unsigned(CONST_MAX_T_VALUE_BITS - 1 downto 0);
 	 
 	signal cfg_max_z_m1, cfg_max_z_m1_next: std_logic_vector(CONST_MAX_Z_VALUE_BITS - 1 downto 0);
+
+	--inner signals
+	signal inner_reset			: std_logic;
 begin
 
-	seq: process(clk, rst, state_next) 
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
+
+	seq: process(clk, inner_reset, state_next) 
 	begin
 		if rising_edge(clk) then
-			if rst = '1' then
+			if inner_reset = '1' then
 				state_curr <= ST_IDLE;
 				z_curr <= (others => '0');
 				t_curr <= (others => '0');

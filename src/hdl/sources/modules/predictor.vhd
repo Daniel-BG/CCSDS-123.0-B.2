@@ -76,14 +76,23 @@ architecture Behavioral of predictor is
 	signal axis_core_d2v_ready, axis_core_d2v_valid: std_logic;
 	
 	signal axis_out_mqi_full_coord: coordinate_array_t;
+
+	--inner signals
+	signal inner_reset			: std_logic;
 begin
+
+	reset_replicator: entity work.reset_replicator
+		port map (
+			clk => clk, rst => rst,
+			rst_out => inner_reset
+		);
 	
 	v2d: entity work.sample_rearrange
 		generic map (
 			RELOCATION_MODE => VERTICAL_TO_DIAGONAL 
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			finished => open,
 			cfg_max_x				=> cfg_max_x,
 			cfg_max_y				=> cfg_max_y,
@@ -104,7 +113,7 @@ begin
 		
 	core: entity work.predictor_core
 		port map (
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			cfg_p					=> cfg_p,
 			cfg_sum_type 			=> cfg_sum_type,
 			cfg_samples				=> cfg_samples,
@@ -141,7 +150,7 @@ begin
 			RELOCATION_MODE => DIAGONAL_TO_VERTICAL
 		)
 		port map ( 
-			clk => clk, rst => rst,
+			clk => clk, rst => inner_reset,
 			finished => open,
 			cfg_max_x				=> cfg_max_x,
 			cfg_max_y				=> cfg_max_y,
@@ -172,7 +181,7 @@ begin
 			FILE_NUMBER => 0
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_in_s_valid,
 			ready => axis_in_s_ready_inner,
 			data  => axis_in_s_d
@@ -185,7 +194,7 @@ begin
 			FILE_NUMBER => 21
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_v2d_core_valid,
 			ready => axis_v2d_core_ready,
 			data  => axis_v2d_core_d
@@ -199,7 +208,7 @@ begin
 			FILE_NUMBER => 41
 		)
 		port map (
-			clk => clk, rst => rst, 
+			clk => clk, rst => inner_reset, 
 			valid => axis_core_d2v_valid,
 			ready => axis_core_d2v_ready,
 			data  => axis_core_d2v_d
