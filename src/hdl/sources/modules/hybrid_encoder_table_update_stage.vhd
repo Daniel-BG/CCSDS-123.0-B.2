@@ -456,17 +456,10 @@ begin
 	process_table_entry: process(ts_selected_table_entry, ts_code_index, ts_valid, ts_ready, ts_ihe)
 	begin
 		ts_at_wren <= ts_valid and ts_ready and (not ts_ihe); --only write when it is low entropy and the pipeline moves
-		if (ts_selected_table_entry(ts_selected_table_entry'high) = '1') then
-			--it is a terminal codeword, reset to default table
-			ts_at_next_addr <= std_logic_vector(resize(unsigned(ts_code_index), ts_at_next_addr'length));
-			ts_is_tree <= "0";
-		else
-			--it is still a tree, go to next table
-			ts_at_next_addr <= ts_selected_table_entry(ts_at_next_addr'high downto 0);
-			ts_is_tree <= "1";
-		end if;
-		ts_cw_bits <= ts_selected_table_entry(CONST_CODEWORD_BITS - 1 downto 0);
-		ts_cw_length <= ts_selected_table_entry(CONST_CODEWORD_LENGTH_BITS + CONST_CODEWORD_BITS - 1 downto CONST_CODEWORD_BITS);
+		ts_is_tree <= ts_selected_table_entry(ts_selected_table_entry'high downto ts_selected_table_entry'high);
+		ts_at_next_addr <= ts_selected_table_entry(ts_at_next_addr'high downto 0);
+		ts_cw_bits <= ts_selected_table_entry(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS + CONST_CODEWORD_BITS - 1 downto CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS);
+		ts_cw_length <= ts_selected_table_entry(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS + CONST_CODEWORD_LENGTH_BITS + CONST_CODEWORD_BITS - 1 downto CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS + CONST_CODEWORD_BITS);
 	end process;
 
 	--calc code quantity (in case input symbol is X)
