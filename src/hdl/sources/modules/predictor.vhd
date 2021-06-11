@@ -28,8 +28,11 @@ entity predictor is
 	port (
 		clk, rst				: in std_logic;
 		--core config
+		cfg_full_prediction		: in std_logic;
 		cfg_p					: in std_logic_vector(CONST_MAX_P_WIDTH_BITS - 1 downto 0);
-		cfg_sum_type 			: in local_sum_t;
+		cfg_wide_sum			: in std_logic;
+		cfg_neighbor_sum		: in std_logic;
+		cfg_smid 				: in std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		cfg_samples				: in std_logic_vector(CONST_MAX_SAMPLES_BITS - 1 downto 0);
 		cfg_tinc				: in std_logic_vector(CONST_TINC_BITS - 1 downto 0);
 		cfg_vmax, cfg_vmin		: in std_logic_vector(CONST_VMINMAX_BITS - 1 downto 0);
@@ -114,8 +117,11 @@ begin
 	core: entity work.predictor_core
 		port map (
 			clk => clk, rst => inner_reset,
+			cfg_full_prediction 	=> cfg_full_prediction,
 			cfg_p					=> cfg_p,
-			cfg_sum_type 			=> cfg_sum_type,
+			cfg_wide_sum			=> cfg_wide_sum,
+			cfg_neighbor_sum		=> cfg_neighbor_sum,
+			cfg_smid 				=> cfg_smid,
 			cfg_samples				=> cfg_samples,
 			cfg_tinc				=> cfg_tinc,
 			cfg_vmax				=> cfg_vmax,

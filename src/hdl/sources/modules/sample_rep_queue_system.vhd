@@ -38,6 +38,7 @@ entity sample_rep_queue_system is
 		axis_in_cr_valid		: in std_logic; 
 		axis_in_cr_ready		: out std_logic;
 		--output synchronized neighborhood
+		axis_out_wd				: out std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		axis_out_w				: out std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		axis_out_n				: out std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		axis_out_ne				: out std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
@@ -49,12 +50,21 @@ entity sample_rep_queue_system is
 end sample_rep_queue_system;
 
 architecture Behavioral of sample_rep_queue_system is
+	--input splitter for west and west down
+	signal axis_crs_npw_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+	signal axis_crs_npw_coord: coordinate_bounds_array_t;
+	signal axis_crs_npw_valid, axis_crs_npw_ready: std_logic;
+	signal axis_crs_npwd_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+	signal axis_crs_npwd_coord: coordinate_bounds_array_t;
+	signal axis_crs_npwd_valid, axis_crs_npwd_ready: std_logic;
 	--neighbor retrievals
 	--neighbor retrieval coord splitter
 	signal axis_nrcs_nrn_valid, axis_nrcs_nrn_ready: std_logic;
 	signal axis_nrcs_nrn_coord: coordinate_bounds_array_t;
 	signal axis_nrcs_nrw_valid, axis_nrcs_nrw_ready: std_logic;
 	signal axis_nrcs_nrw_coord: coordinate_bounds_array_t;
+	signal axis_nrcs_nrwd_valid, axis_nrcs_nrwd_ready: std_logic;
+	signal axis_nrcs_nrwd_coord: coordinate_bounds_array_t;
 	signal axis_nrcs_nrnw_valid, axis_nrcs_nrnw_ready: std_logic;
 	signal axis_nrcs_nrnw_coord: coordinate_bounds_array_t;
 	signal axis_nrcs_nrne_valid, axis_nrcs_nrne_ready: std_logic;
@@ -64,6 +74,8 @@ architecture Behavioral of sample_rep_queue_system is
 	signal axis_nq_nrn_valid, axis_nq_nrn_ready: std_logic;
 	signal axis_wq_nrw_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal axis_wq_nrw_valid, axis_wq_nrw_ready: std_logic;
+	signal axis_wdq_nrwd_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+	signal axis_wdq_nrwd_valid, axis_wdq_nrwd_ready: std_logic;
 	signal axis_nwq_nrnw_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal axis_nwq_nrnw_valid, axis_nwq_nrnw_ready: std_logic;
 	signal axis_neq_nrne_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
@@ -104,6 +116,11 @@ architecture Behavioral of sample_rep_queue_system is
 	--north west latch
 	signal axis_nrnwl_nrsy_d : std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal axis_nrnwl_nrsy_valid, axis_nrnwl_nrsy_ready: std_logic;
+	--nort west down
+	signal axis_nrwd_nrwdl_ready, axis_nrwd_nrwdl_valid: std_logic;
+	signal axis_nrwd_nrwdl_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+	signal axis_nrwdl_nrsy_ready, axis_nrwdl_nrsy_valid: std_logic;
+	signal axis_nrwdl_nrsy_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	
 	--loopback for putters
 	signal axis_nwqp_nwq_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
@@ -114,6 +131,8 @@ architecture Behavioral of sample_rep_queue_system is
 	signal axis_nqp_nq_valid, axis_nqp_nq_ready: std_logic;
 	signal axis_wqp_wq_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal axis_wqp_wq_valid, axis_wqp_wq_ready: std_logic;
+	signal axis_wdqp_wdq_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+	signal axis_wdqp_wdq_valid, axis_wdqp_wdq_ready: std_logic;
 
 	--input coord fifo
 	signal axis_coordq_valid	: std_logic;
@@ -130,6 +149,27 @@ begin
 			rst_out => inner_reset
 		);
 
+	input_sample_splitter: entity work.AXIS_SPLITTER_2
+		Generic map(
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			USER_WIDTH => coordinate_bounds_array_t'length
+		)
+		Port map (
+			clk => clk, rst => inner_reset,
+			input_valid		=> axis_in_cr_valid,
+			input_data		=> axis_in_cr_d,
+			input_ready		=> axis_in_cr_ready,
+			input_user		=> axis_in_cr_coord,
+			--to output axi ports
+			output_0_valid	=> axis_crs_npw_valid,
+			output_0_data	=> axis_crs_npw_d,
+			output_0_ready	=> axis_crs_npw_ready,
+			output_0_user	=> axis_crs_npw_coord,
+			output_1_valid	=> axis_crs_npwd_valid,
+			output_1_data	=> axis_crs_npwd_d,
+			output_1_ready	=> axis_crs_npwd_ready,
+			output_1_user	=> axis_crs_npwd_coord
+		);
 
 	input_coord_queue: entity work.axis_fifo
 		Generic map (
@@ -146,7 +186,7 @@ begin
 			output_valid=> axis_coordq_valid
 		);
 
-	neigh_ret_coord_splitter: entity work.AXIS_SPLITTER_4
+	neigh_ret_coord_splitter: entity work.AXIS_SPLITTER_5
 		Generic map (
 			DATA_WIDTH => coordinate_bounds_array_t'length
 		)
@@ -168,7 +208,10 @@ begin
 			output_2_ready	=> axis_nrcs_nrne_ready,
 			output_3_valid	=> axis_nrcs_nrnw_valid,
 			output_3_data	=> axis_nrcs_nrnw_coord,
-			output_3_ready	=> axis_nrcs_nrnw_ready
+			output_3_ready	=> axis_nrcs_nrnw_ready,
+			output_4_valid	=> axis_nrcs_nrwd_valid,
+			output_4_data	=> axis_nrcs_nrwd_coord,
+			output_4_ready	=> axis_nrcs_nrwd_ready
 		);
 		
 	neigh_ret_north: entity work.neigh_retrieval_north
@@ -244,7 +287,36 @@ begin
 			output_1_ready	=> axis_nrws_neqp_ready,
 			output_1_user	=> axis_nrws_neqp_coord
 		);
-		
+
+	neigh_ret_westdown: entity work.neigh_retrieval_westdown
+		port map ( 
+			clk => clk, rst => inner_reset,
+			axis_in_coord_d		=> axis_nrcs_nrwd_coord,
+			axis_in_coord_valid => axis_nrcs_nrwd_valid,
+			axis_in_coord_ready => axis_nrcs_nrwd_ready,
+			axis_in_data_d		=> axis_wdq_nrwd_d,
+			axis_in_data_valid  => axis_wdq_nrwd_valid,
+			axis_in_data_ready  => axis_wdq_nrwd_ready,
+			axis_out_data_d		=> axis_nrwd_nrwdl_d,
+			axis_out_data_coord => open,
+			axis_out_data_valid => axis_nrwd_nrwdl_valid,
+			axis_out_data_ready => axis_nrwd_nrwdl_ready
+		);
+
+	neigh_ret_westdown_latch: entity work.AXIS_LATCHED_CONNECTION
+		Generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH
+		)
+		Port map (
+			clk => clk, rst => inner_reset,
+			input_ready => axis_nrwd_nrwdl_ready,
+			input_valid => axis_nrwd_nrwdl_valid,
+			input_data  => axis_nrwd_nrwdl_d,
+			output_ready=> axis_nrwdl_nrsy_ready,
+			output_valid=> axis_nrwdl_nrsy_valid,
+			output_data => axis_nrwdl_nrsy_d
+		);
+
 	neigh_ret_northwest: entity work.neigh_retrieval_northwest
 		port map ( 
 			clk => clk, rst => inner_reset,
@@ -350,13 +422,25 @@ begin
 	west_putter: entity work.neigh_putter_west
 		Port map ( 
 			clk => clk, rst	=> inner_reset,
-			axis_in_d		=> axis_in_cr_d,
-			axis_in_coord	=> axis_in_cr_coord,
-			axis_in_valid	=> axis_in_cr_valid,
-			axis_in_ready	=> axis_in_cr_ready,
+			axis_in_d		=> axis_crs_npw_d,
+			axis_in_coord	=> axis_crs_npw_coord,
+			axis_in_valid	=> axis_crs_npw_valid,
+			axis_in_ready	=> axis_crs_npw_ready,
 			axis_out_d		=> axis_wqp_wq_d,
 			axis_out_valid	=> axis_wqp_wq_valid,
 			axis_out_ready	=> axis_wqp_wq_ready
+		);
+
+	westdown_putter: entity work.neigh_putter_westdown
+		Port map ( 
+			clk => clk, rst	=> inner_reset,
+			axis_in_d		=> axis_crs_npwd_d,
+			axis_in_coord	=> axis_crs_npwd_coord,
+			axis_in_valid	=> axis_crs_npwd_valid,
+			axis_in_ready	=> axis_crs_npwd_ready,
+			axis_out_d		=> axis_wdqp_wdq_d,
+			axis_out_valid	=> axis_wdqp_wdq_valid,
+			axis_out_ready	=> axis_wdqp_wdq_ready
 		);
 		
 	north_queue: entity work.axis_fifo_latched 
@@ -387,6 +471,21 @@ begin
 			output_ready=> axis_wq_nrw_ready,
 			output_data	=> axis_wq_nrw_d,
 			output_valid=> axis_wq_nrw_valid
+		);
+
+	westdown_queue: entity work.axis_fifo_latched 
+		Generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			FIFO_DEPTH => CONST_MAX_BANDS*2
+		)
+		Port map ( 
+			clk => clk, rst => inner_reset,
+			input_valid	=> axis_wdqp_wdq_valid,
+			input_ready => axis_wdqp_wdq_ready,
+			input_data	=> axis_wdqp_wdq_d,
+			output_ready=> axis_wdq_nrwd_ready,
+			output_data	=> axis_wdq_nrwd_d,
+			output_valid=> axis_wdq_nrwd_valid
 		);
 		
 	northwest_queue: entity work.axis_fifo_latched 
@@ -419,7 +518,7 @@ begin
 			output_valid=> axis_neq_nrne_valid
 		);
 		
-	neigh_retrieval_syncrhonizer: entity work.axis_symmetric_synchronizer_latched_4
+	neigh_retrieval_syncrhonizer: entity work.axis_symmetric_synchronizer_latched_5
 		generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
 			USER_WIDTH => coordinate_bounds_array_t'length,
@@ -440,10 +539,14 @@ begin
 			axis_in_3_d		=> axis_nrws_nrsy_d,
 			axis_in_3_ready	=> axis_nrws_nrsy_ready,
 			axis_in_3_valid => axis_nrws_nrsy_valid,
+			axis_in_4_d     => axis_nrwdl_nrsy_d,
+			axis_in_4_ready => axis_nrwdl_nrsy_ready,
+			axis_in_4_valid => axis_nrwdl_nrsy_valid,
 			axis_out_d_0 	=> axis_out_n,
 			axis_out_d_1 	=> axis_out_ne,
 			axis_out_d_2 	=> axis_out_nw,
 			axis_out_d_3 	=> axis_out_w,
+			axis_out_d_4	=> axis_out_wd,
 			axis_out_ready 	=> axis_out_ready,
 			axis_out_valid 	=> axis_out_valid,
 			axis_out_user 	=> axis_out_coord	

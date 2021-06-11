@@ -45,6 +45,7 @@ inline void XCCSDS_SetDefaultParameters(UINTPTR BaseAddress) {
 	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_ABS_ERR_LOCALADDR, 			0);
 	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_REL_ERR_LOCALADDR, 			2048);
 	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_SMAX_LOCALADDR, 				65535);
+	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_SMID_LOCALADDR, 				32768);
 	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_RESOLUTION_LOCALADDR, 		4);
 	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_DAMPING_LOCALADDR, 			4);
 	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_OFFSET_LOCALADDR, 			4);
@@ -53,7 +54,9 @@ inline void XCCSDS_SetDefaultParameters(UINTPTR BaseAddress) {
 	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_GAMMA_STAR_LOCALADDR, 		6);
 	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_U_MAX_LOCALADDR, 			18);
 	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_IACC_LOCALADDR, 				40);
-	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_SUM_TYPE_LOCALADDR, 			1);
+	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_WIDE_SUM_LOCALADDR, 			1);
+	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_NEIGHBOR_SUM_LOCALADDR, 		1);
+	XCCSDS_SetParam(BaseAddress, CCSDS_REG_CFG_FULL_PREDICTION_LOCALADDR, 	1);
 	//</Autogen by CCSDS.java>
 }
 

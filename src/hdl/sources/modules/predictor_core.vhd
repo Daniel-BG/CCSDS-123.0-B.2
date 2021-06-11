@@ -24,12 +24,16 @@ use IEEE.STD_LOGIC_1164.ALL;
 use work.ccsds_data_structures.all;
 use work.ccsds_constants.all;
 use work.am_data_types.all;
+use ieee.numeric_std.all;
 
 entity predictor_core is
 	port (
 		clk, rst				: in std_logic;
 		cfg_p					: in std_logic_vector(CONST_MAX_P_WIDTH_BITS - 1 downto 0);
-		cfg_sum_type 			: in local_sum_t;
+		cfg_full_prediction		: in std_logic;
+		cfg_wide_sum			: in std_logic;
+		cfg_neighbor_sum		: in std_logic;
+		cfg_smid 				: in std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		cfg_samples				: in std_logic_vector(CONST_MAX_SAMPLES_BITS - 1 downto 0);
 		cfg_tinc				: in std_logic_vector(CONST_TINC_BITS - 1 downto 0);
 		cfg_vmax, cfg_vmin		: in std_logic_vector(CONST_VMINMAX_BITS - 1 downto 0);
@@ -122,7 +126,7 @@ architecture Behavioral of predictor_core is
 	signal axis_crs_nr_d: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	--from neighbor retrieval to local sum
 	signal axis_nr_ls_valid, axis_nr_ls_ready: std_logic;
-	signal axis_nr_ls_w, axis_nr_ls_n, axis_nr_ls_nw, axis_nr_ls_ne: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+	signal axis_nr_ls_w, axis_nr_ls_wd, axis_nr_ls_n, axis_nr_ls_nw, axis_nr_ls_ne: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal axis_nr_ls_coord: coordinate_bounds_array_t;
 	
 	--ls to lss
@@ -152,6 +156,7 @@ architecture Behavioral of predictor_core is
 	signal axis_lscdq_cd_d: std_logic_vector(CONST_LSUM_BITS - 1 downto 0);
 	
 	--dd to dvsy
+	signal axis_dd_dqsy_nd_pre, axis_dd_dqsy_nwd_pre, axis_dd_dqsy_wd_pre: std_logic_vector(CONST_LDIF_BITS - 1 downto 0); 
 	signal axis_dd_dqsy_nd, axis_dd_dqsy_nwd, axis_dd_dqsy_wd: std_logic_vector(CONST_LDIF_BITS - 1 downto 0); 
 	signal axis_dd_dqsy_ready, axis_dd_dqsy_valid: std_logic;
 	signal axis_dd_dqsy_coord: coordinate_bounds_array_t;
@@ -167,7 +172,7 @@ architecture Behavioral of predictor_core is
 	signal axis_dqsy_dvs_ready,axis_dqsy_dvs_valid: std_logic;
 	
 	--diff vector splitter to its outputs
-	signal axis_dvs_dot_d: std_logic_vector(CONST_DIFFVEC_BITS - 1 downto 0);
+	signal axis_dvs_dot_d, axis_dvs_dot_d_filtered: std_logic_vector(CONST_DIFFVEC_BITS - 1 downto 0);
 	signal axis_dvs_dot_coord: coordinate_bounds_array_t;
 	signal axis_dvs_dot_valid, axis_dvs_dot_ready: std_logic;
 	signal axis_dvs_dvq_d: std_logic_vector(CONST_DIFFVEC_BITS - 1 downto 0);
@@ -513,6 +518,7 @@ begin
 			axis_in_cr_ready		=> axis_crs_nr_ready,
 			--output synchronized neighborhood
 			axis_out_w				=> axis_nr_ls_w,
+			axis_out_wd				=> axis_nr_ls_wd,
 			axis_out_n				=> axis_nr_ls_n,
 			axis_out_ne				=> axis_nr_ls_ne,
 			axis_out_nw				=> axis_nr_ls_nw,
@@ -523,8 +529,12 @@ begin
 		
 	local_sum: entity work.local_sum_calc
 		port map (
-			cfg_sum_type 		=> cfg_sum_type,
+			clk => clk, rst => inner_reset,
+			cfg_wide_sum		=> cfg_wide_sum,
+			cfg_neighbor_sum	=> cfg_neighbor_sum,
+			cfg_smid 			=> cfg_smid,
 			axis_in_w 			=> axis_nr_ls_w,
+			axis_in_wd 			=> axis_nr_ls_wd,
 			axis_in_nw 			=> axis_nr_ls_nw,
 			axis_in_n 			=> axis_nr_ls_n,
 			axis_in_ne	 		=> axis_nr_ls_ne,
@@ -614,13 +624,24 @@ begin
 			axis_in_ready 		=> axis_lss_dd_ready,
 			axis_in_valid 		=> axis_lss_dd_valid,
 			axis_in_coord 		=> axis_lss_dd_coord,
-			axis_out_nd 		=> axis_dd_dqsy_nd,
-			axis_out_nwd 		=> axis_dd_dqsy_nwd,
-			axis_out_wd 		=> axis_dd_dqsy_wd,
+			axis_out_nd 		=> axis_dd_dqsy_nd_pre,
+			axis_out_nwd 		=> axis_dd_dqsy_nwd_pre,
+			axis_out_wd 		=> axis_dd_dqsy_wd_pre,
 			axis_out_ready 		=> axis_dd_dqsy_ready,
 			axis_out_valid 		=> axis_dd_dqsy_valid,
 			axis_out_coord		=> axis_dd_dqsy_coord
 		);
+	filter_output_diffs: process(axis_dd_dqsy_nd_pre, axis_dd_dqsy_nwd_pre, axis_dd_dqsy_wd_pre, cfg_full_prediction) begin
+		if cfg_full_prediction = '1' then
+			axis_dd_dqsy_nd <= axis_dd_dqsy_nd_pre;
+			axis_dd_dqsy_nwd <= axis_dd_dqsy_nwd_pre;
+			axis_dd_dqsy_wd <= axis_dd_dqsy_wd_pre;
+		else
+			axis_dd_dqsy_nd <= (others => '0');
+			axis_dd_dqsy_nwd <= (others => '0');
+			axis_dd_dqsy_wd <= (others => '0');
+		end if;
+	end process;
 		
 	diff_queue_system: entity work.difference_queue_system
 		Port map ( 
@@ -756,6 +777,24 @@ begin
 			axis_out_wv_ready		=> axis_wret_dot_ready
 		);
 		
+	--assign axis_dvs_dot_d_filtered
+	filter_diff_vector : process(cfg_p, cfg_full_prediction, axis_dvs_dot_d)
+	begin
+		--axis_out_d <= axis_out_dird & axis_out_cld;
+		if cfg_full_prediction = '1' then
+			axis_dvs_dot_d_filtered(CONST_DIFFVEC_BITS - 1 downto CONST_CLDVEC_BITS) <= axis_dvs_dot_d(CONST_DIFFVEC_BITS - 1 downto CONST_CLDVEC_BITS);
+		else
+			axis_dvs_dot_d_filtered(CONST_DIFFVEC_BITS - 1 downto CONST_CLDVEC_BITS) <= (others => '0');
+		end if;
+		assign_cld : for i in 0 to CONST_MAX_P - 1 loop
+			if to_integer(unsigned(cfg_p)) > i then
+				axis_dvs_dot_d_filtered(CONST_CLDVEC_BITS - 1 - CONST_LDIF_BITS*(i) downto CONST_CLDVEC_BITS - CONST_LDIF_BITS*(i+1)) <= axis_dvs_dot_d(CONST_CLDVEC_BITS - 1 - CONST_LDIF_BITS*(i) downto CONST_CLDVEC_BITS - CONST_LDIF_BITS*(i+1));
+			else
+				axis_dvs_dot_d_filtered(CONST_CLDVEC_BITS - 1 - CONST_LDIF_BITS*(i) downto CONST_CLDVEC_BITS - CONST_LDIF_BITS*(i+1)) <= (others => '0');
+			end if;
+		end loop;
+	end process ; -- filter_diff_vector
+	--end assignment
 	predicted_central_local_diff: entity work.axis_dotprod
 		generic map (
 			VECTOR_LENGTH => CONST_MAX_C,
@@ -768,7 +807,7 @@ begin
 		)
 		port map ( 
 			clk => clk, rst => inner_reset,
-			axis_input_a_d		=> axis_dvs_dot_d,
+			axis_input_a_d		=> axis_dvs_dot_d_filtered,
 			axis_input_a_ready	=> axis_dvs_dot_ready,
 			axis_input_a_valid  => axis_dvs_dot_valid,
 			axis_input_a_user	=> axis_dvs_dot_coord,
@@ -1608,6 +1647,19 @@ begin
 			valid => axis_nr_ls_valid,
 			ready => axis_nr_ls_ready,
 			data  => axis_nr_ls_w
+		);
+		
+	TEST_CHECK_WDR: entity work.checker_wrapper
+		generic map (
+			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
+			SKIP => 0,
+			FILE_NUMBER => 46
+		)
+		port map (
+			clk => clk, rst => inner_reset, 
+			valid => axis_nr_ls_valid,
+			ready => axis_nr_ls_ready,
+			data  => axis_nr_ls_wd
 		);
 	--pragma synthesis_on
 end Behavioral;

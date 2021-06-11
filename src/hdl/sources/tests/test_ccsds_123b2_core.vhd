@@ -44,8 +44,10 @@ architecture testbench of test_ccsds_123b2_core is
 
 	-- Testbench DUT ports
 	signal clk, rst              : std_logic;
+	signal cfg_smid				 : std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
+	signal cfg_wide_sum, cfg_neighbor_sum: std_logic;
+	signal cfg_full_prediction	 : std_logic;
 	signal cfg_p                 : std_logic_vector(CONST_MAX_P_WIDTH_BITS - 1 downto 0);
-	signal cfg_sum_type          : local_sum_t;
 	signal cfg_samples           : std_logic_vector(CONST_MAX_SAMPLES_BITS - 1 downto 0);
 	signal cfg_tinc              : std_logic_vector(CONST_TINC_BITS - 1 downto 0);
 	signal cfg_vmax, cfg_vmin    : std_logic_vector(CONST_VMINMAX_BITS - 1 downto 0);
@@ -137,8 +139,11 @@ begin
 		cfg_min_preload_value <= std_logic_vector(to_unsigned(((C_BANDS-1)*(C_BANDS-2))/2+2, CONST_MAX_Z_VALUE_BITS*2)); --((cfg_max_z)*(cfg_max_z-1))/2 + 2
 		cfg_max_preload_value <= std_logic_vector(to_unsigned(((C_BANDS-1)*(C_BANDS-2))/2+6, CONST_MAX_Z_VALUE_BITS*2)); --((cfg_max_z)*(cfg_max_z-1))/2 + 6
 		--algorithm constants
-		cfg_p 				<= std_logic_vector(to_unsigned(3, CONST_MAX_P_WIDTH_BITS));
-		cfg_sum_type 		<= WIDE_NEIGHBOR_ORIENTED; 
+		cfg_smid			<= std_logic_vector(to_unsigned(32768, CONST_MAX_DATA_WIDTH));
+		cfg_wide_sum		<= '0';
+		cfg_neighbor_sum	<= '0';
+		cfg_full_prediction <= '0';
+		cfg_p 				<= std_logic_vector(to_unsigned(0, CONST_MAX_P_WIDTH_BITS));
 		cfg_tinc 			<= std_logic_vector(to_unsigned(6, CONST_TINC_BITS));
 		cfg_vmax			<= std_logic_vector(to_unsigned(3, CONST_VMINMAX_BITS));
 		cfg_vmin			<= std_logic_vector(to_signed(-1, CONST_VMINMAX_BITS));
@@ -187,7 +192,7 @@ begin
 	begin
 		--cut flow
 		wait until rising_edge(clk);
-		input_enable <= '0';
+		--input_enable <= '0';
 		wait for C_CLK_PERIOD * (1 SEC);
 		--resume flow
 		wait until rising_edge(clk);
@@ -203,8 +208,11 @@ begin
 		port map (
 			clk                   => clk,
 			rst                   => rst,
+			cfg_full_prediction   => cfg_full_prediction,
 			cfg_p                 => cfg_p,
-			cfg_sum_type          => cfg_sum_type,
+			cfg_smid			  => cfg_smid,
+			cfg_wide_sum		  => cfg_wide_sum,
+			cfg_neighbor_sum      => cfg_neighbor_sum,
 			cfg_samples           => cfg_samples,
 			cfg_tinc              => cfg_tinc,
 			cfg_vmax              => cfg_vmax,

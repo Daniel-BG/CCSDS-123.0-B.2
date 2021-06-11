@@ -125,7 +125,6 @@ architecture Behavioral of hybrid_encoder_table_update_stage is
 	signal ts_code_index		: std_logic_vector(CONST_CODE_INDEX_BITS - 1 downto 0);
 	signal ts_input_symbol		: std_logic_vector(CONST_INPUT_SYMBOL_BITS - 1 downto 0);
 	signal ts_code_table_addr	: std_logic_vector(CONST_LOW_ENTROPY_CODING_TABLE_ADDRESS_BITS - 1 downto 0);
-	signal ts_code_table_data	: bin_table_t;
 	signal ts_ihe				: std_logic;
 	signal ts_cw_bits 			: std_logic_vector(CONST_CODEWORD_BITS - 1 downto 0);
 	signal ts_cw_length 		: std_logic_vector(CONST_CODEWORD_LENGTH_BITS - 1 downto 0);
@@ -453,18 +452,6 @@ begin
 			addr_input_symbol => fss_input_symbol,
 			data => ts_selected_table_entry
 		);
-		
---	assign_ts_table_entries: process(ts_code_table_data)
---	begin
---		--put first the actual symbol tables which are at the end of the code table data
---		for i in 0 to CONST_INPUT_SYMBOL_AMOUNT - 2 loop
---			ts_code_table_entries(i) <= ts_code_table_data(CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*(CONST_INPUT_SYMBOL_AMOUNT-i-1) - 1 downto CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*(CONST_INPUT_SYMBOL_AMOUNT-i-2));
---		end loop;
---		--put terminal code last which is actually at the beginning of the code table data
---		ts_code_table_entries(CONST_INPUT_SYMBOL_AMOUNT - 1) <= ts_code_table_data(CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*CONST_INPUT_SYMBOL_AMOUNT - 1 downto CONST_LOW_ENTROPY_TABLE_ENTRY_BITS*(CONST_INPUT_SYMBOL_AMOUNT-1));
---	end process;
-		
---	ts_selected_table_entry <= ts_code_table_entries(to_integer(unsigned(ts_input_symbol)));
 	
 	process_table_entry: process(ts_selected_table_entry, ts_code_index, ts_valid, ts_ready, ts_ihe)
 	begin

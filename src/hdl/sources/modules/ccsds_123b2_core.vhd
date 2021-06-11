@@ -32,8 +32,11 @@ entity ccsds_123b2_core is
 	port ( 
 		clk, rst				: in std_logic;
 		--core config
+		cfg_full_prediction		: in std_logic;
 		cfg_p					: in std_logic_vector(CONST_MAX_P_WIDTH_BITS - 1 downto 0);
-		cfg_sum_type 			: in local_sum_t;
+		cfg_wide_sum			: in std_logic;
+		cfg_neighbor_sum		: in std_logic;
+		cfg_smid 				: in std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 		cfg_samples				: in std_logic_vector(CONST_MAX_SAMPLES_BITS - 1 downto 0);
 		cfg_tinc				: in std_logic_vector(CONST_TINC_BITS - 1 downto 0);
 		cfg_vmax, cfg_vmin		: in std_logic_vector(CONST_VMINMAX_BITS - 1 downto 0);
@@ -88,8 +91,11 @@ architecture Behavioral of ccsds_123b2_core is
 	signal axis_enc_alg_valid, axis_enc_alg_ready, axis_enc_alg_last: std_logic;
 	
 	--core config
+	signal reg_cfg_full_prediction		: std_logic;
 	signal reg_cfg_p					: std_logic_vector(CONST_MAX_P_WIDTH_BITS - 1 downto 0);
-	signal reg_cfg_sum_type 			: local_sum_t;
+	signal reg_cfg_wide_sum				: std_logic;
+	signal reg_cfg_neighbor_sum			: std_logic;
+	signal reg_cfg_smid 				: std_logic_vector(CONST_MAX_DATA_WIDTH - 1 downto 0);
 	signal reg_cfg_samples				: std_logic_vector(CONST_MAX_SAMPLES_BITS - 1 downto 0);
 	signal reg_cfg_tinc					: std_logic_vector(CONST_TINC_BITS - 1 downto 0);
 	signal reg_cfg_vmax, reg_cfg_vmin	: std_logic_vector(CONST_VMINMAX_BITS - 1 downto 0);
@@ -132,8 +138,11 @@ begin
 	begin
 		if rising_edge(clk) then
 			if inner_reset = '1' then
+				reg_cfg_full_prediction 	<= cfg_full_prediction;
 				reg_cfg_p					<= cfg_p;					
-				reg_cfg_sum_type 			<= cfg_sum_type; 			
+				reg_cfg_wide_sum			<= cfg_wide_sum;
+				reg_cfg_neighbor_sum		<= cfg_neighbor_sum;
+				reg_cfg_smid 				<= cfg_smid;		
 				reg_cfg_samples				<= cfg_samples;				
 				reg_cfg_tinc				<= cfg_tinc;					
 				reg_cfg_vmax				<= cfg_vmax;
@@ -166,7 +175,7 @@ begin
 		end if;
 	end process;
 
-	cfg_check: process(reg_cfg_p, reg_cfg_sum_type, reg_cfg_samples, reg_cfg_tinc, reg_cfg_vmax,			
+	cfg_check: process(reg_cfg_p, reg_cfg_samples, reg_cfg_smid, reg_cfg_tinc, reg_cfg_vmax,			
 		reg_cfg_vmin, reg_cfg_depth, reg_cfg_omega,	reg_cfg_weo,
 		reg_cfg_use_abs_err, reg_cfg_use_rel_err, reg_cfg_abs_err, reg_cfg_rel_err, 		
 		reg_cfg_smax, reg_cfg_resolution, reg_cfg_damping, reg_cfg_offset,			
@@ -239,7 +248,6 @@ begin
 		if unsigned(reg_cfg_u_max) < CONST_U_MAX_MIN or unsigned(reg_cfg_u_max) > CONST_U_MAX_MAX then
 			cfg_error(12) <= '1';
 		end if;
-
 	end process;
 
 
@@ -247,8 +255,11 @@ begin
 		port map (
 			clk => clk, rst => inner_reset,
 			--core config
+			cfg_full_prediction		=> reg_cfg_full_prediction,
 			cfg_p					=> reg_cfg_p,
-			cfg_sum_type 			=> reg_cfg_sum_type,
+			cfg_wide_sum			=> reg_cfg_wide_sum,
+			cfg_neighbor_sum		=> reg_cfg_neighbor_sum,
+			cfg_smid 				=> reg_cfg_smid,
 			cfg_samples				=> reg_cfg_samples,
 			cfg_tinc				=> reg_cfg_tinc,
 			cfg_vmax				=> reg_cfg_vmax,

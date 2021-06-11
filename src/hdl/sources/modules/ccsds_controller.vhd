@@ -129,7 +129,7 @@ architecture Behavioral of ccsds_controller is
 	constant C_S_AXI_REG_BYTENO_LOCALADDR: integer := 12;	--total bytes to be read (BYTES, not samples)
 	--read/write registers for CCSDS configuration
 	constant C_S_AXI_REG_CFG_P_LOCALADDR 				: integer := 36;
-	constant C_S_AXI_REG_CFG_SUM_TYPE_LOCALADDR 		: integer := 40;
+	constant C_S_AXI_REG_CFG_FULL_PREDICTION_LOCALADDR	: integer := 40;
 	constant C_S_AXI_REG_CFG_SAMPLES_LOCALADDR 			: integer := 44;
 	constant C_S_AXI_REG_CFG_TINC_LOCALADDR 			: integer := 48;
 	constant C_S_AXI_REG_CFG_VMAX_LOCALADDR 			: integer := 52;
@@ -156,6 +156,9 @@ architecture Behavioral of ccsds_controller is
 	constant C_S_AXI_REG_CFG_GAMMA_STAR_LOCALADDR 		: integer := 136;
 	constant C_S_AXI_REG_CFG_U_MAX_LOCALADDR 			: integer := 140;
 	constant C_S_AXI_REG_CFG_IACC_LOCALADDR 			: integer := 144;	
+	constant C_S_AXI_REG_CFG_WIDE_SUM_LOCALADDR			: integer := 148;
+	constant C_S_AXI_REG_CFG_NEIGHBOR_SUM_LOCALADDR		: integer := 152;
+	constant C_S_AXI_REG_CFG_SMID_LOCALADDR				: integer := 156;
 	
 	--read only status registers (local addresses)
 	constant C_S_AXI_REG_STATUS_LOCALADDR: integer := 256;  
@@ -187,8 +190,11 @@ architecture Behavioral of ccsds_controller is
 		s_axi_reg_ddrrst, s_axi_reg_ddrwst,
 		s_axi_reg_inbyte, s_axi_reg_inbyte_next,
 		s_axi_reg_outbyt, s_axi_reg_outbyt_next,
+		s_axi_reg_cfg_full_prediction,
 		s_axi_reg_cfg_p,
-		s_axi_reg_cfg_sum_type,
+		s_axi_reg_cfg_wide_sum,
+		s_axi_reg_cfg_neighbor_sum,
+		s_axi_reg_cfg_smid,
 		s_axi_reg_cfg_samples,
 		s_axi_reg_cfg_tinc,
 		s_axi_reg_cfg_vmax,
@@ -216,7 +222,6 @@ architecture Behavioral of ccsds_controller is
 		s_axi_reg_cfg_u_max,
 		s_axi_reg_cfg_iacc
 	: std_logic_vector((2**CONTROLLER_DATA_BYTES_LOG)*8 - 1 downto 0);
-	signal s_axi_reg_cfg_sum_type_converted: local_sum_t;
 
 	--clock registers
 	--control axis bus, master axis bus, core axis bus
@@ -371,8 +376,14 @@ begin
 						s_axi_reg_tgaddr <= c_s_axi_writedata_curr;
 					elsif local_c_s_axi_writeaddr = C_S_AXI_REG_CFG_P_LOCALADDR then
 						s_axi_reg_cfg_p <= c_s_axi_writedata_curr;
-					elsif local_c_s_axi_writeaddr = C_S_AXI_REG_CFG_SUM_TYPE_LOCALADDR then
-						s_axi_reg_cfg_sum_type <= c_s_axi_writedata_curr;
+					elsif local_c_s_axi_writeaddr = C_S_AXI_REG_CFG_FULL_PREDICTION_LOCALADDR then
+						s_axi_reg_cfg_full_prediction <= c_s_axi_writedata_curr;
+					elsif local_c_s_axi_writeaddr = C_S_AXI_REG_CFG_WIDE_SUM_LOCALADDR then
+						s_axi_reg_cfg_wide_sum <= c_s_axi_writedata_curr;
+					elsif local_c_s_axi_writeaddr = C_S_AXI_REG_CFG_NEIGHBOR_SUM_LOCALADDR then
+						s_axi_reg_cfg_neighbor_sum <= c_s_axi_writedata_curr;
+					elsif local_c_s_axi_writeaddr = C_S_AXI_REG_CFG_SMID_LOCALADDR then
+						s_axi_reg_cfg_smid <= c_s_axi_writedata_curr;
 					elsif local_c_s_axi_writeaddr = C_S_AXI_REG_CFG_SAMPLES_LOCALADDR then
 						s_axi_reg_cfg_samples <= c_s_axi_writedata_curr;
 					elsif local_c_s_axi_writeaddr = C_S_AXI_REG_CFG_TINC_LOCALADDR then
@@ -521,8 +532,14 @@ begin
 						c_s_axi_readdata <= s_axi_reg_tgaddr;
 					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CFG_P_LOCALADDR then
 						c_s_axi_readdata <= s_axi_reg_cfg_p;
-					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CFG_SUM_TYPE_LOCALADDR then
-						c_s_axi_readdata <= s_axi_reg_cfg_sum_type;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CFG_FULL_PREDICTION_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_cfg_full_prediction;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CFG_WIDE_SUM_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_cfg_wide_sum;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CFG_NEIGHBOR_SUM_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_cfg_neighbor_sum;
+					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CFG_SMID_LOCALADDR then
+						c_s_axi_readdata <= s_axi_reg_cfg_smid;
 					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CFG_SAMPLES_LOCALADDR then
 						c_s_axi_readdata <= s_axi_reg_cfg_samples;
 					elsif local_c_s_axi_readaddr = C_S_AXI_REG_CFG_TINC_LOCALADDR then
@@ -927,7 +944,6 @@ begin
 			flag_b => ififo_almost_empty
 		);
 
-	s_axi_reg_cfg_sum_type_converted <= WIDE_NEIGHBOR_ORIENTED when s_axi_reg_cfg_sum_type(0) = '1' else WIDE_COLUMN_ORIENTED;
 	ccsds_core: entity work.ccsds_123b2_core
 		generic map (
 			USE_HYBRID_CODER		=> true
@@ -935,8 +951,11 @@ begin
 		port map ( 
 			clk => ccsds_clk, rst => ccsds_rst,
 			--core config
+			cfg_full_prediction		=> s_axi_reg_cfg_full_prediction(0),
 			cfg_p					=> s_axi_reg_cfg_p(CONST_MAX_P_WIDTH_BITS - 1 downto 0),
-			cfg_sum_type 			=> s_axi_reg_cfg_sum_type_converted,
+			cfg_wide_sum			=> s_axi_reg_cfg_wide_sum(0),
+			cfg_neighbor_sum		=> s_axi_reg_cfg_neighbor_sum(0),
+			cfg_smid 				=> s_axi_reg_cfg_smid(CONST_MAX_DATA_WIDTH - 1 downto 0),
 			cfg_samples				=> s_axi_reg_cfg_samples(CONST_MAX_SAMPLES_BITS - 1 downto 0),
 			cfg_tinc				=> s_axi_reg_cfg_tinc(CONST_TINC_BITS - 1 downto 0),
 			cfg_vmax 				=> s_axi_reg_cfg_vmax(CONST_VMINMAX_BITS - 1 downto 0),
