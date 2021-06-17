@@ -581,7 +581,7 @@ begin
 	local_sum_queue_hrpsv: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_LSUM_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 8
 		)
 		Port map ( 
 			clk => clk, rst => inner_reset,
@@ -689,7 +689,7 @@ begin
 	diff_vec_queue_wu: entity work.AXIS_FIFO_SWRAP
 		Generic map (
 			DATA_WIDTH => CONST_DIFFVEC_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS,
+			FIFO_DEPTH => 64,
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map ( 
@@ -863,7 +863,7 @@ begin
 	hrpsv_queue: entity work.axis_fifo_latched 
 		Generic map (
 			DATA_WIDTH => CONST_HRPSV_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 64
 		)
 		Port map ( 
 			clk => clk, rst => inner_reset,
@@ -922,7 +922,7 @@ begin
 	drpsv_mqi_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_DRPSV_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 32
 		)
 		Port map (
 			clk => clk, rst => inner_reset,
@@ -937,7 +937,7 @@ begin
 	drpsv_drpe_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_DRPSV_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 32
 		)
 		Port map (
 			clk => clk, rst => inner_reset,
@@ -993,7 +993,7 @@ begin
 	psvcqbcq_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 32
 		)
 		Port map (
 			clk => clk, rst => inner_reset,
@@ -1008,7 +1008,7 @@ begin
 	psvtq_queue: entity work.AXIS_FIFO_SWRAP
 		Generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 8
 		)
 		Port map ( 
 			clk => clk, rst => inner_reset,
@@ -1039,7 +1039,7 @@ begin
 	prediction_residual_queue: entity work.AXIS_FIFO_SWRAP
 		Generic map (
 			DATA_WIDTH => CONST_PR_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS,
+			FIFO_DEPTH => 4,
 			USER_WIDTH => coordinate_bounds_array_t'length
 		)
 		Port map ( 
@@ -1096,7 +1096,7 @@ begin
 	mev_drsr_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_MEV_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 32
 		)
 		Port map (
 			clk => clk, rst => inner_reset,
@@ -1111,7 +1111,7 @@ begin
 	mev_cqbc_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_MEV_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 32
 		)
 		Port map (
 			clk => clk, rst => inner_reset,
@@ -1167,7 +1167,7 @@ begin
 	qi_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_QI_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 8
 		)
 		Port map (
 			clk => clk, rst => inner_reset,
@@ -1214,25 +1214,25 @@ begin
 			output_0_data	=> axis_cqbcs_drsr_d,
 			output_0_ready	=> axis_cqbcs_drsr_ready,
 			output_0_user 	=> axis_cqbcs_drsr_coord,
-			output_1_valid	=> axis_cqbcs_cqbcq_valid,
-			output_1_data	=> axis_cqbcs_cqbcq_d,
-			output_1_ready	=> axis_cqbcs_cqbcq_ready
+			output_1_valid	=> axis_cqbcq_drpe_valid,
+			output_1_data	=> axis_cqbcq_drpe_d,
+			output_1_ready	=> axis_cqbcq_drpe_ready
 		);
 			
-	cqbc_queue: entity work.AXIS_FIFO 
-		Generic map (
-			DATA_WIDTH => CONST_CQBC_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
-		)
-		Port map (
-			clk => clk, rst => inner_reset,
-			input_valid	=> axis_cqbcs_cqbcq_valid,
-			input_ready => axis_cqbcs_cqbcq_ready,
-			input_data	=> axis_cqbcs_cqbcq_d,
-			output_ready=> axis_cqbcq_drpe_ready,
-			output_data	=> axis_cqbcq_drpe_d,
-			output_valid=> axis_cqbcq_drpe_valid
-		);	
+--	cqbc_queue: entity work.AXIS_FIFO 
+--		Generic map (
+--			DATA_WIDTH => CONST_CQBC_BITS,
+--			FIFO_DEPTH => CONST_MAX_BANDS
+--		)
+--		Port map (
+--			clk => clk, rst => inner_reset,
+--			input_valid	=> axis_cqbcs_cqbcq_valid,
+--			input_ready => axis_cqbcs_cqbcq_ready,
+--			input_data	=> axis_cqbcs_cqbcq_d,
+--			output_ready=> axis_cqbcq_drpe_ready,
+--			output_data	=> axis_cqbcq_drpe_d,
+--			output_valid=> axis_cqbcq_drpe_valid
+--		);	
 		
 	drsr_calc: entity work.drsr_calc 
 		port map ( 
@@ -1345,7 +1345,7 @@ begin
 	theta_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_THETA_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 4
 		)
 		Port map (
 			clk => clk, rst => inner_reset,

@@ -42,7 +42,7 @@ architecture Behavioral of neigh_putter_westdown is
 begin
 
 	update_flag: process(axis_in_coord) begin
-		if F_STDLV2CB(axis_in_coord).last_z = '0' and (F_STDLV2CB(axis_in_coord).last_x = '0' or F_STDLV2CB(axis_in_coord).last_y = '0') then
+		if F_STDLV2CB(axis_in_coord).last_z = '0' and F_STDLV2CB(axis_in_coord).last_x = '0' then
 			axis_in_flag(0) <= '0';
 		else
 			axis_in_flag(0) <= '1';

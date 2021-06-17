@@ -178,7 +178,7 @@ begin
 	weight_update_queue: entity work.AXIS_FIFO 
 		Generic map (
 			DATA_WIDTH => CONST_WEIGHTVEC_BITS,
-			FIFO_DEPTH => CONST_MAX_BANDS
+			FIFO_DEPTH => 64
 		)
 		Port map ( 
 			clk => clk, rst => inner_reset,

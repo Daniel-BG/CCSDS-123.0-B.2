@@ -46,7 +46,7 @@ architecture Behavioral of neigh_retrieval_westdown is
 begin
 
 	update_condition: process(axis_in_coord_d) begin
-		if F_STDLV2CB(axis_in_coord_d).first_z = '1' or (F_STDLV2CB(axis_in_coord_d).first_y = '1' and F_STDLV2CB(axis_in_coord_d).first_x= '1') then
+		if F_STDLV2CB(axis_in_coord_d).first_z = '1' or F_STDLV2CB(axis_in_coord_d).first_x = '1' then
 			condition <= '0';
 		else
 			condition <= '1';
