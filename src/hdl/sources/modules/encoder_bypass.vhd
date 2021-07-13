@@ -26,9 +26,6 @@ use work.ccsds_data_structures.all;
 use ieee.numeric_std.all;
 
 entity encoder_bypass is
-	generic (
-		USE_HYBRID_CODER		: boolean := true
-	);
 	Port ( 
 		clk, rst				: in std_logic;
 		cfg_initial_counter		: in std_logic_vector(CONST_MAX_COUNTER_BITS - 1 downto 0);
@@ -170,52 +167,28 @@ begin
 			coder_axis_out_ready<= olatch_in_ready;
 		end if;
 	end process;
-
-	gen_normal_coder: if not USE_HYBRID_CODER generate 
-		encoder: entity work.encoder
-			Port map ( 
-				clk => clk, rst => inner_reset,
-				cfg_initial_counter		=> cfg_initial_counter,
-				cfg_final_counter		=> cfg_final_counter,
-				cfg_u_max				=> cfg_u_max,
-				cfg_depth 				=> cfg_depth,
-				cfg_iacc				=> cfg_iacc(CONST_MAX_ACC_BITS - 1 downto 0),
-				axis_in_mqi_d			=> coder_axis_in_mqi_d,
-				axis_in_mqi_ready		=> coder_axis_in_mqi_ready,
-				axis_in_mqi_valid		=> coder_axis_in_mqi_valid,
-				axis_in_mqi_coord		=> coder_axis_in_mqi_coord,
-				axis_out_code			=> coder_axis_out_code,
-				axis_out_length			=> coder_axis_out_length,
-				axis_out_coord			=> coder_axis_out_coord,
-				axis_out_valid			=> coder_axis_out_valid,
-				axis_out_ready			=> coder_axis_out_ready,
-				axis_out_last			=> coder_axis_out_last
-			);
-	end generate;
 	
-	gen_hybrid_coder: if USE_HYBRID_CODER generate 
-		encoder: entity work.hybrid_encoder
-			Port map ( 
-				clk => clk, rst	=> inner_reset,
-				cfg_initial_counter		=> cfg_initial_counter,
-				cfg_final_counter		=> cfg_final_counter,
-				cfg_ihra				=> cfg_iacc,
-				cfg_u_max				=> cfg_u_max,
-				cfg_depth				=> cfg_depth,
-				cfg_gamma_star 			=> cfg_gamma_star,
-				cfg_max_z 				=> cfg_max_z,
-				axis_in_mqi_d			=> coder_axis_in_mqi_d,
-				axis_in_mqi_ready		=> coder_axis_in_mqi_ready,
-				axis_in_mqi_valid		=> coder_axis_in_mqi_valid,
-				axis_in_mqi_coord		=> coder_axis_in_mqi_coord,
-				axis_out_code			=> coder_axis_out_code,
-				axis_out_length			=> coder_axis_out_length,
-				axis_out_coord			=> coder_axis_out_coord,
-				axis_out_valid			=> coder_axis_out_valid,
-				axis_out_ready			=> coder_axis_out_ready,
-				axis_out_last			=> coder_axis_out_last
-			);
-	end generate;
+	encoder: entity work.hybrid_encoder
+		Port map ( 
+			clk => clk, rst	=> inner_reset,
+			cfg_initial_counter		=> cfg_initial_counter,
+			cfg_final_counter		=> cfg_final_counter,
+			cfg_ihra				=> cfg_iacc,
+			cfg_u_max				=> cfg_u_max,
+			cfg_depth				=> cfg_depth,
+			cfg_gamma_star 			=> cfg_gamma_star,
+			cfg_max_z 				=> cfg_max_z,
+			axis_in_mqi_d			=> coder_axis_in_mqi_d,
+			axis_in_mqi_ready		=> coder_axis_in_mqi_ready,
+			axis_in_mqi_valid		=> coder_axis_in_mqi_valid,
+			axis_in_mqi_coord		=> coder_axis_in_mqi_coord,
+			axis_out_code			=> coder_axis_out_code,
+			axis_out_length			=> coder_axis_out_length,
+			axis_out_coord			=> coder_axis_out_coord,
+			axis_out_valid			=> coder_axis_out_valid,
+			axis_out_ready			=> coder_axis_out_ready,
+			axis_out_last			=> coder_axis_out_last
+		);
 	
 	
 	output_latch: entity work.AXIS_DATA_LATCH 

@@ -57,7 +57,9 @@ architecture Behavioral of cqbc_calc is
 	
 	signal joint_valid, joint_ready: std_logic;
 	signal joint_psv: std_logic_vector(axis_in_psv_d'range);
+	signal joint_psv_ze: std_logic_vector(axis_in_psv_d'high + 1 downto 0);
 	signal joint_mult: std_logic_vector(axis_in_qi_d'length + axis_in_mev_d'length downto 0);
+	signal joint_final: std_logic_vector(joint_mult'range);
 	signal joint_coord: coordinate_bounds_array_t;
 
 	signal inner_reset: std_logic;
@@ -122,14 +124,18 @@ begin
 			output_data_1 => joint_mult,
 			output_user   => joint_coord
 		);
+	joint_psv_ze <= "0" & joint_psv;
+	update_final: process(joint_mult, joint_psv_ze) begin
+		joint_final <= std_logic_vector(unsigned(joint_mult) + unsigned(joint_psv_ze)); --should be signed addition but this works fine since we let it overflow
+	end process;
 
 	axis_out_cqbc_coord <= joint_coord;
 	joint_ready <= axis_out_cqbc_ready;
 	axis_out_cqbc_valid <= joint_valid;
 	axis_out_cqbc_d <= 
-				(others => '0') when -signed("0" & unsigned(joint_psv)) > signed(joint_mult)
-		else 	cfg_smax when signed("0" & unsigned(joint_psv)) + signed(joint_mult) > signed("0" & unsigned(cfg_smax))
-		else    std_logic_vector(resize(signed("0" & unsigned(joint_psv)) + signed(joint_mult), axis_out_cqbc_d'length)); --this is always positive
+				(others => '0') when -signed(joint_psv_ze) > signed(joint_mult)
+		else 	cfg_smax when signed(joint_psv_ze) + signed(joint_mult) > signed("0" & unsigned(cfg_smax))
+		else    joint_final(axis_out_cqbc_d'range); --this is always positive
 	
 
 end Behavioral;

@@ -26,9 +26,6 @@ use work.ccsds_data_structures.all;
 use ieee.numeric_std.all;
 
 entity ccsds_123b2_core is
-	generic (
-		USE_HYBRID_CODER		: boolean := true
-	);
 	port ( 
 		clk, rst				: in std_logic;
 		--core config
@@ -294,9 +291,6 @@ begin
 		);
 		
 	encoder: entity work.encoder_bypass
-		generic map (
-			USE_HYBRID_CODER => USE_HYBRID_CODER
-		)
 		Port map ( 
 			clk => clk, rst => inner_reset,
 			cfg_initial_counter		=> reg_cfg_initial_counter,
