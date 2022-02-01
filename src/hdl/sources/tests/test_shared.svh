@@ -3,8 +3,8 @@
 	//`define DO_NOT_CHECK
 	
 	`define GOLDEN_ROOT_DIR "C:/Users/Daniel/Basurero/out/"
-	`define GOLDEN_EXT ".smp"
-	`define GOLDEN_EXT_DIAG ".smp.diag"
+	`define GOLDEN_EXT ".mif"
+	`define GOLDEN_EXT_DIAG ".diag.mif"
 	//PREDICTOR
 	`define CONST_GOLDEN_S 	    	{`GOLDEN_ROOT_DIR, "c_s",					`GOLDEN_EXT}
 	`define CONST_GOLDEN_DRPSV  	{`GOLDEN_ROOT_DIR, "c_drpsv",				`GOLDEN_EXT}

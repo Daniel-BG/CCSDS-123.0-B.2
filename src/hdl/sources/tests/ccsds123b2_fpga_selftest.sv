@@ -63,7 +63,7 @@ module ccsds123b2_fpga_selftest(
     		.clk(clk),
     		.rst(inner_reset),
 			.cfg_full_prediction(1),
-			.cfg_p(0),
+			.cfg_p(3),
 			.cfg_smid(32768),
 			.cfg_wide_sum(1),
 			.cfg_neighbor_sum(1),
@@ -74,10 +74,10 @@ module ccsds123b2_fpga_selftest(
 			.cfg_depth(16),
 			.cfg_omega(19),
 			.cfg_weo(0),
-			.cfg_use_abs_err(0),
-			.cfg_use_rel_err(0),
-			.cfg_abs_err(0),
-			.cfg_rel_err(0),
+			.cfg_use_abs_err(1),
+			.cfg_use_rel_err(1),
+			.cfg_abs_err(1024),
+			.cfg_rel_err(4096),
 			.cfg_smax(65535),
 			.cfg_resolution(4),
 			.cfg_damping(4),
@@ -105,7 +105,7 @@ module ccsds123b2_fpga_selftest(
 	axis_rom_fifo
 		#(
 			.width(64),
-			.depth(12552),
+			.depth(4881),
 			.intFile("pattern_out.mif")
    		)
    		output_rom

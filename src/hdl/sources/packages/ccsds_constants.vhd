@@ -54,9 +54,9 @@ package ccsds_constants is
 	constant CONST_MAX_OMEGA			: integer := 19;				--maximum allowed bits for weights (Can be set lower through cfg ports)
 	constant CONST_MIN_OMEGA			: integer := 4;
 	constant CONST_MAX_P				: integer := 3;					--maximum allowed bits for previous bands used in prediction
-	constant CONST_MAX_BANDS			: integer := 256;				--maximum allowed size in the x direction (Can be set lower through cfg ports)
-	constant CONST_MAX_LINES			: integer := 1024;				--maximum allowed size in the y direction (Can be set lower through cfg ports)
-	constant CONST_MAX_SAMPLES			: integer := 1024; 				--maximum allowed size in the z direction (Can be set lower through cfg ports)
+	constant CONST_MAX_BANDS			: integer := 256;				--maximum allowed size in the z direction (Can be set lower through cfg ports)
+	constant CONST_MAX_LINES			: integer := 4096;				--maximum allowed size in the y direction (Can be set lower through cfg ports)
+	constant CONST_MAX_SAMPLES			: integer := 512; 				--maximum allowed size in the x direction (Can be set lower through cfg ports)
 	
 	--DERIVED CONSTANTS
 	constant CONST_MAX_SAMPLES_PER_BAND	: integer := CONST_MAX_SAMPLES * CONST_MAX_LINES;

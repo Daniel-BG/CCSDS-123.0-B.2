@@ -945,9 +945,6 @@ begin
 		);
 
 	ccsds_core: entity work.ccsds_123b2_core
-		generic map (
-			USE_HYBRID_CODER		=> true
-		)
 		port map ( 
 			clk => ccsds_clk, rst => ccsds_rst,
 			--core config
