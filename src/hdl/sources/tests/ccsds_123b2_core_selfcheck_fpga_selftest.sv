@@ -29,23 +29,56 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 		output logic selfcheck_full_finished,
 		output logic selfcheck_ref_failed,
 		output logic selfcheck_ref_finished,
-		output logic selfcheck_timeout
+		output logic selfcheck_timeout,
+		output logic check_failed,
+		output logic check_finished
     );
     
+    wire inner_reset;
     
+    wire [15:0] axis_in_s_d;
+    wire axis_in_s_valid, axis_in_s_ready;
+    wire [63:0] axis_out_data, axis_rom_data;
+    wire axis_out_valid, axis_out_last, axis_out_ready, axis_rom_valid, axis_rom_ready;
+    
+    reg inner_failed, inner_finished;
+    
+    
+	reset_replicator #() reset_rep
+		(
+			.clk(clk), 
+			.rst(rst), 
+			.rst_out(inner_reset)
+		);
+    
+    axis_rom_fifo
+		#(
+			.width(16),
+			.depth(61200),
+			.intFile("pattern_in.mif")
+   		)
+   		input_rom
+   		(
+   			.clk(clk),
+   			.rst(inner_reset),
+   			.axis_d(axis_in_s_d),
+   			.axis_valid(axis_in_s_valid),
+   			.axis_ready(axis_in_s_ready)
+   		);
     
     ccsds_123b2_core_selfcheck_wrapper 
     #(
     	.PATTERN_IN("pattern_in.mif"),
-		.selfcheck_ref_cnt_limit(4880),
+		.selfcheck_ref_cnt_limit(4881),
 		.selfcheck_ref_checksum(64'h0004360006B58000),
 		.PATTERN_OUT("pattern_out.mif"),
+		.selfcheck_input_words(61200),
 		.selfcheck_timeout_cnt_limit(220000)
     ) 
     selfcheck_core
     (
     	.clk(clk), 
-    	.rst(rst),
+    	.rst(inner_reset),
 		.selfcheck_init(selfcheck_init),
 		.selfcheck_working(selfcheck_working),
 		.selfcheck_full_failed(selfcheck_full_failed),
@@ -85,13 +118,55 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 		.cfg_u_max(18),
 		.cfg_iacc(40),
 		.cfg_error(),
-		.axis_in_s_d(0),
-		.axis_in_s_valid(0),
-		.axis_in_s_ready(),
-		.axis_out_data(),
-		.axis_out_valid(),
-		.axis_out_last(),
-		.axis_out_ready(1)
+		.axis_in_s_d(axis_in_s_d),
+		.axis_in_s_valid(axis_in_s_valid),
+		.axis_in_s_ready(axis_in_s_ready),
+		.axis_out_data(axis_out_data),
+		.axis_out_valid(axis_out_valid),
+		.axis_out_last(axis_out_last),
+		.axis_out_ready(axis_out_ready)
     );
+    
+    
+	axis_rom_fifo
+		#(
+			.width(64),
+			.depth(4881),
+			.intFile("pattern_out.mif")
+   		)
+   		output_rom
+   		(
+   			.clk(clk),
+   			.rst(inner_reset),
+   			.axis_d(axis_rom_data),
+   			.axis_valid(axis_rom_valid),
+   			.axis_ready(axis_rom_ready)
+   		);
+   		
+   	//logic to check status
+   	//always ready to read
+   	assign axis_out_ready = 1;
+   	assign axis_rom_ready = axis_out_valid;
+   	
+   	always_ff @(posedge clk)
+   	begin
+   		if (rst) begin
+   			inner_failed <= 0;
+   			inner_finished <= 0;
+   		end else begin
+   			if (axis_out_valid) begin
+   				if (axis_rom_data != axis_out_data && inner_finished == 0) begin
+   					inner_failed <= 1;
+   				end
+   				if (axis_out_last) begin
+   					inner_finished <= 1;
+   				end
+   			end
+   		end
+   	end;
+   	
+   	
+   	assign check_failed = inner_failed;
+   	assign check_finished = inner_finished;
     
 endmodule

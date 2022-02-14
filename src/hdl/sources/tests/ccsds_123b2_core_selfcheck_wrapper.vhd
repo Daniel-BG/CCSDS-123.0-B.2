@@ -33,9 +33,10 @@ use IEEE.NUMERIC_STD.ALL;
 entity ccsds_123b2_core_selfcheck_wrapper is
 	Generic (
 		PATTERN_IN 							: string := "pattern_in.mif";
-		selfcheck_ref_cnt_limit 			: integer := 4880;
+		selfcheck_ref_cnt_limit 			: integer := 4881;
 		selfcheck_ref_checksum				: std_logic_vector(63 downto 0) := x"0004360006B58000";
 		PATTERN_OUT							: string := "pattern_out.mif";
+		selfcheck_input_words				: integer := 61200;
 		selfcheck_timeout_cnt_limit  		: integer := 220000 --217233 exact? (+-)
 	);
 	Port ( 
@@ -176,7 +177,7 @@ begin
 		end if;
 	end process;
 	
-	comb: process(state_curr, selfcheck_init, selfcheck_timeout_inner)
+	comb: process(state_curr, selfcheck_init, selfcheck_timeout_inner, selfcheck_full_finished_inner, selfcheck_ref_finished_inner)
 	begin
 		inner_reset <= '0';
 		mux_check_enable <= '0';
@@ -196,11 +197,11 @@ begin
 			--this connects the memory directly to the core and it should start reading data right away
 			mux_check_enable <= '1';	
 			selfcheck_working <= '1';
-			if selfcheck_timeout_inner = '1' then
+			if selfcheck_timeout_inner = '1' or selfcheck_full_finished_inner = '1' or selfcheck_ref_finished_inner = '1' then
 				state_next <= SELFCHECK_END;
 			end if;
 		elsif state_curr = SELFCHECK_END then
-			
+			mux_check_enable <= '1';	
 		end if;
 	end process;
 	
@@ -217,6 +218,13 @@ begin
 					if mux_axis_out_valid = '1' then
 						if axis_pattern_out_d /= mux_axis_out_data and selfcheck_full_finished_inner = '0' then
 							selfcheck_full_failed <= '1';
+							report "Error detected (expected, actual): (" & integer'image(to_integer(signed(axis_pattern_out_d(63 downto 32))))
+													  & integer'image(to_integer(signed(axis_pattern_out_d(31 downto 0))))
+													  & " , " 
+													  & integer'image(to_integer(signed(mux_axis_out_data(63 downto 32))))
+													  & integer'image(to_integer(signed(mux_axis_out_data(31 downto 0))))
+													  & ")";
+							--$info("Seen: 0x%h Expected: 0x%h (@ %d)", data, ref_data, numloops);
 						end if;
 						if mux_axis_out_last = '1' then
 							selfcheck_full_finished_inner <= '1';
@@ -240,7 +248,7 @@ begin
 				if selfcheck_init = '1' then
 					--assume it is always read, since mux_axis_out_ready is tied to 1
 					if mux_axis_out_valid = '1' and selfcheck_ref_finished_inner = '0' then
-						if selfcheck_ref_cnt = selfcheck_ref_cnt_limit then
+						if selfcheck_ref_cnt = (selfcheck_ref_cnt_limit - 1) then
 							selfcheck_ref_finished_inner <= '1';
 							if mux_axis_out_data = selfcheck_ref_checksum then
 								selfcheck_ref_failed <= '0';
@@ -297,8 +305,8 @@ begin
 			mux_cfg_weo					<= std_logic_vector(to_unsigned(0, 		CONST_WEO_BITS));
 			mux_cfg_use_abs_err			<= '1';
 			mux_cfg_use_rel_err			<= '1';
-			mux_cfg_abs_err 			<= std_logic_vector(to_unsigned(1024, 		CONST_ABS_ERR_BITS));
-			mux_cfg_rel_err 			<= std_logic_vector(to_unsigned(4096, 		CONST_REL_ERR_BITS));
+			mux_cfg_abs_err 			<= std_logic_vector(to_unsigned(1024, 	CONST_ABS_ERR_BITS));
+			mux_cfg_rel_err 			<= std_logic_vector(to_unsigned(4096, 	CONST_REL_ERR_BITS));
 			mux_cfg_smax				<= std_logic_vector(to_unsigned(65535, 	CONST_MAX_DATA_WIDTH));
 			mux_cfg_resolution			<= std_logic_vector(to_unsigned(4, 		CONST_RES_BITS));
 			mux_cfg_damping				<= std_logic_vector(to_unsigned(4, 		CONST_DAMPING_BITS));
@@ -428,7 +436,7 @@ begin
 	pattern_rom: entity work.axis_rom_fifo
 		generic map (
 			width => 16,
-			depth => 61200,
+			depth => selfcheck_input_words,
 			intFile => PATTERN_IN
 		)
 		port map (
@@ -442,7 +450,7 @@ begin
 	fullcheck_rom: entity work.axis_rom_fifo
 		generic map (
 			width => 64,
-			depth => 4880,
+			depth => selfcheck_ref_cnt_limit,
 			intFile => PATTERN_OUT
 		)
 		port map (
