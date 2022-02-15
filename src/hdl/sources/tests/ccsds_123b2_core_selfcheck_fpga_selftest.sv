@@ -23,39 +23,90 @@
 module ccsds_123b2_core_selfcheck_fpga_selftest(
 		input logic clk,
 		input logic rst,
-		input logic selfcheck_init,
-		output logic selfcheck_working,
 		output logic selfcheck_full_failed,
 		output logic selfcheck_full_finished,
 		output logic selfcheck_ref_failed,
 		output logic selfcheck_ref_finished,
 		output logic selfcheck_timeout,
 		output logic check_failed,
-		output logic check_finished
-    );
+		output logic check_finished,
+		output logic test_finished
+    );    
     
-    wire inner_reset;
     
     wire [15:0] axis_in_s_d;
     wire axis_in_s_valid, axis_in_s_ready;
     wire [63:0] axis_out_data, axis_rom_data;
     wire axis_out_valid, axis_out_last, axis_out_ready, axis_rom_valid, axis_rom_ready;
     
+    reg selfcheck_init;
     reg inner_failed, inner_finished;
+    reg inner_test_finished;
+    reg inner_reset;
+    reg [31:0] inner_counter;
     
+	////fsm control for inputting the test image and initiating the selfcheck
+    typedef enum {IDLE, RESET, TEST, RESET_TEST, SELFCHECK, FINISHED} state_t;
+    state_t state_curr;
     
-	reset_replicator #() reset_rep
-		(
-			.clk(clk), 
-			.rst(rst), 
-			.rst_out(inner_reset)
-		);
+    always_ff @(posedge clk)
+    begin
+		if (rst) begin
+			inner_failed <= 0;
+   			inner_finished <= 0;
+   			inner_test_finished <= 0;
+   			inner_reset <= 1;
+   			selfcheck_init <= 0;
+   			state_curr <= IDLE;
+   			check_failed <= 0;
+   			check_finished <= 0;
+   			test_finished <= 0;
+   		end else begin
+			if (state_curr == IDLE) begin
+				state_curr <= RESET;
+				inner_reset <= 1;
+				inner_counter <= 128;
+			end else if (state_curr == RESET) begin
+				inner_counter <= inner_counter - 1;
+				if (inner_counter == 0) begin
+					state_curr <= TEST;
+					inner_reset <= 0;
+					inner_counter <= 495000;
+				end;
+			end else if (state_curr == TEST) begin
+				inner_counter <= inner_counter - 1;
+				if (inner_counter == 0) begin
+					check_failed <= inner_failed;
+					check_finished <= 1;
+					state_curr <= RESET_TEST;
+					inner_counter <= 128;
+					inner_reset <= 1;
+				end;
+			end else if (state_curr == RESET_TEST) begin
+				inner_counter <= inner_counter - 1;
+				if (inner_counter == 0) begin
+					state_curr <= SELFCHECK;
+					selfcheck_init <= 1;
+					inner_reset <= 0;
+					inner_counter <= 218000;
+				end;
+			end else if (state_curr == SELFCHECK) begin
+				inner_counter <= inner_counter - 1;
+				if (inner_counter == 0) begin
+					state_curr <= FINISHED;
+				end;
+			end else if (state_curr == FINISHED) begin
+				test_finished <= 1;
+			end;
+   		end
+    end;
+    ////
     
     axis_rom_fifo
 		#(
 			.width(16),
-			.depth(61200),
-			.intFile("pattern_in.mif")
+			.depth(262144),
+			.intFile("testimage_in.mif")
    		)
    		input_rom
    		(
@@ -73,14 +124,14 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 		.selfcheck_ref_checksum(64'h0004360006B58000),
 		.PATTERN_OUT("pattern_out.mif"),
 		.selfcheck_input_words(61200),
-		.selfcheck_timeout_cnt_limit(220000)
+		.selfcheck_timeout_cnt_limit(217500)
     ) 
     selfcheck_core
     (
     	.clk(clk), 
     	.rst(inner_reset),
 		.selfcheck_init(selfcheck_init),
-		.selfcheck_working(selfcheck_working),
+		.selfcheck_working(),
 		.selfcheck_full_failed(selfcheck_full_failed),
 		.selfcheck_full_finished(selfcheck_full_finished),
 		.selfcheck_ref_failed(selfcheck_ref_failed),
@@ -91,7 +142,7 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 		.cfg_smid(32768),
 		.cfg_wide_sum(1),
 		.cfg_neighbor_sum(1),
-		.cfg_samples(100),
+		.cfg_samples(128),
 		.cfg_tinc(6),
 		.cfg_vmax(3),
 		.cfg_vmin(-1),
@@ -106,12 +157,12 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 		.cfg_resolution(4),
 		.cfg_damping(4),
 		.cfg_offset(4),
-		.cfg_max_x(99),
-		.cfg_max_y(35),
-		.cfg_max_z(16),
-		.cfg_max_t(3599),
-		.cfg_min_preload_value(122),
-		.cfg_max_preload_value(126),
+		.cfg_max_x(127),
+		.cfg_max_y(63),
+		.cfg_max_z(31),
+		.cfg_max_t(8191),
+		.cfg_min_preload_value(467),
+		.cfg_max_preload_value(471),
 		.cfg_initial_counter(2),
 		.cfg_final_counter(63),
 		.cfg_gamma_star(6),
@@ -131,8 +182,8 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 	axis_rom_fifo
 		#(
 			.width(64),
-			.depth(4881),
-			.intFile("pattern_out.mif")
+			.depth(841),
+			.intFile("testimage_out.mif")
    		)
    		output_rom
    		(
@@ -150,7 +201,7 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
    	
    	always_ff @(posedge clk)
    	begin
-   		if (rst) begin
+   		if (inner_reset) begin
    			inner_failed <= 0;
    			inner_finished <= 0;
    		end else begin
@@ -165,8 +216,5 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
    		end
    	end;
    	
-   	
-   	assign check_failed = inner_failed;
-   	assign check_finished = inner_finished;
     
 endmodule

@@ -37,7 +37,7 @@ entity ccsds_123b2_core_selfcheck_wrapper is
 		selfcheck_ref_checksum				: std_logic_vector(63 downto 0) := x"0004360006B58000";
 		PATTERN_OUT							: string := "pattern_out.mif";
 		selfcheck_input_words				: integer := 61200;
-		selfcheck_timeout_cnt_limit  		: integer := 220000 --217233 exact? (+-)
+		selfcheck_timeout_cnt_limit  		: integer := 217500 --217233 exact? (+-)
 	);
 	Port ( 
 		clk, rst: in std_logic;

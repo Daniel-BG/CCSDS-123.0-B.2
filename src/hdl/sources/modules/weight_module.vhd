@@ -259,6 +259,7 @@ begin
 		);
 
 	--pragma synthesis_off
+	gen_test: if (TEST_GEN_ENABLE) generate
 	TEST_CHECK_WU: entity work.checker_wrapper
 		generic map (
 			DATA_WIDTH => CONST_WUSE_BITS,
@@ -271,6 +272,7 @@ begin
 			ready => axis_wuse_wu_ready,
 			data  => axis_wuse_wu_d
 		);
+	end generate gen_test;
 	--pragma synthesis_on
 end Behavioral;
 

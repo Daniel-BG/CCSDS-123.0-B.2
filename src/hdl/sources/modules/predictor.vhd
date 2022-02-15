@@ -180,6 +180,7 @@ begin
 	
 	--test stuff
 	--pragma synthesis_off
+gen_test: if (TEST_GEN_ENABLE) generate
 	TEST_CHECK_INPUT_SAMPLES: entity work.checker_wrapper
 		generic map (
 			DATA_WIDTH => CONST_MAX_DATA_WIDTH,
@@ -219,5 +220,6 @@ begin
 			ready => axis_core_d2v_ready,
 			data  => axis_core_d2v_d
 		);
-	--pragma synthesis_on
+end generate gen_test;
+--pragma synthesis_on
 end Behavioral;

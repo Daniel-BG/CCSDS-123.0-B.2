@@ -296,6 +296,7 @@ begin
 		);
 
 	--pragma synthesis_off
+gen_test: if (TEST_GEN_ENABLE) generate
 	TEST_ACCUMULATOR: entity work.checker_wrapper
 		generic map (
 			DATA_WIDTH => CONST_MAX_HR_ACC_BITS,
@@ -321,6 +322,7 @@ begin
 			ready => axis_out_ready,
 			data  => axis_out_cnt_pre
 		);		
+end generate gen_test;
 	--pragma synthesis_on
 	
 end Behavioral;

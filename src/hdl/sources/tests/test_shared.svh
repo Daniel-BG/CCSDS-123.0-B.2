@@ -69,7 +69,7 @@
 	`define CONST_GOLDEN_CWV 		{`GOLDEN_ROOT_DIR, "c_cwv", 				`GOLDEN_EXT}
 	`define CONST_GOLDEN_CTID		{`GOLDEN_ROOT_DIR, "c_ctid", 				`GOLDEN_EXT}
 	//OUTPUT
-	`define CONST_GOLDEN_OUTPUT		{`GOLDEN_ROOT_DIR, "output2.dat"}
+	`define CONST_GOLDEN_OUTPUT		{`GOLDEN_ROOT_DIR, "output.mif"}
 	
 	`define CONST_GOLDEN_NUM_S 	    		0
 	`define CONST_GOLDEN_NUM_DRPSV  		1

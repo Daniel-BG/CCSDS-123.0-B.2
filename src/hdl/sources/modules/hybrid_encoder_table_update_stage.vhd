@@ -508,6 +508,7 @@ begin
 		
 
 	--pragma synthesis_off
+	gen_test: if (TEST_GEN_ENABLE) generate
 	TEST_CHECK_CTID: entity work.checker_wrapper
 		generic map (
 			DATA_WIDTH => ts_code_table_addr'length,
@@ -651,6 +652,8 @@ begin
 			ready => ts_ready,
 			data  => ts_cw_bits
 		);
+	end generate gen_test;
 	--pragma synthesis_on
+	
 
 end Behavioral;

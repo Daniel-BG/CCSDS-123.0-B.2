@@ -25,6 +25,8 @@ use ieee.numeric_std.all;
 use work.ccsds_math_functions.all;
 
 package ccsds_constants is
+	constant TEST_GEN_ENABLE: boolean := false;
+
 	--IMAGE CONSTANTS
 	type relocation_mode_t is (VERTICAL_TO_DIAGONAL, DIAGONAL_TO_VERTICAL); 
 	

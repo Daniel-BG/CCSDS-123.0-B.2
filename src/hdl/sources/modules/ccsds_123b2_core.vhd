@@ -329,6 +329,7 @@ begin
 		);
 		
 	--pragma synthesis_off
+gen_test: if (TEST_GEN_ENABLE) generate
 	TEST_CHECK_MQI_REORDERED: entity work.checker_wrapper
 		generic map (
 			DATA_WIDTH => CONST_MQI_BITS,
@@ -341,6 +342,8 @@ begin
 			ready => axis_pred_enc_ready,
 			data  => axis_pred_enc_mqi
 		);
+end generate gen_test;
 	--pragma synthesis_on
+	
 		
 end Behavioral;
