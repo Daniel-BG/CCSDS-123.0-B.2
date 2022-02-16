@@ -52,8 +52,6 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
     always_ff @(posedge clk)
     begin
 		if (rst) begin
-			inner_failed <= 0;
-   			inner_finished <= 0;
    			inner_test_finished <= 0;
    			inner_reset <= 1;
    			selfcheck_init <= 0;
