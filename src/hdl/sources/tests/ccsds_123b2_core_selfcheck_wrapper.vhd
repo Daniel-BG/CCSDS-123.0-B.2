@@ -205,6 +205,8 @@ begin
 		end if;
 	end process;
 	
+--	selfcheck_full_finished <= '0';
+--	selfcheck_full_failed <= '0';
 	selfcheck_full_finished <= selfcheck_full_finished_inner;
 	selfcheck_full: process(clk)
 	begin

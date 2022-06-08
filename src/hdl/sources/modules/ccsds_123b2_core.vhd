@@ -122,7 +122,7 @@ architecture Behavioral of ccsds_123b2_core is
 	signal reg_cfg_iacc					: std_logic_vector(CONST_MAX_HR_ACC_BITS - 1 downto 0);
 
 	--inner signals
-	signal inner_reset			: std_logic;
+	signal inner_reset					: std_logic;
 begin
 
 	reset_replicator: entity work.reset_replicator

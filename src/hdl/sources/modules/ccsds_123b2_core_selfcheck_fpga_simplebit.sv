@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module ccsds_123b2_core_selfcheck_fpga_selftest(
+module ccsds_123b2_core_selfcheck_fpga_simplebit(
 		input logic clk,
 		input logic rst,
 		output logic selfcheck_full_failed,
@@ -28,19 +28,10 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 		output logic selfcheck_ref_failed,
 		output logic selfcheck_ref_finished,
 		output logic selfcheck_timeout,
-		output logic check_failed,
-		output logic check_finished,
 		output logic test_finished
     );    
     
-    
-    wire [15:0] axis_in_s_d;
-    wire axis_in_s_valid, axis_in_s_ready;
-    wire [63:0] axis_out_data, axis_rom_data;
-    wire axis_out_valid, axis_out_last, axis_out_ready, axis_rom_valid, axis_rom_ready;
-    
     reg selfcheck_init;
-    reg inner_failed, inner_finished;
     reg inner_test_finished;
     reg inner_reset;
     reg [31:0] inner_counter;
@@ -56,8 +47,6 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
    			inner_reset <= 1;
    			selfcheck_init <= 0;
    			state_curr <= IDLE;
-   			check_failed <= 0;
-   			check_finished <= 0;
    			test_finished <= 0;
    		end else begin
 			if (state_curr == IDLE) begin
@@ -66,28 +55,10 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 				inner_counter <= 0;
 			end else if (state_curr == RESET) begin
 				if ($signed(inner_counter) >= 128) begin
-					state_curr <= TEST;
-					inner_reset <= 0;
-					inner_counter <= 0;
-				end else begin
-					inner_counter <= inner_counter + 1;
-				end;
-			end else if (state_curr == TEST) begin
-				if ($signed(inner_counter) >= 495000) begin
-					check_failed <= inner_failed;
-					check_finished <= 1;
-					state_curr <= RESET_TEST;
-					inner_counter <= 0;
-					inner_reset <= 1;
-				end else begin
-					inner_counter <= inner_counter + 1;
-				end;
-			end else if (state_curr == RESET_TEST) begin
-				if ($signed(inner_counter) >= 128) begin
 					state_curr <= SELFCHECK;
-					selfcheck_init <= 1;
 					inner_reset <= 0;
 					inner_counter <= 0;
+					selfcheck_init <= 1;
 				end else begin
 					inner_counter <= inner_counter + 1;
 				end;
@@ -102,22 +73,7 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 			end;
    		end
     end;
-    ////
-    
-    axis_rom_fifo
-		#(
-			.width(16),
-			.depth(262144),
-			.intFile("testimage_in.mif")
-   		)
-   		input_rom
-   		(
-   			.clk(clk),
-   			.rst(inner_reset),
-   			.axis_d(axis_in_s_d),
-   			.axis_valid(axis_in_s_valid),
-   			.axis_ready(axis_in_s_ready)
-   		);
+
     
     ccsds_123b2_core_selfcheck_wrapper 
     #(
@@ -171,52 +127,15 @@ module ccsds_123b2_core_selfcheck_fpga_selftest(
 		.cfg_u_max(18),
 		.cfg_iacc(40),
 		.cfg_error(),
-		.axis_in_s_d(axis_in_s_d),
-		.axis_in_s_valid(axis_in_s_valid),
-		.axis_in_s_ready(axis_in_s_ready),
-		.axis_out_data(axis_out_data),
-		.axis_out_valid(axis_out_valid),
-		.axis_out_last(axis_out_last),
-		.axis_out_ready(axis_out_ready)
+		.axis_in_s_d(),
+		.axis_in_s_valid(0),
+		.axis_in_s_ready(),
+		.axis_out_data(),
+		.axis_out_valid(),
+		.axis_out_last(),
+		.axis_out_ready(0)
     );
-    
-    
-	axis_rom_fifo
-		#(
-			.width(64),
-			.depth(841),
-			.intFile("testimage_out.mif")
-   		)
-   		output_rom
-   		(
-   			.clk(clk),
-   			.rst(inner_reset),
-   			.axis_d(axis_rom_data),
-   			.axis_valid(axis_rom_valid),
-   			.axis_ready(axis_rom_ready)
-   		);
-   		
-   	//logic to check status
-   	//always ready to read
-   	assign axis_out_ready = 1;
-   	assign axis_rom_ready = axis_out_valid;
-   	
-   	always_ff @(posedge clk)
-   	begin
-   		if (inner_reset) begin
-   			inner_failed <= 0;
-   			inner_finished <= 0;
-   		end else begin
-   			if (axis_out_valid) begin
-   				if (axis_rom_data != axis_out_data && inner_finished == 0) begin
-   					inner_failed <= 1;
-   				end
-   				if (axis_out_last) begin
-   					inner_finished <= 1;
-   				end
-   			end
-   		end
-   	end;
+
    	
     
 endmodule
